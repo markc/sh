@@ -163,7 +163,7 @@ setdistro ()
     OSREL=${OSREL:-'jammy'}
     WUGID='www-data'
 
-    # OS dependant overrides
+    # OS dependent overrides
     if [[ $OSTYP == alpine ]]; then
         V_PHP='8'
         C_DNS='/etc/pdns'
