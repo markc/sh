@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+# .sh/bin/setup-rc 20190630 - 20230105
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+[[ $1 =~ '-h' ]] && echo "Usage: setup-rc [domain] [rc version] [db name]" && exit 1
+
+[[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
+
+_HOST=${1:-$(hostname -f | tr 'A-Z' 'a-z')}
+_RC_V=${2:-'1.6.0'}
+_DBID=${3:-'webmail'}
+
+[[ -f ~/.vhosts/$_HOST ]] && . ~/.vhosts/$_HOST || exit 3
+
+[[ $DEBUG ]] && set -x
+
+if [[ -d $WPATH/html/vendor/roundcube/ ]]; then
+    echo "### Exists $WPATH/html/roundcube"
+else
+    echo "### Setup RoundCube in $WPATH/html"
+    cd $UPATH/var
+    [[ ! -f roundcubemail-$_RC_V-complete.tar.gz ]] &&
+        wget -q https://github.com/roundcube/roundcubemail/releases/download/$_RC_V/roundcubemail-$_RC_V-complete.tar.gz
+    tar xf roundcubemail-$_RC_V-complete.tar.gz
+
+    if [[ $DTYPE == mysql ]]; then
+        if [[ $(mysql -BNe "SHOW DATABASES LIKE '$_DBID'") ]]; then
+            echo "### '$_DBID' database already exists"
+        else
+            echo "### Create $_DBID database"
+            mysql -e "CREATE DATABASE IF NOT EXISTS $_DBID"
+            mysql -e "GRANT ALL PRIVILEGES ON $_DBID.* TO '$DUSER'@'localhost' IDENTIFIED BY '$DPASS'"
+            mysql -e "FLUSH PRIVILEGES"
+        fi
+        cat roundcubemail-$_RC_V/SQL/$DTYPE.initial.sql | mysql $_DBID
+        _DNSW="mysql://$DUSER:$DPASS@127.0.0.1/$_DBID"
+    else
+        cat roundcubemail-$_RC_V/SQL/$DTYPE.initial.sql | sqlite3 roundcubemail.db
+        chmod 0646 roundcubemail.db
+        _DNSW="sqlite:////home/u/$MHOST/var/roundcubemail.db?mode=0646"
+    fi
+
+    [[ -d www/html ]] && mv www/html www/html_old && mkdir www/html
+    mv roundcubemail-$_RC_V/{config,logs,plugins,program,skins,temp,vendor,composer*,index.php} www/html
+    cd www/html
+    mkdir data
+    wget -q https://getcomposer.org/composer.phar
+
+    cat <<EOS >config/config.inc.php
+<?php
+// Auto created by NetServa HCP/SH on $(date +%Y%m%d)
+\$config = [];
+\$config['db_dsnw'] = '$_DNSW';
+\$config['imap_host'] = 'ssl://$MHOST:993';
+\$config['smtp_host'] = 'ssl://$MHOST:465';
+\$config['smtp_user'] = '%u';
+\$config['smtp_pass'] = '%p';
+\$config['support_url'] = 'https://$HDOMN';
+\$config['product_name'] = 'Webmail for $HDOMN';
+\$config['des_key'] = '$(pwgen -sB 24 1)';
+//\$config['managesieve_host'] = 'tls://$MHOST';
+\$config['skin'] = 'elastic';
+\$config['plugins'] = ['archive','zipdownload','carddav','contextmenu','managesieve'];
+EOS
+
+    cat <<EOS >composer.json
+{
+    "name": "roundcube/roundcubemail",
+    "description": "The Roundcube Webmail suite",
+    "license": "GPL-3.0+",
+    "minimum-stability": "stable",
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://plugins.roundcube.net"
+        }
+    ],
+    "require": {
+        "php": ">=7.0",
+        "pear/pear-core-minimal": "*",
+        "pear/auth_sasl": "*",
+        "pear/net_idna2": "*",
+        "pear/mail_mime": "*",
+        "pear/net_smtp": "*",
+        "pear/crypt_gpg": "*",
+        "pear/net_sieve": "*",
+        "roundcube/plugin-installer": "*",
+        "masterminds/html5": "*",
+        "endroid/qr-code": "*",
+        "johndoh/contextmenu": "*",
+        "roundcube/carddav": "*"
+    }
+}
+EOS
+    #        "boressoft/ident_switch": "*", // this seems to be outdated
+
+    # Not needed now?
+#    [[ -d $UPATH/var/www_old/.well-known ]] && mv $UPATH/var/www_old/.well-known $UPATH/var/www/.well-known
+#    [[ -d $UPATH/var/www_old/hcp ]] && mv $UPATH/var/www_old/hcp $UPATH/var/www/hcp
+
+    chperms $_HOST
+
+    su - $UUSER -c "cd var/www; php composer.phar -n update" >/dev/null 2>&1
+    su - $UUSER -c "cd var/www; php composer.phar -n install" >/dev/null 2>&1
+
+    cat <<EOS | tee -a /root/.vhosts/$_HOST.conf >/dev/null
+RoundCube
+=========
+
+Webmail: https://$MHOST/
+
+EOS
+
+fi
+
+[[ $DEBUG ]] && set +x
