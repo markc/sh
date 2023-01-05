@@ -2,6 +2,8 @@
 # .sh/bin/setup-rc 20190630 - 20230105
 # Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
+# NOTE: breaking change, setup Roundcube inside hcp/webmail/ folder
+
 [[ $1 =~ '-h' ]] && echo "Usage: setup-rc [domain] [rc version|remove] [db name]" && exit 1
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
@@ -14,21 +16,24 @@ _DBID=${3:-'webmail'}
 
 [[ $DEBUG ]] && set -x
 
+_PATH="$WPATH/html/hcp/webmail"
+
 if [[ $_RC_V == remove ]]; then
-    rm -rf $WPATH/html/{config,logs,plugins,program,skins,temp,vendor,composer*,index.php}
+    rm -rf $_PATH/{config,logs,plugins,program,skins,temp,vendor,composer*,index.php}
     echo "DROP DATABASE IF EXISTS $_DBID;" | $SQCMD
-    if [[ ! -f $WPATH/html/index.html && -f $WPATH/html_old/index.html ]]; then
-        mv $WPATH/html_old/index.html $WPATH/html
+    if [[ -f $WPATH/html_old/index.html && ! -f $_PATH/index.html ]]; then
+        mv $WPATH/html_old/index.html $_PATH
     fi
-    echo "Remove Roundcube from $WPATH/html" && exit 4
+    echo "Remove Roundcube from $_PATH" && exit 4
 fi
 
-if [[ -d $WPATH/html/vendor/roundcube/ ]]; then
-    echo "### Exists $WPATH/html/roundcube"
+if [[ -d $_PATH/vendor/roundcube/ ]]; then
+    echo "### Exists $_PATH/vendor/roundcube/"
 else
-    echo "### Setup RoundCube in $WPATH/html"
+    echo "### Setup Roundcube in $_PATH"
 
-    cd $UPATH/var
+    [[ -d $_PATH ]] || mkdir -p $_PATH
+    cd $_PATH
 
     [[ ! -f roundcubemail-$_RC_V-complete.tar.gz ]] &&
         wget -q https://github.com/roundcube/roundcubemail/releases/download/$_RC_V/roundcubemail-$_RC_V-complete.tar.gz
@@ -46,16 +51,15 @@ else
         cat roundcubemail-$_RC_V/SQL/$DTYPE.initial.sql | mysql $_DBID
         _DNSW="mysql://$DUSER:$DPASS@127.0.0.1/$_DBID"
     else
-        cat roundcubemail-$_RC_V/SQL/$DTYPE.initial.sql | sqlite3 roundcubemail.db
-        chmod 0646 roundcubemail.db
-        _DNSW="sqlite:////home/u/$MHOST/var/roundcubemail.db?mode=0646"
+        cat roundcubemail-$_RC_V/SQL/$DTYPE.initial.sql | sqlite3 $_DBID.db
+        chmod 0646 $_DBID.db
+        _DNSW="sqlite:///$_PATH/$_DBID.db?mode=0646"
     fi
 
-    [[ -d www/html ]] && mv www/html www/html_old && mkdir www/html
-    mv roundcubemail-$_RC_V/{config,logs,plugins,program,skins,temp,vendor,composer*,index.php} www/html
+    mv roundcubemail-$_RC_V/{config,logs,plugins,program,skins,temp,vendor,composer*,index.php} .
     wget -q https://getcomposer.org/composer.phar
 
-    cat <<EOS >www/html/config/config.inc.php
+    cat <<EOS >$_PATH/config/config.inc.php
 <?php
 // Auto created by NetServa HCP/SH on $(date +%Y%m%d)
 \$config = [];
@@ -64,15 +68,21 @@ else
 \$config['smtp_host'] = 'ssl://$MHOST:465';
 \$config['smtp_user'] = '%u';
 \$config['smtp_pass'] = '%p';
-\$config['support_url'] = 'https://$HDOMN';
-\$config['product_name'] = 'Webmail for $HDOMN';
+\$config['support_url'] = 'https://$MHOST';
+\$config['product_name'] = 'Webmail for $MHOST';
 \$config['des_key'] = '$(pwgen -sB 24 1)';
 //\$config['managesieve_host'] = 'tls://$MHOST';
 \$config['skin'] = 'elastic';
-\$config['plugins'] = ['archive','zipdownload','carddav','contextmenu','managesieve'];
+\$config['plugins'] = [
+  'archive',
+  'zipdownload',
+  'carddav',
+  'contextmenu',
+  'managesieve'
+];
 EOS
 
-    cat <<EOS >www/html/composer.json
+    cat <<EOS >$_PATH/composer.json
 {
     "name": "roundcube/roundcubemail",
     "description": "The Roundcube Webmail suite",
@@ -101,21 +111,16 @@ EOS
     }
 }
 EOS
-    #        "boressoft/ident_switch": "*", // this seems to be outdated
+    chperms $MHOST
 
-    [[ -d $WPATH/html_old/.well-known ]] && mv $WPATH/html_old/.well-known $WPATH/html
-    [[ -d $WPATH/html_old/hcp ]] && mv $WPATH/html_old/hcp $WPATH/html
+    su - $UUSER -c "cd $_PATH; php composer.phar -n update" >/dev/null 2>&1
+    su - $UUSER -c "cd $_PATH; php composer.phar -n install" >/dev/null 2>&1
 
-    chperms $VHOST
-
-    su - $UUSER -c "cd var/www/html; php composer.phar -n update" >/dev/null 2>&1
-    su - $UUSER -c "cd var/www/html; php composer.phar -n install" >/dev/null 2>&1
-
-    cat <<EOS | tee -a /root/.vhosts/$VHOST.conf >/dev/null
+    cat <<EOS | tee -a /root/.vhosts/$MHOST.conf >/dev/null
 RoundCube
 =========
 
-Webmail: https://$VHOST/
+Webmail: https://$MHOST/
 
 EOS
 
