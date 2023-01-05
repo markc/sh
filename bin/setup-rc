@@ -94,9 +94,8 @@ EOS
 EOS
     #        "boressoft/ident_switch": "*", // this seems to be outdated
 
-    # Not needed now?
-#    [[ -d $UPATH/var/www_old/.well-known ]] && mv $UPATH/var/www_old/.well-known $UPATH/var/www/.well-known
-#    [[ -d $UPATH/var/www_old/hcp ]] && mv $UPATH/var/www_old/hcp $UPATH/var/www/hcp
+    [[ -d $WPATH/html_old/.well-known ]] && mv $WPATH/html_old/.well-known $WPATH/html
+    [[ -d $WPATH/html_old/hcp ]] && mv $WPATH/html_old/hcp $WPATH/html
 
     chperms $_HOST
 
@@ -107,7 +106,7 @@ EOS
 RoundCube
 =========
 
-Webmail: https://$MHOST/
+Webmail: https://$_HOST/
 
 EOS
 
