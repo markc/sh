@@ -2,7 +2,7 @@
 # .sh/bin/sheriff 20170618 - 20180225
 # Copyright (C) 1995-2018 Mark Constable <markc@renta.net> (AGPL-3.0)
 #
-# ssheriff                Limit SSH access to 4 attemtps per 2 mins
+# ssheriff                Limit SSH access to 4 attempts per 2 mins
 # ssheriff clear          Will clear ALL iptables rules and tables
 # ssheriff 12.34.56.667   Limit ICMP (ping) to 12.34.56.78
 # ssheriff [IP] 22 ens0   Limit ICMP and SSH to port and interface

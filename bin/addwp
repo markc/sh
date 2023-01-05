@@ -80,7 +80,7 @@ fi
 #$WPAPP scaffold --quiet child-theme kadence-child --parent_theme=kadence 2> /dev/null
 #$WPAPP theme --quiet activate kadence-child $MSNET 2> /dev/null
 
-# Doesnt seem to work with PHP 8.1 just yet
+# Doesn't seem to work with PHP 8.1 just yet
 #echo 'Install Elementor plugin'
 #$WPAPP plugin --quiet install elementor 2> /dev/null
 #$WPAPP plugin --quiet activate elementor $MSNET 2> /dev/null
