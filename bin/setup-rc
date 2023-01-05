@@ -2,7 +2,7 @@
 # .sh/bin/setup-rc 20190630 - 20230105
 # Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
-[[ $1 =~ '-h' ]] && echo "Usage: setup-rc [domain] [rc version] [db name]" && exit 1
+[[ $1 =~ '-h' ]] && echo "Usage: setup-rc [domain] [rc version|remove] [db name]" && exit 1
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
@@ -13,6 +13,12 @@ _DBID=${3:-'webmail'}
 [[ -f ~/.vhosts/$_HOST ]] && . ~/.vhosts/$_HOST || exit 3
 
 [[ $DEBUG ]] && set -x
+
+if [[ $_RC_V == remove ]]; then
+    rm -rf $WPATH/html/{config,logs,plugins,program,skins,temp,vendor,composer*,index.php}
+    echo "DROP DATABASE [IF EXISTS] $_DBID;" | $SQCMD
+    echo "Remove Roundcube from $WPATH/html" && exit 4
+fi
 
 if [[ -d $WPATH/html/vendor/roundcube/ ]]; then
     echo "### Exists $WPATH/html/roundcube"
