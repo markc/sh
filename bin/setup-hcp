@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# .sh/bin/setup-hcp 20170519 - 20221122
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/setup-hcp 20170519 - 20230105
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ $1 =~ '-h' ]] && echo "Usage: setup-hcp [domain]" && exit 1
 
@@ -120,7 +120,7 @@ return [
 fi
 
 setup-pma $MHOST
-setup-roundcube $MHOST
+setup-rc $MHOST
 chperms $MHOST
 serva restart web
 serva restart mail
