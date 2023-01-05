@@ -16,7 +16,7 @@ _DBID=${3:-'webmail'}
 
 if [[ $_RC_V == remove ]]; then
     rm -rf $WPATH/html/{config,logs,plugins,program,skins,temp,vendor,composer*,index.php}
-    echo "DROP DATABASE [IF EXISTS] $_DBID;" | $SQCMD
+    echo "DROP DATABASE IF EXISTS $_DBID;" | $SQCMD
     echo "Remove Roundcube from $WPATH/html" && exit 4
 fi
 
