@@ -24,7 +24,9 @@ if [[ -d $WPATH/html/vendor/roundcube/ ]]; then
     echo "### Exists $WPATH/html/roundcube"
 else
     echo "### Setup RoundCube in $WPATH/html"
+
     cd $UPATH/var
+
     [[ ! -f roundcubemail-$_RC_V-complete.tar.gz ]] &&
         wget -q https://github.com/roundcube/roundcubemail/releases/download/$_RC_V/roundcubemail-$_RC_V-complete.tar.gz
     tar xf roundcubemail-$_RC_V-complete.tar.gz
@@ -48,11 +50,9 @@ else
 
     [[ -d www/html ]] && mv www/html www/html_old && mkdir www/html
     mv roundcubemail-$_RC_V/{config,logs,plugins,program,skins,temp,vendor,composer*,index.php} www/html
-    cd www/html
-    mkdir data
     wget -q https://getcomposer.org/composer.phar
 
-    cat <<EOS >config/config.inc.php
+    cat <<EOS >www/html/config/config.inc.php
 <?php
 // Auto created by NetServa HCP/SH on $(date +%Y%m%d)
 \$config = [];
@@ -69,7 +69,7 @@ else
 \$config['plugins'] = ['archive','zipdownload','carddav','contextmenu','managesieve'];
 EOS
 
-    cat <<EOS >composer.json
+    cat <<EOS >www/html/composer.json
 {
     "name": "roundcube/roundcubemail",
     "description": "The Roundcube Webmail suite",
@@ -103,16 +103,16 @@ EOS
     [[ -d $WPATH/html_old/.well-known ]] && mv $WPATH/html_old/.well-known $WPATH/html
     [[ -d $WPATH/html_old/hcp ]] && mv $WPATH/html_old/hcp $WPATH/html
 
-    chperms $_HOST
+    chperms $VHOST
 
-    su - $UUSER -c "cd var/www; php composer.phar -n update" >/dev/null 2>&1
-    su - $UUSER -c "cd var/www; php composer.phar -n install" >/dev/null 2>&1
+    su - $UUSER -c "cd var/www/html; php composer.phar -n update" >/dev/null 2>&1
+    su - $UUSER -c "cd var/www/html; php composer.phar -n install" >/dev/null 2>&1
 
-    cat <<EOS | tee -a /root/.vhosts/$_HOST.conf >/dev/null
+    cat <<EOS | tee -a /root/.vhosts/$VHOST.conf >/dev/null
 RoundCube
 =========
 
-Webmail: https://$_HOST/
+Webmail: https://$VHOST/
 
 EOS
 
