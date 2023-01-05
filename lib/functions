@@ -281,8 +281,7 @@ sethost ()
     VUSER='admin'
     WPATH=$VPATH/$VHOST/var/www
     WPUSR=$(head /dev/urandom | tr -dc a-z | head -c6)
-    [[ $VHOST == $AHOST ]] && TEMPH=${VHOST#*.} || TEMPH=$VHOST
-    AMAIL="$VUSER@$TEMPH"
+    AMAIL="$VUSER@${AHOST#mail.}"
 }
 
 sx ()
