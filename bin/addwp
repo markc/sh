@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# .sh/bin/addwp 20160231 - 20221230
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/addwp 20160231 - 20230111
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ -z $1 || $1 =~ -h ]] && echo "Usage: addwp domain [multi] [path]" && exit 1
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
-. /root/.vhosts/$1 || exit 3
+. ~/.vhosts/$1 || exit 3
 
 [[ $DEBUG ]] && set -x
 

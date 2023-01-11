@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+# .sh/bin/addao 20230111 - 20230111
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+# TODO: Change the default public files area from html/ to public/
+# TODO: Allow mysql OR sqlite to be used
+# TODO: Deal with development (local) versus production installs
+
+[[ $1 =~ '-h' ]] && echo "Usage: addoa [vhost|local] [(mysql)|sqlite]" && exit 1
+
+[[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
+
+VHOST=${1:-`hostname -f`}
+
+. ~/.vhosts/$1 || exit 3
+
+DTYPE=${2:-${DTYPE:-'mysql'}} # FIXME
+
+COMPR='/usr/local/bin/wp'
+
+[[ $DEBUG ]] && set -x
+
+if [[ ! -e $COMPR ]]; then
+    echo "### Install composer as $COMPR"
+    curl -s -O https://getcomposer.org/download/latest-stable/composer.phar
+    chmod +x composer.phar
+    mv composer.phar $COMPR
+fi
+
+if [[ -d $WPATH/public/vendor/open-admin ]]; then
+    echo "### Setting up Open-Admin"
+    su - $UUSER -c "
+cd $UROOT/var
+
+composer create-project --prefer-dist laravel/laravel www
+
+cd www
+
+ln -s public html
+
+cp .env.example .env
+sed -e 's/^DB_CONNECTION=mysql/DB_CONNECTION=sqlite/' \
+    -e 's/^APP_ENV=local/APP_ENV=production/' \
+    -e 's/^APP_DEBUG=true/APP_DEBUG=false/' \
+    -e \"s@^APP_URL=http://localhost@APP_URL=https://$VHOST@\" \
+    -e 's/^DB_HOST=127.0.0.1/#DB_HOST=127.0.0.1/' \
+    -e 's/^DB_PORT=3306/#DB_PORT=3306/' \
+    -e 's/^DB_DATABASE=laravel/#DB_DATABASE=laravel/' \
+    -e 's/^DB_USERNAME=root/#DB_USERNAME=root/' \
+    -e 's/^DB_PASSWORD=/#DB_PASSWORD=/' -i .env
+
+touch database/database.sqlite
+
+php artisan key:generate
+
+composer require open-admin-org/open-admin
+
+sed \"s/'ADMIN_HTTPS', false/'ADMIN_HTTPS', true/\" -i config/admin.php
+
+php artisan vendor:publish --provider=\"OpenAdmin\Admin\AdminServiceProvider\"
+php artisan admin:install
+
+echo
+echo 'Open-Admin is now setup at https://$VHOST/admin/'
+echo
+composer show open-admin-org/open-admin
+"
+    chperms $VHOST
+else
+    echo "### Open-Admin exists at $WPATH/public/vendor/open-admin"
+fi
+
+[[ $DEBUG ]] && set +x
