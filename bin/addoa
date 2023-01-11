@@ -32,7 +32,7 @@ if [[ -d $WPATH/public/vendor/open-admin ]]; then
 else
     echo "### Setting up Open-Admin"
     su - $UUSER -c "
-cd $UROOT/var
+cd $UPATH/var
 
 composer create-project --prefer-dist laravel/laravel www
 
