@@ -12,7 +12,7 @@
 
 VHOST=${1:-`hostname -f`}
 
-. ~/.vhosts/$1 || exit 3
+. ~/.vhosts/$VHOST || exit 3
 
 DTYPE=${2:-${DTYPE:-'mysql'}} # FIXME
 
