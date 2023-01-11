@@ -16,7 +16,7 @@ VHOST=${1:-`hostname -f`}
 
 DTYPE=${2:-${DTYPE:-'mysql'}} # FIXME
 
-COMPR='/usr/local/bin/wp'
+COMPR='/usr/local/bin/composer'
 
 [[ $DEBUG ]] && set -x
 
