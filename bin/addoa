@@ -57,10 +57,10 @@ php artisan key:generate
 
 composer require open-admin-org/open-admin
 
-sed \"s/'ADMIN_HTTPS', false/'ADMIN_HTTPS', true/\" -i config/admin.php
-
 php artisan vendor:publish --provider=\"OpenAdmin\Admin\AdminServiceProvider\"
 php artisan admin:install
+
+sed \"s/'ADMIN_HTTPS', false/'ADMIN_HTTPS', true/\" -i config/admin.php
 
 echo
 echo 'Open-Admin is now setup at https://$VHOST/admin/'
