@@ -28,6 +28,8 @@ if [[ ! -e $COMPR ]]; then
 fi
 
 if [[ -d $WPATH/public/vendor/open-admin ]]; then
+    echo "### Open-Admin exists at $WPATH/public/vendor/open-admin"
+else
     echo "### Setting up Open-Admin"
     su - $UUSER -c "
 cd $UROOT/var
@@ -66,8 +68,6 @@ echo
 composer show open-admin-org/open-admin
 "
     chperms $VHOST
-else
-    echo "### Open-Admin exists at $WPATH/public/vendor/open-admin"
 fi
 
 [[ $DEBUG ]] && set +x
