@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# .sh/bin/addwp 20160231 - 20230111
+# .sh/bin/addwp 20160231 - 20230406
 # Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
-[[ -z $1 || $1 =~ -h ]] && echo "Usage: addwp domain [multi] [path]" && exit 1
+[[ -z $1 || $1 =~ -h ]] && echo "Usage: addwp domain [path]" && exit 1
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
@@ -10,19 +10,9 @@
 
 [[ $DEBUG ]] && set -x
 
-MULTI=${2:-''}
-FPATH=${3:-''}
-TITLE=$(echo $VHOST | tr 'a-z' 'A-Z')
-MSITE=''
-MSNET=''
+FPATH=${2:-''}
+TITLE=$(echo "$VHOST" | tr '[:lower:]' '[:upper:]')
 WPAPP='/usr/local/bin/wp'
-
-if [[ $MULTI =~ ^mu ]]; then
-    MSITE='multisite-install --subdomains'
-    MSNET='--network'
-else
-    MSITE='install'
-fi
 
 if [[ $FPATH ]]; then
     WPURL="https://$VHOST/$FPATH"
@@ -40,7 +30,7 @@ if [[ ! -x $WPAPP ]]; then
 fi
 
 # Exception: keep wp-* tables out of $ADMIN (sysadm) database
-if [[ $DNAME == $ADMIN ]]; then
+if [[ $DNAME == "$ADMIN" ]]; then
     DNAME=${VHOST//[.-]/_}
 fi
 
@@ -58,47 +48,26 @@ if [[ -f $FPATH/wp-config.php ]]; then
     exit 4
 else
     echo "### Download Wordpress"
-    cd $UPATH/var
+    cd "$UPATH/var" || exit 4
     if [[ ! -f latest.tar.gz ]]; then
         wget -q -nv --no-check-certificate https://wordpress.org/latest.tar.gz
     fi
     tar xf latest.tar.gz
     rm latest.tar.gz
     if [[ -d $FPATH ]]; then
-        [[ -d ${FPATH}_old ]] && rm -rf ${FPATH}_old
-        mv $FPATH ${FPATH}_old
+        [[ -d ${FPATH}_old ]] && rm -rf "${FPATH}_old"
+        mv "$FPATH" "${FPATH}_old"
     fi
-    mv wordpress $FPATH
-    chown $U_UID:$WUGID -R $FPATH
+    mv wordpress "$FPATH"
+    chown "$U_UID:$WUGID" -R "$FPATH"
 fi
-
-# Not needed but keep here just in case
-#echo 'Install Kadence Starter Templates plugin' # OPTIONAL
-#$WPAPP plugin --quiet install kadence-starter-templates 2> /dev/null
-#$WPAPP plugin --quiet activate kadence-starter-templates $MSNET 2> /dev/null
-#echo 'Create and active kadence-child theme'
-#$WPAPP scaffold --quiet child-theme kadence-child --parent_theme=kadence 2> /dev/null
-#$WPAPP theme --quiet activate kadence-child $MSNET 2> /dev/null
-
-# Doesn't seem to work with PHP 8.1 just yet
-#echo 'Install Elementor plugin'
-#$WPAPP plugin --quiet install elementor 2> /dev/null
-#$WPAPP plugin --quiet activate elementor $MSNET 2> /dev/null
-
-# Only needed when using a child-theme
-#    cat <<EOS >>$FPATH/wp-content/themes/kadence-child/functions.php
-#remove_action('admin_color_scheme_picker', 'admin_color_scheme_picker');
-#add_action('admin_head', function() {
-#    echo '<style>.form-table th, .form-table td { padding: 0.25em; }</style>';
-#});
-#EOS
 
 if [[ -f $FPATH/wp-includes/version.php ]]; then
     echo "### Setting up Wordpress"
     su - $UUSER -c "
 cd $FPATH
 $WPAPP core config --dbname='$DNAME' --dbuser='$DUSER' --dbpass='$DPASS'
-$WPAPP core $MSITE \
+$WPAPP core install \
   --url='$WPURL' \
   --title='$TITLE' \
   --admin_user='$WPUSR' \
@@ -125,31 +94,19 @@ $WPAPP option update permalink_structure '/%postname%/'
 $WPAPP option set default_comment_status closed
 " >/dev/null
 
-    export PLUGINS=$(echo $(su $UUSER -c "$WPAPP plugin list --field=name --path=$FPATH"))
-    export PAGES=$(su $UUSER -c "$WPAPP post list --post_type=page --format=ids --path=$FPATH")
-    export POSTS=$(su $UUSER -c "$WPAPP post list --post_type=post --format=ids --path=$FPATH")
+    export _PLUGINS=$(echo $(su $UUSER -c "$WPAPP plugin list --field=name --path=$FPATH"))
+    export _PAGES=$(su $UUSER -c "$WPAPP post list --post_type=page --format=ids --path=$FPATH")
+    export _POSTS=$(su $UUSER -c "$WPAPP post list --post_type=post --format=ids --path=$FPATH")
 
     su - $UUSER -c "
 cd $FPATH
-$WPAPP plugin delete $PLUGINS
-$WPAPP post delete $POSTS
-$WPAPP post delete $PAGES
-$WPAPP theme delete twentytwentyone
-
-echo 'Install Kadence theme'
-$WPAPP theme --quiet --activate install kadence 2> /dev/null
-
-echo 'Install Kadence Blocks plugin'
-$WPAPP plugin --quiet install kadence-blocks 2> /dev/null
-$WPAPP plugin --quiet activate kadence-blocks $MSNET 2> /dev/null
-
-echo 'Install Autoptimize plugin'
-$WPAPP plugin --quiet install autoptimize 2> /dev/null
-$WPAPP plugin --quiet activate autoptimize $MSNET 2> /dev/null
+$WPAPP plugin delete $_PLUGINS
+$WPAPP post delete $_POSTS
+$WPAPP post delete $_PAGES
+$WPAPP theme delete twentytwentyone twentytwentytwo
 
 echo 'Install WPvivid plugin'
 $WPAPP plugin --quiet install wpvivid-backuprestore 2> /dev/null
-$WPAPP plugin --quiet activate wpvivid-backuprestore $MSNET 2> /dev/null
 
 $WPAPP post create --post_type=page --post_title='Home' --post_status=publish
 $WPAPP post create --post_type=page --post_title='About' --post_status=publish
@@ -157,26 +114,26 @@ $WPAPP post create --post_type=page --post_title='News' --post_status=publish
 $WPAPP post create --post_type=page --post_title='Contact' --post_status=publish
 " >/dev/null
 
-    export HOMEPAGE=$(su $UUSER -c "$WPAPP post list --post_type=page --name=home --format=ids --path=$FPATH")
-    export NEWSPAGE=$(su $UUSER -c "$WPAPP post list --post_type=page --name=news --format=ids --path=$FPATH")
-    export ABOUTPAGE=$(su $UUSER -c "$WPAPP post list --post_type=page --name=about --format=ids --path=$FPATH")
-    export CONTACTPAGE=$(su $UUSER -c "$WPAPP post list --post_type=page --name=contact --format=ids --path=$FPATH")
+    export _HOMEPAGE=$(su $UUSER -c "$WPAPP post list --post_type=page --name=home --format=ids --path=$FPATH")
+    export _NEWSPAGE=$(su $UUSER -c "$WPAPP post list --post_type=page --name=news --format=ids --path=$FPATH")
+    export _ABOUTPAGE=$(su $UUSER -c "$WPAPP post list --post_type=page --name=about --format=ids --path=$FPATH")
+    export _CONTACTPAGE=$(su $UUSER -c "$WPAPP post list --post_type=page --name=contact --format=ids --path=$FPATH")
 
     su - $UUSER -c "
 cd $FPATH
 $WPAPP menu create 'Primary Menu'
-$WPAPP menu item add-post primary-menu $HOMEPAGE
-$WPAPP menu item add-post primary-menu $ABOUTPAGE
-$WPAPP menu item add-post primary-menu $NEWSPAGE
-$WPAPP menu item add-post primary-menu $CONTACTPAGE
+$WPAPP menu item add-post primary-menu $_HOMEPAGE
+$WPAPP menu item add-post primary-menu $_ABOUTPAGE
+$WPAPP menu item add-post primary-menu $_NEWSPAGE
+$WPAPP menu item add-post primary-menu $_CONTACTPAGE
 $WPAPP menu location assign primary-menu primary
-$WPAPP option update page_on_front $HOMEPAGE
-$WPAPP option update page_for_posts $NEWSPAGE
+$WPAPP option update page_on_front $_HOMEPAGE
+$WPAPP option update page_for_posts $_NEWSPAGE
 $WPAPP option update show_on_front page
 " >/dev/null
 
-    chperms $VHOST
-    cat <<EOS | tee -a /root/.vhosts/$VHOST.conf >/dev/null
+    chperms "$VHOST"
+    cat <<EOS | tee -a "/root/.vhosts/$VHOST.conf" >/dev/null
 WordPress
 =========
 
