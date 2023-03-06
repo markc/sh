@@ -1,4 +1,4 @@
-    bash <(wget -qLO - https://raw.githubusercontent.com/netserva/sh/master/bin/setup-sh)
+    bash <(wget -qLO - https://raw.githubusercontent.com/markc/sh/master/bin/setup-sh)
 
 # NetServa SH
 
@@ -22,7 +22,7 @@ The simplest way to install and setup this project is to make sure `bash`,
 `wget` and `git` are installed first then copy and paste this one-liner as
 root. Please [review the script] at Github first...
 
-    bash <(wget -qLO - https://raw.githubusercontent.com/netserva/sh/master/bin/setup-sh)
+    bash <(wget -qLO - https://raw.githubusercontent.com/markc/sh/master/bin/setup-sh)
 
 To install this project manually, copy and paste these 3 lines below...
 
@@ -184,9 +184,9 @@ There are also some semi-related posts on my [personal blog].
 
 _All scripts and documentation are Copyright (C) 1995-2023 Mark Constable and Licensed [AGPL-3.0]_
 
-[Github]: https://github.com/netserva/sh
-[NetServa HCP]: https://github.com/netserva/hcp
-[review the script]: https://github.com/netserva/sh/blob/master/bin/setup-sh
+[Github]: https://github.com/markc/sh
+[NetServa HCP]: https://github.com/markc/hcp
+[review the script]: https://github.com/markc/sh/blob/master/bin/setup-sh
 [AGPL-3.0]: http://www.gnu.org/licenses/agpl-3.0.html
 [fork this project]: https://help.github.com/articles/fork-a-repo
 [pull requests]: https://help.github.com/articles/using-pull-requests
