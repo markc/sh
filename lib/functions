@@ -1,5 +1,7 @@
-# .sh/lib/functions 20151231 - 20221230
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/lib/functions 20151231 - 20230526
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+[[ $DEBUG ]] && set -x
 
 f () { find . -type f -iname '*'$*'*'; }
 
@@ -331,3 +333,5 @@ updhost ()
 }
 
 export -f chktime f gethost getuser getusers go2 grepuser newuid sanitize_fqdn setdistro sethost setuser sc sx updhost
+
+[[ $DEBUG ]] && set +x
