@@ -204,8 +204,9 @@ setuser ()
 
 sethost ()
 {
+[[ $DEBUG ]] && echo "--------------------" && set -x
     if [[ -z $1 || $1 =~ -h ]]; then
-        echo "Usage: sethost uuser@domain|domain [(mysql)|sqlite]"
+        echo "Usage: sethost [uuser@]domain [(mysql)|sqlite]"
         return 1
     elif [[ $1 =~ "@" ]]; then
         UUSER=${1%@*}
@@ -220,6 +221,7 @@ sethost ()
         U_UID=$(newuid)
         UUSER=$([[ $U_UID = 1000 ]] && echo "sysadm" || echo "u$U_UID")
     fi
+[[ $DEBUG ]] && echo "--------------------" && set +x
 
     sanitize_fqdn $_FQDN
 
