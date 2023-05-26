@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# .sh/bin/setup-host 20170524 - 20221230
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/setup-host 20170524 - 20230526
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ $1 =~ '-h' ]] && echo "Usage: setup-host [fqdn] [(mysql)|sqlite]" && exit 1
 
@@ -215,8 +215,10 @@ EOS
         # Comment out if cloud-init is required otherwise this is the lazy way
         # to get rid of netplan so that systemd-networkd will work, especially
         # when a bridge is wanted via the LXDBR env var.
-        echo "### Remove python and all related packages"
-        apt-get -yqq --purge remove $RLIST >/dev/null
+
+#### Let's try a default cloud-init ubuntu for a while and see how it goes
+#        echo "### Remove python and all related packages"
+#        apt-get -yqq --purge remove $RLIST >/dev/null
     fi
 
     # Let's make sure a few services are enabled
