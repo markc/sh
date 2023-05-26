@@ -1,5 +1,7 @@
-# .sh/lib/aliases 20151231 - 20230413
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/lib/aliases 20151231 - 20230526
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+[[ $DEBUG ]] && set -x
 
 [[ $(type -t sc) == alias ]] && unalias sc
 
@@ -11,7 +13,7 @@ alias e='nano -t -x -c'
 alias eh='e ~/.help'
 alias em='e ~/.menu'
 alias es='e ~/.myrc;. ~/.shrc'
-alias hcp='shm pull; su - sysadm -c "cd var/www/hcp; git pull"'
+alias hcp='shm pull; su - sysadm -c "cd var/www/html/hcp; git pull"'
 alias l='journalctl -f'
 alias la='LC_COLLATE=C ls -lFAh --group-directories-first --color'
 alias ll='LC_COLLATE=C ls -lF --group-directories-first --color'
@@ -80,3 +82,5 @@ alias plog='tail -f ../log/php-errors.log'
 
 # Depends on /etc/postfix/header_checks
 alias maillog="journalctl -f -n 10000 | stdbuf -oL grep 'warning: header Subject:' | sed -e 's/mail .*warning: header Subject:\(.*\)/\1/' -e 's/ from .*];//' -e 's/proto=.*$//'"
+
+[[ $DEBUG ]] && set +x
