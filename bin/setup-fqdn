@@ -30,7 +30,7 @@ sanitize_fqdn $_FQDN
         echo "### Remove current UID 1000 user '$_SADM'"
         userdel -rf $_SADM
     fi
-    echo "### Create vhost sysadm@$MHOST"
+    echo "### Create vhost $ADMIN@$MHOST"
     addvhost $ADMIN@$MHOST
 #fi
 

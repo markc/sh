@@ -204,7 +204,7 @@ setuser ()
 
 sethost ()
 {
-[[ $DEBUG ]] && echo "--------------------" && set -x
+[[ $DEBUG ]] && echo "-------------------- $@" && set -x
     if [[ -z $1 || $1 =~ -h ]]; then
         echo "Usage: sethost [uuser@]domain [(mysql)|sqlite]"
         return 1
