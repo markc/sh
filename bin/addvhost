@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# .sh/bin/addvhost 20170217 - 20220515
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/addvhost 20170217 - 20230527
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 # TODO: move anything to do with hosting plans into another script
 
@@ -29,7 +29,7 @@ fi
 
 if [[ ! -f /root/.vhosts/$VHOST ]]; then
     echo "### Create /root/.vhosts/$VHOST config file"
-    sethost $_UTMP$VHOST $DTYPE $OSREL
+    sethost $VHOST
     gethost >/root/.vhosts/$VHOST
     touch /root/.vhosts/$VHOST.conf
     chmod 600 /root/.vhosts/*
