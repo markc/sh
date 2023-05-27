@@ -12,8 +12,8 @@ VHOST=${1:-$(hostname -f | tr 'A-Z' 'a-z')}
 
 [[ $DEBUG ]] && set -x
 
-if [[ ! -d $WPATH/vendor/roundcube/ ]]; then
-    echo "@@@ $WPATH/vendor/roundcube does not exist" && exit 4
+if [[ ! -d $WPATH/hcp/webmail/vendor/roundcube/ ]]; then
+    echo "@@@ $WPATH/hcp/webmail/vendor/roundcube does not exist" && exit 4
 else
     if [[ $DTYPE == mysql ]]; then
         DBTMP=${VHOST//[.-]/_}
@@ -24,7 +24,7 @@ else
     fi
     rm -rf $UPATH/var/roundcube* $UPATH/var/composer*
     find $WPATH -maxdepth 2 ! -name www ! -name hcp ! -name .well-known ! -name public ! -name html -exec rm -rf {} +
-    touch $WPATH/index.html && chown $(stat -c '%u:%g' $WPATH) $WPATH/index.html
+    touch $WPATH/hcp/webmail/index.html && chown $(stat -c '%u:%g' $WPATH) $WPATH/hcp/webmail/index.html
     echo "@@@ Remove Roundcube from $WPATH ($DTYPE)"
 fi
 
