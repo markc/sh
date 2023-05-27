@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# .sh/bin/newconf 20200304 - 20220515
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/newconf 20200304 - 20230527
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 # WIP ### breakout web server config files from newssl
 
@@ -30,7 +30,7 @@ else
     WSERV=nginx
 fi
 
-[[ ! -d $WPATH/html ]] && echo "ERROR: $WPATH/html does not exist" && exit 3
+[[ ! -d $WPATH ]] && echo "ERROR: $WPATH does not exist" && exit 3
 
 # Nginx config files
 
@@ -129,7 +129,7 @@ then ### OpenLiteSpeed config files
     if [[ ! -f $C_WEB/conf/vhosts/$VHOST/vhconf.conf ]]; then
         [[ -d $C_WEB/conf/vhosts/$VHOST ]] || mkdir -p $C_WEB/conf/vhosts/$VHOST
         cat <<EOS >$C_WEB/conf/vhosts/$VHOST/vhconf.conf
-docRoot                 $WPATH/html
+docRoot                 $WPATH
 vhDomain                $VHOST
 vhAliases               www.$VHOST
 adminEmails             localhost

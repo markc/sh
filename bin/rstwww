@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# .sh/bin/rstwww 20180205 - 20220330
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/rstwww 20180205 - 20230527
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
-### WARNING: this has hardly been tested
+### TODO WIP this has hardly been tested
 
 [[ -z $1 || $1 =~ -h ]] && echo "Usage: rstwww domain [dbname] [oldomain]" && exit 1
 
@@ -17,10 +17,10 @@ DNAME=${2:-${VHOST//[.-]/_}}
 VFILE=${3:-$VHOST}
 DFILE=${VFILE//[.-]/_}
 UPATH=$VPATH/$VHOST
-WPATH=$UPATH/var/www
+WPATH=$UPATH/var/www/html
 UUSER=$(stat -c "%U" $UPATH/var)
 
-[[ ! -d $WPATH/html ]] && echo "!!! ERROR: $WPATH/html does NOT exist, run 'addvhost' first" && exit 4
+[[ ! -d $WPATH ]] && echo "!!! ERROR: $WPATH does NOT exist, run 'addvhost' first" && exit 4
 
 cd $UPATH/var
 

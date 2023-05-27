@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# .sh/bin/bkpwww 20180205 - 20220330
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/bkpwww 20180205 - 20230527
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ -z $1 || $1 =~ -h ]] && echo "Usage: bkpwww domain [dbname]" && exit 1
 
@@ -13,7 +13,7 @@
 DNAME=${2:-$DNAME}
 TARNM="$(date +'%Y%m%d')-$VHOST.tgz"
 
-[[ ! -d $WPATH/html ]] && echo "ERROR: $WPATH/html does NOT exist, run 'addvhost' first" && exit 3
+[[ ! -d $WPATH ]] && echo "ERROR: $WPATH does NOT exist, run 'addvhost' first" && exit 3
 
 cd $UPATH/var
 

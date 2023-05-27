@@ -221,7 +221,7 @@ sethost ()
     U_GID="$U_UID"
     U_SHL=$([[ $U_UID == $A_UID ]] && echo "/bin/bash" || echo "/bin/sh")
     WPASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c16)
-    WPATH=$VPATH/$VHOST/var/www/html
+    WPATH="$VPATH/$VHOST/var/www/html"
     WPUSR=$(head /dev/urandom | tr -dc a-z | head -c6)
 
     AMAIL="$VUSER@${VHOST#mail.}"

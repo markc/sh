@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# .sh/bin/newssl 20160121 - 20220515
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/newssl 20160121 - 20230527
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 # Depends on nginx and DNS already resolving to requested (sub)domains
 
@@ -33,14 +33,14 @@ done
 
 AHOST=$(hostname -f | tr 'A-Z' 'a-z')
 VPATH="/home/u"
-WPATH="$VPATH/$AHOST/var/www"
-WACME="$WPATH/html/.well-known/acme-challenge"
+WPATH="$VPATH/$AHOST/var/www/html"
+WACME="$WPATH/.well-known/acme-challenge"
 LEGIT="https://github.com/lukas2511/dehydrated.git"
 LECFG="/etc/dehydrated"
 C_SSL="/etc/ssl"
 C_WEB="/etc/nginx"
 
-[[ ! -d $WPATH/html ]] && echo "ERROR: $WPATH/html does not exist" && exit 2
+[[ ! -d $WPATH ]] && echo "ERROR: $WPATH does not exist" && exit 2
 
 [[ ! -d $LECFG ]] &&
     mkdir $LECFG &&
@@ -53,7 +53,7 @@ C_WEB="/etc/nginx"
 
 if [[ ! -d $WACME ]]; then
     mkdir -p $WACME
-    chown $(stat -c "%u:%g" $WPATH/html) -R $WPATH/html/.well-known
+    chown $(stat -c "%u:%g" $WPATH) -R $WPATH/.well-known
 fi
 
 cd $LECFG

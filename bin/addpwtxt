@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# .sh/bin/addpwtxt 20190114 - 20220330
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/addpwtxt 20190114 - 20230527
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ $1 =~ -h ]] && echo "Usage: addpwtxt [password] [vhost]" && exit 1
 
@@ -16,14 +16,14 @@ if [[ -f ~/.vhosts/$VHOST ]]; then
     PWPIN=$((1000 + RANDOM % 9999))
     NEWPW=$(pwgen -sB 16 1)
 
-    if [[ -d $WPATH/html ]]; then
-        echo $VPASS >$WPATH/html/$PWPIN.txt
-        chown $UUSER:$WUGID $WPATH/html/$PWPIN.txt
-        chmod 640 $WPATH/html/$PWPIN.txt
-        echo "$WPATH/html/$PWPIN.txt"
+    if [[ -d $WPATH ]]; then
+        echo $VPASS >$WPATH/$PWPIN.txt
+        chown $UUSER:$WUGID $WPATH/$PWPIN.txt
+        chmod 640 $WPATH/$PWPIN.txt
+        echo "$WPATH/$PWPIN.txt"
         echo "$VPASS is at https://$VHOST/$PWPIN.txt"
     else
-        echo "ERROR: $WPATH/html does not exist"
+        echo "ERROR: $WPATH does not exist"
     fi
 else
     echo "ERROR: ~/.vhosts/$VHOST does not exist"

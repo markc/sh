@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# .sh/bin/mvhost 20190602 - 20200330
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/mvhost 20190602 - 20230527
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+#### TODO WIP needs testing
 
 # Requires "rhost" (remote ssh host) to be defined in ~/.ssh/config
 
@@ -54,18 +56,18 @@ else
     echo "Warning: $UPATH/var/$DNAME.sql does not exist"
 fi
 
-if [[ -f $WPATH/html/wp-config.php ]]; then
-    if [[ ! -f $WPATH/html/wp-config.php.bkp ]]; then
-        echo "Update: $WPATH/html/wp-config.php"
+if [[ -f $WPATH/wp-config.php ]]; then
+    if [[ ! -f $WPATH/wp-config.php.bkp ]]; then
+        echo "Update: $WPATH/wp-config.php"
         su - $UUSER -c "
-cd $WPATH/html
+cd $WPATH
 mv wp-config.php wp-config.php.bkp
 wp core config --dbname='$DNAME' --dbuser='$DUSER' --dbpass='$DPASS'
 chmod 640 wp-config.php
 "
     fi
 else
-    echo "Warning: $WPATH/html/wp-config.php does not exist"
+    echo "Warning: $WPATH/wp-config.php does not exist"
 fi
 
 [[ $DEBUG ]] && set -x

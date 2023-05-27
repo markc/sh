@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# .sh/bin/newmaster 20160816 - 20220401
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/newmaster 20160816 - 20230527
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ -z $1 || $1 =~ -h ]] && echo "Usage: newmaster domain [passwd] [email] [path]" && exit 1
 
@@ -15,22 +15,22 @@
 APASS=${2:-$APASS}
 EMAIL=${3:-"webmaster@$VHOST"}
 _PATH=${4:-''}
-WPATH="$VPATH/$VHOST/var/www"
+WPATH="$VPATH/$VHOST/var/www/html"
 UUSER=$(stat -c "%U" $WPATH)
 
 [[ -d $C_SSL/$VHOST ]] && SCHEME="https://" || SCHEME="http://"
 
 if [[ $_PATH ]]; then
     WPURL=$SCHEME$VHOST/$_PATH
-    if [[ -d $WPATH/html/$_PATH ]]; then
-        _PATH=$WPATH/html/$_PATH
+    if [[ -d $WPATH/$_PATH ]]; then
+        _PATH=$WPATH/$_PATH
     else
         _PATH=$WPATH/$_PATH
     fi
 else
     WPURL=$SCHEME$VHOST
-    if [[ -d $WPATH/html ]]; then
-        _PATH=$WPATH/html
+    if [[ -d $WPATH ]]; then
+        _PATH=$WPATH
     else
         _PATH=$WPATH
     fi

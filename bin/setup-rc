@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# .sh/bin/setup-rc 20190630 - 20230525
+# .sh/bin/setup-rc 20190630 - 20230527
 # Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 # NOTE: breaking change, setup Roundcube inside hcp/webmail/ folder
@@ -16,7 +16,7 @@ _DBID=${3:-'webmail'}
 
 [[ $DEBUG ]] && set -x
 
-_PATH="$WPATH/html/hcp/webmail"
+_PATH="$WPATH/hcp/webmail"
 
 if [[ $_RC_V == remove ]]; then
     rm -rf $_PATH/{config,logs,plugins,program,skins,temp,vendor,composer*,index.php}

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# .sh/bin/delwp 20180202 - 20220330
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/delwp 20180202 - 20230527
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ -z $1 || $1 =~ -h ]] && echo "Usage: delwp domain [path]" && exit 1
 
@@ -11,7 +11,7 @@
 [[ $DEBUG ]] && set -x
 
 _PATH=${2:-''}
-[[ $_PATH ]] && _PATH=$WPATH/html/$_PATH || _PATH=$WPATH/html
+[[ $_PATH ]] && _PATH=$WPATH/$_PATH || _PATH=$WPATH
 
 [[ ! -d $_PATH ]] && echo "!!! ERROR: $_PATH does NOT exist" && exit 4
 

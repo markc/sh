@@ -203,19 +203,19 @@ $UUSER:x:$U_GID:
 EOS
 fi
 
-if [[ -f $WPATH/html/index.html || -f $WPATH/html/index.php ]]; then
-    [[ -f $WPATH/html/index.html ]] && echo "### $WPATH/html/index.html already exists"
-    [[ -f $WPATH/html/index.php ]] && echo "### $WPATH/html/index.php already exists"
+if [[ -f $WPATH/index.html || -f $WPATH/index.php ]]; then
+    [[ -f $WPATH/index.html ]] && echo "### $WPATH/index.html already exists"
+    [[ -f $WPATH/index.php ]] && echo "### $WPATH/index.php already exists"
 else
-    echo "### Create $WPATH/html/index.html"
-    echo "<!DOCTYPE html><title>$VHOST</title><h1 style=\"text-align:center\">$VHOST</h1>" >$WPATH/html/index.html
+    echo "### Create $WPATH/index.html"
+    echo "<!DOCTYPE html><title>$VHOST</title><h1 style=\"text-align:center\">$VHOST</h1>" >$WPATH/index.html
 fi
 
-if [[ -f $WPATH/html/phpinfo.php ]]; then
-    echo "### $WPATH/html/phpinfo.php already exists"
+if [[ -f $WPATH/phpinfo.php ]]; then
+    echo "### $WPATH/phpinfo.php already exists"
 else
-    echo "### Create $WPATH/html/phpinfo.php"
-    echo "<?php error_log(__FILE__.' '.\$_SERVER['REMOTE_ADDR']); phpinfo();" >$WPATH/html/phpinfo.php
+    echo "### Create $WPATH/phpinfo.php"
+    echo "<?php error_log(__FILE__.' '.\$_SERVER['REMOTE_ADDR']); phpinfo();" >$WPATH/phpinfo.php
 fi
 
 chperms $VHOST
@@ -293,7 +293,7 @@ DO_VMAILLOG=$(
 EOS
 )
 
-if [[ -d $WPATH/html && $DOCMS == wp ]]; then
+if [[ -d $WPATH && $DOCMS == wp ]]; then
     if [[ $DTYPE == mysql ]]; then
         addwp $VHOST
     else

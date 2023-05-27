@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# .sh/bin/allssl 20170304 - 20220330
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/allssl 20170304 - 20230527
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 # Depends on nginx and DNS already resolving to requested domains
 
@@ -28,12 +28,12 @@ ALL=$(/bin/ls -1 $C_SSL/*/fullchain.pem)
 for i in $ALL; do
     ALTCN=$(openssl x509 -noout -text -in $i | awk -F' DNS:' '/DNS:/ {print $2$3$4$5$6}')
     VHOST=$(basename $(dirname $i))
-    WPATH=/home/u/$AHOST/var/www
-    VACME=$WPATH/html/.well-known/acme-challenge
+    WPATH=/home/u/$AHOST/var/www/html
+    VACME=$WPATH/.well-known/acme-challenge
 
     if [[ ! -d $VACME ]]; then
         mkdir -p $VACME
-        chown $(stat -c "%u:%g" $WPATH) -R $WPATH/html/.well-known
+        chown $(stat -c "%u:%g" $WPATH) -R $WPATH/.well-known
     fi
 
     echo "WELLKNOWN=$VACME" >config
