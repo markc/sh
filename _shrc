@@ -6,36 +6,12 @@
 
 PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/snap/bin:~/.sh/bin
 SUDO=$([ $(id -u) -gt 0 ] && echo 'sudo ')
-OSTYP=unknown
-COLOR=31
-DEBUG=
 EDITOR=nano
+COLOR=31
+LABEL=$(hostname)
 
 # Set the OS type
 [[ -f /etc/os-release ]] && OSTYP=$(awk -F= '/^ID=/ {print $2}' /etc/os-release|sed 's/"//g')
-
-if [[ $OSTYP == openwrt ]]; then
-    function getent {
-        if [[ $1 == passwd ]]; then
-            cat /etc/passwd
-        elif [[ $1 == group ]]; then
-            cat /etc/group
-        fi
-    }
-    function hostname {
-        local _host=$(uci get system.@system[0].hostname)
-        if [[ -z $1 ]]; then
-            echo $_host
-        elif [[ $1 == -f ]]; then
-            echo $_host.$(uci get dhcp.@dnsmasq[0].domain)
-        elif [[ $1 == -d ]]; then
-            uci get dhcp.@dnsmasq[0].domain
-        fi
-    }
-fi
-
-_HOST=$(hostname -f | tr 'A-Z' 'a-z')
-LABEL=$(hostname)
 
 # Import global aliases
 [ -f ~/.sh/lib/aliases ] && . ~/.sh/lib/aliases
@@ -46,20 +22,15 @@ LABEL=$(hostname)
 # Import managed env vars
 [ -f ~/.sh/lib/functions ] && . ~/.sh/lib/functions
 
+_HOST=$(hostname -f | tr 'A-Z' 'a-z')
 if [ -f ~/.vhosts/$_HOST ]; then
     . ~/.vhosts/$_HOST
 else
-    sethost $_HOST $DTYPE $OSREL
+    sethost
 fi
 
 PS1="\[\033[1;${COLOR}m\]${LABEL} \w\[\033[0m\] "
 
 export PATH SUDO MAILTO EDITOR COLOR LABEL PS1 # DEBUG?
-
-export ADMIN AHOST AMAIL ANAME APASS A_GID A_UID BPATH CIMAP CSMTP C_DNS
-export C_FPM C_SQL C_SSL C_WEB DBMYS DBSQL DHOST DNAME DPASS DPATH DPORT
-export DTYPE DUSER EPASS EXMYS EXSQL HNAME HDOMN IP4_0 LROOT MHOST MPATH
-export OSMIR OSREL OSTYP SQCMD SQDNS TAREA TCITY UPASS UPATH UUSER U_GID
-export U_SHL U_UID VHOST VPATH VUSER V_PHP WPASS WPATH WPUSR WUGID
 
 [[ $DEBUG ]] && set +x
