@@ -1,7 +1,27 @@
-# .sh/lib/functions 20151231 - 20230526
+# .sh/lib/functions 20151231 - 20230527
 # Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ $DEBUG ]] && set -x
+
+if [[ $OSTYP == openwrt ]]; then
+    function getent {
+        if [[ $1 == passwd ]]; then
+            cat /etc/passwd
+        elif [[ $1 == group ]]; then
+            cat /etc/group
+        fi
+    }
+    function hostname {
+        local _host=$(uci get system.@system[0].hostname)
+        if [[ -z $1 ]]; then
+            echo $_host
+        elif [[ $1 == -f ]]; then
+            echo $_host.$(uci get dhcp.@dnsmasq[0].domain)
+        elif [[ $1 == -d ]]; then
+            uci get dhcp.@dnsmasq[0].domain
+        fi
+    }
+fi
 
 f () { find . -type f -iname '*'$*'*'; }
 
@@ -29,7 +49,7 @@ chktime ()
 
 gethost ()
 {
-    echo "\
+    cat << EOS
 ADMIN='$ADMIN'
 AHOST='$AHOST'
 AMAIL='$AMAIL'
@@ -83,12 +103,13 @@ V_PHP='$V_PHP'
 WPASS='$WPASS'
 WPATH='$WPATH'
 WPUSR='$WPUSR'
-WUGID='$WUGID'"
+WUGID='$WUGID'
+EOS
 }
 
 getusers ()
 {
-    getent passwd | awk -F: '{if ($3 > 999 && $3 < 65534) print}'
+    getent passwd | awk -F: '{if ($3 > 999 && $3 < 9999) print}'
 }
 
 getuser ()
@@ -127,69 +148,6 @@ getdb ()
     echo $SQCMD
 }
 
-sanitize_fqdn ()
-{
-    if [[ ${1%%.*} == ${1#*.} ]]; then
-        HNAME=$1
-        HDOMN='local'
-    else
-        HNAME=${1%%.*}
-        HDOMN=${1#*.}
-    fi
-
-    if [[ $HNAME == mail && $HDOMN == local ]]; then
-        VHOST=netserva.$HDOMN
-        MHOST=$HNAME.$VHOST
-    elif [[ $HNAME == mail ]]; then
-        VHOST=$HDOMN
-        MHOST=$HNAME.$HDOMN
-    else
-        VHOST=$HNAME.$HDOMN
-        MHOST=$HNAME.$HDOMN
-    fi
-
-    export HNAME HDOMN VHOST MHOST
-}
-
-setdistro ()
-{
-    V_PHP='8.1'
-    CIMAP='/etc/dovecot'
-    CSMTP='/etc/postfix'
-    C_DNS='/etc/powerdns'
-    C_FPM="/etc/php/$V_PHP/fpm"
-    C_SQL='/etc/mysql'
-    C_SSL='/etc/ssl'
-    C_WEB='/etc/nginx'
-    OSMIR='archive.ubuntu.com'
-    OSREL=${OSREL:-'jammy'}
-    WUGID='www-data'
-
-    # OS dependent overrides
-    if [[ $OSTYP == alpine ]]; then
-        V_PHP='8'
-        C_DNS='/etc/pdns'
-        C_DNS='/etc/pdns'
-        C_FPM="/etc/php$V_PHP"
-        C_SQL='/etc/my.cnf.d'
-        OSMIR='nl.alpinelinux.org'
-        OSREL=${OSREL:-'edge'}
-        WUGID='nginx'
-    elif [[ $OSTYP == debian ]]; then
-        OSMIR='ftp.debian.org'
-        OSREL=${OSREL:-'bullseye'}
-    elif [[ $OSTYP == manjaro ]]; then
-        C_DNS='/etc/powerdns'
-        C_FPM='/etc/php'
-        C_SQL='/etc/my.cnf.d'
-        OSMIR='manjaro.moson.eu'
-        OSREL=${OSREL:-'stable'}
-        WUGID='http'
-    elif [[ $OSTYP == openwrt ]]; then
-        echo "TODO: add settings for OpenWrt"
-    fi
-}
-
 setuser ()
 {
     local U_TMP=$(grepuser "$1")
@@ -204,88 +162,102 @@ setuser ()
 
 sethost ()
 {
-[[ $DEBUG ]] && echo "-------------------- $@" && set -x
-    if [[ -z $1 || $1 =~ -h ]]; then
-        echo "Usage: sethost [uuser@]domain [(mysql)|sqlite]"
-        return 1
-    elif [[ $1 =~ "@" ]]; then
-        UUSER=${1%@*}
-        _FQDN=${1#*@}
-        if [[ $UUSER == u* ]]; then
-            U_UID=${UUSER#*u}
-        else
-            [[ $A_UID ]] && U_UID=$A_UID || U_UID=1000
-        fi
-    else
-        _FQDN=$1
-        U_UID=$(newuid)
-        UUSER=$([[ $U_UID = 1000 ]] && echo "sysadm" || echo "u$U_UID")
-    fi
-[[ $DEBUG ]] && echo "--------------------" && set +x
+    [[ $1 =~ -h ]] && echo "Usage: sethost [domain]" && return 1;
 
-    sanitize_fqdn $_FQDN
+    local _FQDN=$(hostname -f | tr 'A-Z' 'a-z')
 
-    # Global static shell variables (default to ubuntu)
-    ADMIN='sysadm'
-    ANAME='System Administrator'
-    A_GID='1000'
-    A_UID='1000'
-    BPATH='/home/backups'
-    DBMYS='/var/lib/mysql'
-    DBSQL='/var/lib/sqlite'
-    DHOST='localhost'
-    DPORT='3306'
-    DTYPE=${2:-${DTYPE:-'mysql'}}
-    LROOT='/usr/local/lsws'
-    TAREA='Australia'
-    TCITY='Sydney'
-    VPATH='/home/u'
+    # Static env vars, can be set in ~/.myrc via "es"
 
-    setdistro
+    ADMIN=${ADMIN:-'sysadm'}
+    A_GID=${A_GID:-'1000'}
+    A_UID=${A_UID:-'1000'}
+    ANAME=${ANAME:-'System Administrator'}
+    BPATH=${BPATH:-'/home/backups'}
+    CIMAP=${CIMAP:-'/etc/dovecot'}
+    CSMTP=${CSMTP:-'/etc/postfix'}
+    C_DNS=${C_DNS:-'/etc/powerdns'}
+    C_SQL=${C_SQL:-'/etc/mysql'}
+    C_SSL=${C_SSL:-'/etc/ssl'}
+    C_WEB=${C_WEB:-'/etc/nginx'}
+    DBMYS=${DBMYS:-'/var/lib/mysql'}
+    DBSQL=${DBSQL:-'/var/lib/sqlite'}
+    DHOST=${DHOST:-'localhost'}
+    DPORT=${DPORT:-'3306'}
+    DTYPE=${DTYPE:-'mysql'}
+    OSMIR=${OSMIR:-'archive.ubuntu.com'}
+    OSREL=${OSREL:-'jammy'}
+    OSTYP=${OSTYP:-'ubuntu'}
+    TAREA=${TAREA:-'Australia'}
+    TCITY=${TCITY:-'Sydney'}
+    V_PHP=${V_PHP:-'8.1'}
+    VPATH=${VPATH:-'/home/u'}
+    VUSER=${VUSER:-'admin'}
+    WUGID=${WUGID:-'www-data'}
 
-    U_GID=$U_UID
+    # Dynamic env vars dependant on other env vars
 
-    [[ $UUSER == $ADMIN ]] && DNAME=$ADMIN || DNAME=${VHOST//[.-]/_}
+    VHOST=${1:-${VHOST:-"$_FQDN"}}
+    U_UID=$([[ $_FQDN == $VHOST ]] && echo "$A_UID" || newuid)
+    UUSER=$([[ $U_UID == $A_UID ]] && echo "$ADMIN" || echo "u$U_UID")
 
-    if [[ -z $4 ]]; then
-        IP4_0=$(ip -4 route get 1.1.1.1 | awk '/src/ {print $7}')
-    elif [[ $4 =~ "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" ]]; then
-        IP4_0=$4
-    else
-        IP4_0=$(hostname -i | cut -d ' ' -f -1)
-    fi
-
+    AHOST=${AHOST:-"$_FQDN"}
+    APASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c16)
+    C_FPM="/etc/php/$V_PHP/fpm"
+    DPASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c16)
     DPATH="$DBSQL/$ADMIN/$ADMIN.db"
+    DUSER="$UUSER"
+    EPASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c16)
     EXMYS="mysql -BN $ADMIN"
     EXSQL="sqlite3 $DPATH"
-
-    if [[ $DTYPE == mysql ]]; then
-        SQCMD=$EXMYS
-        SQDNS="mysql -BN pdns"
-    elif [[ $DTYPE == sqlite ]]; then
-        SQCMD=$EXSQL
-        SQDNS="sqlite3 $DBSQL/$ADMIN/pdns.db"
-    else
-        echo "!!! ERROR: unknown database type '$DTYPE'"
-    fi
-
-    # was pwgen -sB 16 1
-    APASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c16)
-    DPASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c16)
-    EPASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c16)
+    HDOMN=${VHOST#*.}
+    HNAME=${VHOST%%.*}
+    IP4_0=$(ip -4 route get 1.1.1.1 | awk '/src/ {print $7}')
+    LROOT=${LROOT:-'/usr/local/lsws'}
+    MHOST=$([[ $HNAME == mail ]] && echo "$HNAME.$HDOMN" || echo "$VHOST")
+    SQCMD=$([[ $DTYPE == mysql ]] && echo "$EXMYS" || echo "$EXSQL")
+    SQDNS=$([[ $DTYPE == mysql ]] && echo "mysql -BN pdns" || echo "sqlite3 $DBSQL/$ADMIN/pdns.db")
     UPASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c16)
+    UUSER=$([[ $U_UID == $A_UID ]] && echo "$ADMIN" || echo "u$U_UID")
+    U_GID="$U_UID"
+    U_SHL=$([[ $U_UID == $A_UID ]] && echo "/bin/bash" || echo "/bin/sh")
     WPASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c16)
-
-    AHOST=$(hostname -f | tr 'A-Z' 'a-z')
-
-    DUSER=$UUSER
-    MPATH=$VPATH/$VHOST/home
-    UPATH=$VPATH/$VHOST
-    U_SHL=$([[ $U_UID = 1000 ]] && echo "/bin/bash" || echo "/bin/sh")
-    VUSER='admin'
-    WPATH=$VPATH/$VHOST/var/www
+    WPATH=$VPATH/$VHOST/var/www/html
     WPUSR=$(head /dev/urandom | tr -dc a-z | head -c6)
-    AMAIL="$VUSER@${AHOST#mail.}"
+
+    AMAIL="$VUSER@${VHOST#mail.}"
+    DNAME=${DNAME:-$([[ $UUSER == $ADMIN ]] &&  echo "$ADMIN" || echo "${VHOST//[.-]/_}")}
+    UPATH="$VPATH/$VHOST"
+    MPATH="$UPATH/home"
+
+    # OS dependent overrides (WIP)
+
+    if [[ $OSTYP == alpine ]]; then
+        V_PHP='8'
+        C_DNS='/etc/pdns'
+        C_DNS='/etc/pdns'
+        C_FPM="/etc/php$V_PHP"
+        C_SQL='/etc/my.cnf.d'
+        OSMIR='nl.alpinelinux.org'
+        OSREL=${OSREL:-'edge'}
+        WUGID='nginx'
+    elif [[ $OSTYP == debian ]]; then
+        OSMIR='ftp.debian.org'
+        OSREL=${OSREL:-'bullseye'}
+    elif [[ $OSTYP == manjaro || $OSTYP == arch ]]; then
+        C_DNS='/etc/powerdns'
+        C_FPM='/etc/php'
+        C_SQL='/etc/my.cnf.d'
+        OSMIR='manjaro.moson.eu'
+        OSREL=${OSREL:-'stable'}
+        if [[ $OSTYP == arch ]]; then
+            echo "TODO: add OSMIR and OSREL for Archlinux"
+            # OSMIR='?'
+            # OSREL='?'
+        fi
+        WUGID='http'
+    elif [[ $OSTYP == openwrt ]]; then
+        echo "TODO: add settings for OpenWrt"
+    fi
 }
 
 sx ()
@@ -297,43 +269,29 @@ sx ()
     ssh $_HOST -q -t "bash -ci '$@'"
 }
 
-updhost ()
+rmenv ()
 {
-    if [[ -z $1 || $1 =~ -h ]]; then
-        echo "Usage: updhost vhost [(mysql)|sqlite] [distro($OSREL)] [IP] [V_PHP]"
-        return 1
-    fi
-
-    if [[ -f /root/.vhosts/$1 ]]; then
-        . /root/.vhosts/$1
-    else
-        echo "ERROR: /root/.vhosts/$1 does not exist" && return 2
-    fi
-
-    sanitize_fqdn $1
-
-    DTYPE=${2:-$DTYPE}
-    OSREL=${3:-$OSREL}
-    IP4_0=${4:-$(hostname -i | cut -d ' ' -f -1)}
-    V_PHP=${5:-$V_PHP}
-    LROOT="/usr/local/lsws"
-    OSTYP=$OSTYP
-    C_FPM="/etc/php/$V_PHP/fpm"
-
-    setdistro
-
-    if [[ $DTYPE == mysql ]]; then
-        SQCMD=$EXMYS
-        SQDNS="mysql -BN pdns"
-    elif [[ $DTYPE == sqlite ]]; then
-        SQCMD=$EXSQL
-        SQDNS="sqlite3 $DBSQL/$ADMIN/pdns.db"
-    else
-        echo "!!! ERROR: unknown database type '$DTYPE'"
-    fi
-    gethost >/root/.vhosts/$1
+    unset ADMIN AHOST AMAIL ANAME APASS A_GID A_UID BPATH CIMAP CSMTP C_DNS
+    unset C_FPM C_SQL C_SSL C_WEB DBMYS DBSQL DHOST DNAME DPASS DPATH DPORT
+    unset DTYPE DUSER EPASS EXMYS EXSQL HNAME HDOMN IP4_0 LROOT MHOST MPATH
+    unset OSMIR OSREL OSTYP SQCMD SQDNS TAREA TCITY UPASS UPATH UUSER U_GID
+    unset U_SHL U_UID VHOST VPATH VUSER V_PHP WPASS WPATH WPUSR WUGID
+    unset -f chktime f getdb gethost getuser getusers go2 grepuser newuid
+    unset -f rmenv sanitize_fqdn setdistro sethost setuser sc sx
 }
 
-export -f chktime f gethost getuser getusers go2 grepuser newuid sanitize_fqdn setdistro sethost setuser sc sx updhost
+mkenv ()
+{
+    declare -g -x ADMIN AHOST AMAIL ANAME APASS A_GID A_UID BPATH CIMAP CSMTP
+    declare -g -x C_DNS C_FPM C_SQL C_SSL C_WEB DBMYS DBSQL DHOST DNAME DPASS
+    declare -g -x DPATH DPORT DTYPE DUSER EPASS EXMYS EXSQL HNAME HDOMN IP4_0
+    declare -g -x LROOT MHOST MPATH OSMIR OSREL OSTYP SQCMD SQDNS TAREA TCITY
+    declare -g -x UPASS UPATH UUSER U_GID U_SHL U_UID VHOST VPATH VUSER V_PHP
+    declare -g -x WPASS WPATH WPUSR WUGID
+    declare -g -f chktime f getdb gethost getuser getusers go2 grepuser mkenv
+    declare -g -f newuid rmenv sanitize_fqdn setdistro sethost setuser sc sx
+}
+
+mkenv
 
 [[ $DEBUG ]] && set +x
