@@ -154,9 +154,10 @@ sasl2-bin ttf-* ubuntu-advantage-tools vi* xinetd snapd lxd-agent-loader"
         mv /etc/apt/sources.list /etc/apt/sources.list.orig
         if [[ $OSTYP == debian ]]; then
             cat <<EOS >/etc/apt/sources.list
-deb http://$OSMIR/debian/ $OSREL main
-deb http://$OSMIR/debian/ $OSREL-updates main
-deb http://security.debian.org/debian-security $OSREL/updates main
+deb http://$OSMIR/debian $OSREL main
+deb http://$OSMIR/debian $OSREL-updates main
+deb http://$OSMIR/debian $OSREL-backports main
+deb http://security.debian.org/debian-security $OSREL-security main
 EOS
         else
             sed ~/.sh/etc/_etc_apt_sources.list \
@@ -276,7 +277,7 @@ else
     [[ ! -d /etc/systemd/network ]] && mkdir /etc/systemd/network
 
     ls /etc/systemd/network/*.network > /dev/null 2>&1
-    if [[ $? -eq 0 ]] then
+    if [[ $? -eq 0 ]]; then
         echo "### Exists /etc/systemd/network/*.network"
     else
         echo "### Create /etc/systemd/network/lxdbr config}"

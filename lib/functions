@@ -241,7 +241,7 @@ sethost ()
         OSREL=${OSREL:-'edge'}
         WUGID='nginx'
     elif [[ $OSTYP == debian ]]; then
-        OSMIR='ftp.debian.org'
+        OSMIR='deb.debian.org'
         OSREL='bullseye'
     elif [[ $OSTYP == manjaro || $OSTYP == arch ]]; then
         C_DNS='/etc/powerdns'
