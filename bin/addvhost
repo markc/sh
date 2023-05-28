@@ -9,7 +9,7 @@
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
 # We need general env vars and bash functions
-. ~/.shrc || exit 3
+. ~/.shrc
 
 [[ $DEBUG ]] && set -x
 

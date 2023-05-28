@@ -13,7 +13,7 @@ L="GoldCoast"
 O="NetServa"
 OU="IT Department"
 
-. ~/.shrc || exit 3
+. ~/.shrc
 
 gethost
 
