@@ -6,8 +6,6 @@
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
-[[ $DEBUG ]] && set -x
-
 # Temporary self-signed SSL certificate defaults
 C="AU"
 ST="QLD"
@@ -16,6 +14,8 @@ O="NetServa"
 OU="IT Department"
 
 . /root/.shrc || exit 3
+
+[[ $DEBUG ]] && set -x
 
 [[ ! -d ~/.vhosts ]] && mkdir ~/.vhosts
 
