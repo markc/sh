@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# .sh/bin/cfadddns 20181002 - 20181002
-# Copyright (C) 1995-2018 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/cfadddns 20181002 - 20230529
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 # See setup-cf
+[[ $DEBUG ]] && set -x
 
 [[ -z $4 || $1 =~ -h ]] && echo "Usage: cfadddns domain name type content [priority(0)] [proxied(false|true)]" && exit 1
 
@@ -16,7 +17,7 @@ ZONID=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones?name=$1" \
     -H "X-Auth-Key: $CF_USER_API_KEY" \
     -H "Content-Type: application/json" |
     jq -r '{"result"}[] | .[0] | .id')
-set -x
+
 if [[ $ZONID ]]; then
     curl -s -X POST "https://api.cloudflare.com/client/v4/zones/$ZONID/dns_records" \
         -H "X-Auth-Email: $CF_PARTNER_EMAIL" \
@@ -27,3 +28,5 @@ if [[ $ZONID ]]; then
 else
     echo "!!! Warning: no ZONE_ID for $1"
 fi
+
+[[ $DEBUG ]] && set +x

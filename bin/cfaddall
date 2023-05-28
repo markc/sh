@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# .sh/bin/addcfdns 20181002 - 20181002
-# Copyright (C) 1995-2018 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/addcfdns 20181002 - 20230528
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 # See setup-cf
+[[ $DEBUG ]] && set -x
 
 [[ -z $2 || $1 =~ -h ]] && echo "Usage: addcfdns domain IP" && exit 1
 
@@ -10,7 +11,6 @@
 [[ -z $CFP_USR ]] && echo "ERROR: CFP_USR is empty" && exit 3
 
 #echo -ne "!!! Adding Full Zone for $1 - "
-#set -x
 
 # use cfp_full_zone_set instead
 #curl -s https://api.cloudflare.com/host-gw.html \
@@ -109,3 +109,5 @@ if [[ $ZONE_ID ]]; then
 else
     echo "!!! Warning: no ZONE_ID for $1 ($2)"
 fi
+
+[[ $DEBUG ]] && set +x
