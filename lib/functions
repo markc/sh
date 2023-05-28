@@ -276,8 +276,8 @@ rmenv ()
     unset DTYPE DUSER EPASS EXMYS EXSQL HNAME HDOMN IP4_0 LROOT MHOST MPATH
     unset OSMIR OSREL OSTYP SQCMD SQDNS TAREA TCITY UPASS UPATH UUSER U_GID
     unset U_SHL U_UID VHOST VPATH VUSER V_PHP WPASS WPATH WPUSR WUGID
-    unset -f chktime f getdb gethost getuser getusers go2 grepuser newuid
-    unset -f rmenv sanitize_fqdn setdistro sethost setuser sc sx
+    unset -f chktime f getdb gethost getuser getusers go2 grepuser mkenv
+    unset -f newuid rmenv sanitize_fqdn setdistro sethost setuser sc sx
 }
 
 mkenv ()
