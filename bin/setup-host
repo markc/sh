@@ -117,7 +117,7 @@ net-tools nginx-light opendkim opendkim-tools opendmarc openssh-server
 pdns-backend-sqlite3 pflogsumm php$V_PHP php$V_PHP-bcmath php$V_PHP-curl
 php$V_PHP-fpm php$V_PHP-gd php$V_PHP-gmp php$V_PHP-imap php$V_PHP-intl
 php$V_PHP-mbstring php$V_PHP-soap php$V_PHP-sqlite3 php$V_PHP-xml php$V_PHP-zip
-php-imagick php-redis polkitd postfix postfix-lmdb postfix-policyd-spf-perl
+php-imagick php-redis postfix postfix-lmdb postfix-policyd-spf-perl
 postfix-sqlite pwgen redis-server rsyslog rsync sqlite3 sudo time unzip wget
 whois"
 
