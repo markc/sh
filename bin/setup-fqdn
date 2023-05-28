@@ -15,9 +15,7 @@ L="GoldCoast"
 O="NetServa"
 OU="IT Department"
 
-[[ $1 ]] && _FQDN=$1 || _FQDN=$(hostname -f)
-
-sanitize_fqdn $_FQDN
+. /root/.shrc || exit 3
 
 [[ ! -d ~/.vhosts ]] && mkdir ~/.vhosts
 
@@ -25,7 +23,7 @@ sanitize_fqdn $_FQDN
 #if [[ $? -eq 0 ]]; then
 #    echo "### sysadm user has correct uid and gid (1000:1000)"
 #else
-    _SADM=$(getent passwd 1000 | awk -F: '{print $1}')
+    local _SADM=$(getent passwd 1000 | awk -F: '{print $1}')
     if [[ $_SADM ]]; then
         echo "### Remove current UID 1000 user '$_SADM'"
         userdel -rf $_SADM
