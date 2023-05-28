@@ -34,7 +34,9 @@ OU="IT Department"
 
 . ~/.vhosts/$MHOST
 
-if [[ ! -f /etc/hosts.orig ]]; then
+if [[ -f /etc/hosts.orig ]]; then
+    echo "### Exists /etc/hosts.orig"
+else
     cp /etc/hosts /etc/hosts.orig
     echo "### Update /etc/hosts"
     sed -i "s/^127.0.1.1.*$/127.0.1.1\tresolved/" /etc/hosts
