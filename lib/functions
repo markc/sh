@@ -282,12 +282,12 @@ rmenv ()
 
 mkenv ()
 {
-    declare -g -x ADMIN AHOST AMAIL ANAME APASS A_GID A_UID BPATH CIMAP CSMTP
-    declare -g -x C_DNS C_FPM C_SQL C_SSL C_WEB DBMYS DBSQL DHOST DNAME DPASS
-    declare -g -x DPATH DPORT DTYPE DUSER EPASS EXMYS EXSQL HNAME HDOMN IP4_0
-    declare -g -x LROOT MHOST MPATH OSMIR OSREL OSTYP SQCMD SQDNS TAREA TCITY
-    declare -g -x UPASS UPATH UUSER U_GID U_SHL U_UID VHOST VPATH VUSER V_PHP
-    declare -g -x WPASS WPATH WPUSR WUGID
+    declare -g ADMIN AHOST AMAIL ANAME APASS A_GID A_UID BPATH CIMAP CSMTP
+    declare -g C_DNS C_FPM C_SQL C_SSL C_WEB DBMYS DBSQL DHOST DNAME DPASS
+    declare -g DPATH DPORT DTYPE DUSER EPASS EXMYS EXSQL HNAME HDOMN IP4_0
+    declare -g LROOT MHOST MPATH OSMIR OSREL OSTYP SQCMD SQDNS TAREA TCITY
+    declare -g UPASS UPATH UUSER U_GID U_SHL U_UID VHOST VPATH VUSER V_PHP
+    declare -g WPASS WPATH WPUSR WUGID
     declare -g chktime f getdb gethost getuser getusers go2 grepuser mkenv
     declare -g newuid rmenv sanitize_fqdn setdistro sethost setuser sc sx
 }
