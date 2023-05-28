@@ -268,7 +268,8 @@ EOS
 else
     [[ ! -d /etc/systemd/network ]] && mkdir /etc/systemd/network
 
-    if ls /etc/systemd/network/*.network > /dev/null; then
+    ls /etc/systemd/network/*.network > /dev/null 2>&1
+    if [[ $? -eq 0 ]] then
         echo "### Exists /etc/systemd/network/*.network"
     else
         echo "### Create /etc/systemd/network/lxdbr config}"
