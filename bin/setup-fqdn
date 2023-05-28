@@ -13,24 +13,29 @@ L="GoldCoast"
 O="NetServa"
 OU="IT Department"
 
-. /root/.shrc || exit 3
+. ~/.shrc || exit 3
+
+gethost
 
 [[ $DEBUG ]] && set -x
 
 [[ ! -d ~/.vhosts ]] && mkdir ~/.vhosts
 
-#grep -q '^sysadm:x:1000:1000' /etc/passwd
-#if [[ $? -eq 0 ]]; then
-#    echo "### sysadm user has correct uid and gid (1000:1000)"
-#else
-    _SADM=$(getent passwd 1000 | awk -F: '{print $1}')
+_1000=$(getent passwd 1000)
+
+echo $_1000 | grep "^sysadm:x:1000:1000:$MHOST:/home/u/$MHOST:/bin/bash" > /dev/null
+
+if [[ $? -eq 0 ]]; then
+    echo "### Exists $_1000"
+else
+    _SADM=$(echo $_1000 | awk -F: '{print $1}')
     if [[ $_SADM ]]; then
         echo "### Remove current UID 1000 user '$_SADM'"
         userdel -rf $_SADM
     fi
-    echo "### Create vhost $ADMIN@$MHOST"
-    addvhost $ADMIN@$MHOST
-#fi
+    echo "### Create vhost $MHOST"
+    addvhost $MHOST
+fi
 
 . ~/.vhosts/$MHOST
 
