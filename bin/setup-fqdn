@@ -23,7 +23,7 @@ OU="IT Department"
 #if [[ $? -eq 0 ]]; then
 #    echo "### sysadm user has correct uid and gid (1000:1000)"
 #else
-    local _SADM=$(getent passwd 1000 | awk -F: '{print $1}')
+    _SADM=$(getent passwd 1000 | awk -F: '{print $1}')
     if [[ $_SADM ]]; then
         echo "### Remove current UID 1000 user '$_SADM'"
         userdel -rf $_SADM

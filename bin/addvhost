@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# .sh/bin/addvhost 20170217 - 20230527
+# .sh/bin/addvhost 20170217 - 20230528
 # Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 # TODO: move anything to do with hosting plans into another script
@@ -7,6 +7,9 @@
 [[ -z $1 || $1 =~ -h ]] && echo "Usage: addvhost [uuser@]domain [cms(none|wp)] [ssl(none|le|self)] [ip]" && exit 1
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
+
+# We need general env vars and bash functions
+. ~/.shrc || exit 3
 
 [[ $DEBUG ]] && set -x
 
@@ -27,7 +30,9 @@ else
     VHOST=$1
 fi
 
-if [[ ! -f /root/.vhosts/$VHOST ]]; then
+if [[ -f /root/.vhosts/$VHOST ]]; then
+    echo "### Exists /root/.vhosts/$VHOST"
+else
     echo "### Create /root/.vhosts/$VHOST config file"
     sethost $VHOST
     gethost >/root/.vhosts/$VHOST
