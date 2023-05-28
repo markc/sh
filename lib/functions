@@ -288,8 +288,8 @@ mkenv ()
     declare -g -x LROOT MHOST MPATH OSMIR OSREL OSTYP SQCMD SQDNS TAREA TCITY
     declare -g -x UPASS UPATH UUSER U_GID U_SHL U_UID VHOST VPATH VUSER V_PHP
     declare -g -x WPASS WPATH WPUSR WUGID
-    declare -g -f chktime f getdb gethost getuser getusers go2 grepuser mkenv
-    declare -g -f newuid rmenv sanitize_fqdn setdistro sethost setuser sc sx
+    declare -g chktime f getdb gethost getuser getusers go2 grepuser mkenv
+    declare -g newuid rmenv sanitize_fqdn setdistro sethost setuser sc sx
 }
 
 mkenv
