@@ -232,14 +232,17 @@ else
     mv /etc/ssh/sshd_config /etc/ssh/sshd_config.orig
     cp ~/.sh/etc/_etc_ssh_sshd__config /etc/ssh/sshd_config
 
-    if [[ ! -d /etc/systemd/system/ssh.socket.d ]]; then
-        echo "### Handle post 22.10 releases using ssh.socket"
-        mkdir /etc/systemd/system/ssh.socket.d
-        echo -e "[Socket]\nListenStream=\nListenStream=9\n" \
-            > /etc/systemd/system/ssh.socket.d/port.conf
-        systemctl daemon-reload
-    fi
-    systemctl restart ssh
+#    if [[ ! -d /etc/systemd/system/ssh.socket.d ]]; then
+#        echo "### Handle post 22.10 releases using ssh.socket"
+#        mkdir /etc/systemd/system/ssh.socket.d
+#        echo -e "[Socket]\nListenStream=\nListenStream=9\n" \
+#            > /etc/systemd/system/ssh.socket.d/port.conf
+#        systemctl daemon-reload
+#    fi
+
+    # The easy way to revert the 22.10+ socket activation disaster
+    systemctl disable --now ssh.socket
+    systemctl enable --now ssh.service
 fi
 
 if [[ -d ~/.ssh ]]; then
