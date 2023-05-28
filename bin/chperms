@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# .sh/bin/chperms 20151231 - 20221122
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/chperms 20151231 - 20230528
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ -z $1 || $1 =~ -h ]] && echo "Usage: chperms vhost|all" && exit 1
 
@@ -14,7 +14,7 @@ fi
 
 [[ ! -d $VPATH ]] && echo "ERROR: $VPATH does not exist" && exit 4
 
-. ~/.sh/lib/_chperms || exit 5
+. ~/.sh/lib/_chperms
 
 [[ $DEBUG ]] && set -x
 
