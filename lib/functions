@@ -277,7 +277,7 @@ rmenv ()
     unset OSMIR OSREL OSTYP SQCMD SQDNS TAREA TCITY UPASS UPATH UUSER U_GID
     unset U_SHL U_UID VHOST VPATH VUSER V_PHP WPASS WPATH WPUSR WUGID
     unset -f chktime f getdb gethost getuser getusers go2 grepuser mkenv
-    unset -f newuid rmenv sanitize_fqdn setdistro sethost setuser sc sx
+    unset -f newuid rmenv sethost setuser sc sx
 }
 
 mkenv ()
@@ -289,7 +289,7 @@ mkenv ()
     export UPASS UPATH UUSER U_GID U_SHL U_UID VHOST VPATH VUSER V_PHP
     export WPASS WPATH WPUSR WUGID
     export -f chktime f getdb gethost getuser getusers go2 grepuser mkenv
-    export -f newuid rmenv sanitize_fqdn setdistro sethost setuser sc sx
+    export -f newuid rmenv sethost setuser sc sx
 }
 
 mkenv
