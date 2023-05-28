@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# .sh/bin/delvhost 20170216 - 20220908
-# Copyright (C) 1995-2021 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/delvhost 20170216 - 20230528
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ -z $1 || $1 =~ -h ]] && echo "Usage: delvhost domain" && exit 1
 
@@ -10,7 +10,7 @@
 
 VHOST=$1
 
-source ~/.vhosts/$VHOST || exit 3
+. ~/.vhosts/$VHOST || exit 3
 
 [[ ! -d $VPATH/$VHOST ]] && echo "ERROR: '$VPATH/$VHOST' does not exist" && exit 4
 
@@ -86,6 +86,8 @@ fi
 if [[ -f /root/.vhosts/$VHOST ]]; then
     if [[ $VHOST == $(hostname -f | tr 'A-Z' 'a-z') ]]; then
         echo "Leaving /root/.vhosts/$VHOST"
+        echo "Remove /root/.vhosts/$VHOST.conf"
+        rm /root/.vhosts/$VHOST.conf
     else
         echo "Remove /root/.vhosts/$VHOST"
         cp ~/.vhosts/$VHOST $UPATH/_root_.vhosts_$VHOST
