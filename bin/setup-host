@@ -125,13 +125,10 @@ whois"
     MLIST="dovecot-mysql mariadb-common mariadb-client mariadb-server
 pdns-backend-mysql php$V_PHP-mysql postfix-mysql"
 
-# no longer needed
-#    [[ $OSREL == focal ]] && MLIST="$MLIST mariadb-client-10.3 mariadb-server-10.3"
-
     # Remove List of packages (RLIST="" to ignore removal)
     RLIST="*golang* *python* accountsservice apache2 at bind9 cloud*
-install-info lxcfs man* open-iscsi rpcbind sasl2-bin ttf-*
-ubuntu-advantage-tools vi* xinetd"
+install-info lxcfs man* multipath-tools open-iscsi open-vm-tools rpcbind
+sasl2-bin ttf-* ubuntu-advantage-tools vi* xinetd snapd lxd-agent-loader"
 
     # Make sure that IP4 is the default
     grep -q '^#precedence ::ffff:0:0/96  100' /etc/gai.conf
@@ -201,24 +198,23 @@ EOS
         systemctl stop pdns >/dev/null 2>&1
         systemctl disable pdns >/dev/null 2>&1
 
+#### This is still required when using jammy+ on very active mailservers
 #        echo "### Install bionic spamprobe (the focal+ spamprobe crashes)"
 #        apt-get -yqq install spamprobe=1.4d-14build1 >/dev/null
 #        apt-mark hold spamprobe >/dev/null
-    fi
 
-    if [[ -f /usr/bin/python3 && ! -d /usr/share/xsessions ]]; then
-        if [[ -f /usr/share/unattended-upgrades/unattended-upgrade-shutdown ]]; then
-            echo "### Remove unattended-upgrades"
-            systemctl stop unattended-upgrades >/dev/null 2>&1
-            systemctl disable unattended-upgrades >/dev/null 2>&1
-        fi
+#### Let's try a default cloud-init ubuntu for a while and see how it goes
+#### A few days later on 20230528
+#### Nope, can't easily get rid of netplan.io without removing cloud-init so
+#### may as well stick to removing python/cloud-init and take the resource win.
+
         # Comment out if cloud-init is required otherwise this is the lazy way
         # to get rid of netplan so that systemd-networkd will work, especially
         # when a bridge is wanted via the LXDBR env var.
 
-#### Let's try a default cloud-init ubuntu for a while and see how it goes
-#        echo "### Remove python and all related packages"
-#        apt-get -yqq --purge remove $RLIST >/dev/null
+        echo "### Remove python and all related packages"
+        apt-get -yqq --purge remove $RLIST >/dev/null
+
     fi
 
     # Let's make sure a few services are enabled
@@ -235,7 +231,15 @@ else
     echo "### Create /etc/ssh/sshd_config"
     mv /etc/ssh/sshd_config /etc/ssh/sshd_config.orig
     cp ~/.sh/etc/_etc_ssh_sshd__config /etc/ssh/sshd_config
-    systemctl restart sshd
+
+    if [[ ! -d /etc/systemd/system/ssh.socket.d ]]; then
+        echo "### Handle post 22.10 releases using ssh.socket"
+        mkdir /etc/systemd/system/ssh.socket.d
+        echo -e "[Socket]\nListenStream=\nListenStream=9\n" \
+            > /etc/systemd/system/ssh.socket.d/port.conf
+        systemctl daemon-reload
+    fi
+    systemctl restart ssh
 fi
 
 if [[ -d ~/.ssh ]]; then
@@ -285,6 +289,10 @@ else
         echo "### Exists /etc/resolv.conf to 1.1.1.1 (systemd)"
     else
         echo "### Change /etc/resolv.conf to 1.1.1.1 (systemd)"
+
+#### TODO this needs to be configurable, ie; via DNS_1 and DNS_2 env vars
+#### and maybe disable systemd-resolved if stub-resolve interferes with pdns
+
 # Leave the stub-resolv.conf in place
 #        cd /etc && rm resolv.conf && ln -s ../run/systemd/resolve/resolv.conf
         sed -i /etc/systemd/resolved.conf \
