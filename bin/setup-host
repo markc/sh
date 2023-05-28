@@ -121,6 +121,9 @@ php-imagick php-redis polkitd postfix postfix-lmdb postfix-policyd-spf-perl
 postfix-sqlite pwgen redis-server rsyslog rsync sqlite3 sudo time unzip wget
 whois"
 
+# Latest list from sury tested with Debian bullseye
+#php8.2 php8.2-bcmath php8.2-cli php8.2-common php8.2-curl php8.2-fpm php8.2-gd php8.2-gmp php8.2-igbinary php8.2-imagick php8.2-imap php8.2-intl php8.2-mbstring php8.2-mysql php8.2-opcache php8.2-readline php8.2-redis php8.2-soap php8.2-sqlite3 php8.2-xml php8.2-zip
+
     # Mysql List of packages (not need if using SQLite)
     MLIST="dovecot-mysql mariadb-common mariadb-client mariadb-server
 pdns-backend-mysql php$V_PHP-mysql postfix-mysql"
@@ -128,7 +131,7 @@ pdns-backend-mysql php$V_PHP-mysql postfix-mysql"
     # Remove List of packages (RLIST="" to ignore removal)
     RLIST="*golang* *python* accountsservice apache2 at bind9 cloud*
 install-info lxcfs man* multipath-tools open-iscsi open-vm-tools rpcbind
-sasl2-bin ttf-* ubuntu-advantage-tools vi* xinetd snapd lxd-agent-loader"
+sasl2-bin ttf-* vi* xinetd snapd"
 
     # Make sure that IP4 is the default
     grep -q '^#precedence ::ffff:0:0/96  100' /etc/gai.conf
@@ -153,11 +156,15 @@ sasl2-bin ttf-* ubuntu-advantage-tools vi* xinetd snapd lxd-agent-loader"
         echo "### Setup apt sources list for $OSREL"
         mv /etc/apt/sources.list /etc/apt/sources.list.orig
         if [[ $OSTYP == debian ]]; then
+            curl -fsSL  https://packages.sury.org/php/apt.gpg |\
+                gpg --dearmor -o /etc/apt/trusted.gpg.d/sury-keyring.gpg
             cat <<EOS >/etc/apt/sources.list
 deb http://$OSMIR/debian $OSREL main
 deb http://$OSMIR/debian $OSREL-updates main
 deb http://$OSMIR/debian $OSREL-backports main
 deb http://security.debian.org/debian-security $OSREL-security main
+# For php8.2
+deb https://packages.sury.org/php bullseye main
 EOS
         else
             sed ~/.sh/etc/_etc_apt_sources.list \
