@@ -5,7 +5,7 @@
 [[ $DEBUG ]] && set -x
 
 PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/snap/bin:~/.sh/bin
-SUDO=$([ $(id -u) -gt 0 ] && echo 'sudo ')
+SUDO=$([[ $(id -u) -gt 0 ]] && echo 'sudo ')
 EDITOR=nano
 COLOR=31
 LABEL=$(hostname)
@@ -14,16 +14,16 @@ LABEL=$(hostname)
 [[ -f /etc/os-release ]] && OSTYP=$(awk -F= '/^ID=/ {print $2}' /etc/os-release|sed 's/"//g')
 
 # Import global aliases
-[ -f ~/.sh/lib/aliases ] && . ~/.sh/lib/aliases
+[[ -f ~/.sh/lib/aliases ]] && . ~/.sh/lib/aliases
 
 # Local custom aliases and env var overrides
-[ -f ~/.myrc ] && . ~/.myrc
+[[ -f ~/.myrc ]] && . ~/.myrc
 
 # Import managed env vars
-[ -f ~/.sh/lib/functions ] && . ~/.sh/lib/functions
+[[ -f ~/.sh/lib/functions ]] && . ~/.sh/lib/functions
 
 _HOST=$(hostname -f | tr 'A-Z' 'a-z')
-if [ -f ~/.vhosts/$_HOST ]; then
+if [[ -f ~/.vhosts/$_HOST ]]; then
     . ~/.vhosts/$_HOST
 else
     sethost
