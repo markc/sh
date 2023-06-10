@@ -10,10 +10,10 @@ a simple Web, Mail and DNS server which also provides a foundation for the
 
 Currently tested on:
 ```
-- Ubuntu Jammy (22.04) # Most tested
+- Ubuntu Lunar         # Most tested
 - Manjaro Stable       # Partly done
 - Alpine Edge          # Almost done
-- Debian Bullseye      # Mostly done
+- Debian Bookworm      # Mostly done
 - OpenWrt Latest       # WIP
 ```
 ## Usage
@@ -116,7 +116,7 @@ set up manually using the below as an example of a non-public local LAN
 domainname assuming that `hostname` returns `myhost`...
 ```
 ~ sethost sysadm@netserva.local
-~ cat gethost
+~ gethost # or cat ~/.vhosts/$(hostname -f)
 ADMIN='sysadm'
 AHOST='netserva.local'
 AMAIL='admin@netserva.local'
@@ -128,7 +128,7 @@ BPATH='/home/backups'
 CIMAP='/etc/dovecot'
 CSMTP='/etc/postfix'
 C_DNS='/etc/powerdns'
-C_FPM='/etc/php/8.1/fpm'
+C_FPM='/etc/php/8.2/fpm'
 C_SQL='/etc/mysql'
 C_SSL='/etc/ssl'
 C_WEB='/etc/nginx'
@@ -148,7 +148,7 @@ IP4_0='192.168.0.2'
 MHOST='netserva.local'
 MPATH='/home/u/netserva.local/home'
 OSMIR='archive.ubuntu.com'
-OSREL='jammy'
+OSREL='lunar'
 OSTYP='ubuntu'
 SQCMD='mysql -BN sysadm'
 TAREA='Australia'
@@ -162,7 +162,7 @@ U_UID='1000'
 VHOST='netserva.local'
 VPATH='/home/u'
 VUSER='admin'
-V_PHP='8.1'
+V_PHP='8.2'
 WPASS='phSdkd1XVxXWVDyT'
 WPATH='/home/u/netserva.local/var/www'
 WPUSR='wzoqqh'
