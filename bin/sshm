@@ -122,13 +122,15 @@ init() {
     [[ ! -d ~/.ssh ]] && mkdir ~/.ssh && chmod 700 ~/.ssh
     [[ ! -d ~/.ssh/config.d ]] && mkdir ~/.ssh/config.d && chmod 700 ~/.ssh/config.d
     [[ ! -f ~/.ssh/config ]] && echo "# Created by sshm on $(date +'%Y%m%d')
-# To avoid manually typing a password for keys with passwords, add this to
-# ~/.myrc or ~/.bashrc and add 'echo YOUR_PASSWORD' to ~/.print_ssh_password
-# then 'chmod 400 ~/.print_ssh_password'
 #
+# To avoid manually typing a password for SSH keys with passwords, add this to
+# ~/.myrc or ~/.bashrc, then add 'echo YOUR_PASSWORD' to ~/.lan_password and
+# 'chmod 700 ~/.lan_password'
+#
+# export SSH_AUTH_SOCK=\"$XDG_RUNTIME_DIR/ssh-agent.socket\"
 # cat ~/.ssh/lan | SSH_ASKPASS=~/.print_ssh_password ssh-add - >/dev/null 2>&1
 #
-# Do not add a password to keys used in automated scripts.
+# Do not add a password to SSH keys used in automated scripts.
 
 Include ~/.ssh/config.d/*
 
@@ -137,6 +139,7 @@ Host *
   ServerAliveInterval 30
   ForwardAgent yes
   AddKeysToAgent yes
+  IdentitiesOnly yes
 #  ControlMaster auto
 #  ControlPath ~/.ssh/ssh_mux_%h_%p_%r
 #  ControlPersist=60" >~/.ssh/config
