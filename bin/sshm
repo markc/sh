@@ -17,6 +17,8 @@ _ARG0=$(basename "$0")
 _ARG1=$1
 
 list() {
+    [[ ! -d ~/.ssh/config.d ]] && mkdir ~/.ssh/config.d && chmod 700 ~/.ssh/config.d
+
     if [[ $1 == keys ]]; then
         cd ~/.ssh && /bin/ls *.pub
     elif [[ $1 == hosts ]]; then
