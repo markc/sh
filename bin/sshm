@@ -9,6 +9,7 @@
   add [key]            Add only new key or host and key
   del [key name|host]  Delete key or host config
   perms                Set correct ~/.ssh permissions
+  init                 Initialize ~/.ssh if not exists
   keys                 Summarize ~/.ssh/authorized_keys" && exit 1
 
 [[ $DEBUG ]] && set -x
@@ -17,7 +18,10 @@ _ARG0=$(basename "$0")
 _ARG1=$1
 
 list() {
-    [[ ! -d ~/.ssh/config.d ]] && mkdir ~/.ssh/config.d && chmod 700 ~/.ssh/config.d
+    if [[ ! $(/bin/ls ~/.ssh/*.pub) ]] >/dev/null 2>&1; then
+        echo "You need to create a key first, ie; sshm add key lan"
+        return
+    fi
 
     if [[ $1 == keys ]]; then
         cd ~/.ssh && /bin/ls *.pub
@@ -31,7 +35,7 @@ list() {
 }
 
 add_key() {
-    [[ $1 ]] && key=$1 || read -p "Enter key file name:" key
+    [[ $1 ]] && key=$1 || read -p "Enter key file name: " key
 
     if [[ -f ~/.ssh/$key ]]; then
         echo -e "Error: Key with this file name already exists"
@@ -48,24 +52,24 @@ add_key() {
 add() {
     [[ $1 && $1 == key ]] && add_key $2 && return
 
-    [[ $1 ]] && name=$1 || read -p "Enter Host (short) name:" name
+    [[ $1 ]] && name=$1 || read -p "Enter Host (short) name: " name
 
     if [[ -f ~/.ssh/config.d/$name ]]; then
         echo -e "Error: Host '$name' already exists"
         return
     fi
 
-    read -p "Enter remote Hostname:" host
+    read -p "Enter remote Hostname or IP: " host
 
     if [[ -z $host ]]; then
         echo -e "Error: Host name is required, try again"
         return
     fi
 
-    read -p "Enter host port (default 22):" port
+    read -p "Enter host port (default 22): " port
     port=${port:-"22"}
 
-    read -p "Enter host user (default root):" user
+    read -p "Enter host user (default root): " user
     user=${user:-"root"}
 
     echo "Host $name
@@ -73,7 +77,7 @@ add() {
   Port $port
   User $user" >~/.ssh/config.d/$name
 
-    read -p "Enter SSH key name (default none):" key
+    read -p "Enter SSH key name (default none): " key
     key=${key:-"none"}
 
     if [[ $key != none ]]; then
@@ -84,7 +88,7 @@ add() {
         echo "  IdentityFile ~/.ssh/$key" >>~/.ssh/config.d/$name
     fi
 
-    read -p "Transfer '$key.pub' to '$host' ($name)? (y|n):" copy
+    read -p "Transfer '$key.pub' to '$host' ($name)? (y|n): " copy
 
     if [[ $copy == y || $copy == yes ]]; then
         pubkey="$(cat ~/.ssh/$key.pub)"
@@ -108,6 +112,38 @@ del() {
     fi
 }
 
+perms() {
+    find ~/.ssh -type d -exec chmod 700 {} +
+    find ~/.ssh -type f -exec chmod 600 {} +
+    echo "Changed perms for ~/.ssh"
+}
+
+init() {
+    [[ ! -d ~/.ssh ]] && mkdir ~/.ssh && chmod 700 ~/.ssh
+    [[ ! -d ~/.ssh/config.d ]] && mkdir ~/.ssh/config.d && chmod 700 ~/.ssh/config.d
+    [[ ! -f ~/.ssh/config ]] && echo "# Created by sshm on $(date +'%Y%m%d')
+# To avoid manually typing a password for keys with passwords, add this to
+# ~/.myrc or ~/.bashrc and add 'echo YOUR_PASSWORD' to ~/.print_ssh_password
+# then 'chmod 400 ~/.print_ssh_password'
+#
+# cat ~/.ssh/lan | SSH_ASKPASS=~/.print_ssh_password ssh-add - >/dev/null 2>&1
+#
+# Do not add a password to keys used in automated scripts.
+
+Include ~/.ssh/config.d/*
+
+Host *
+  TCPKeepAlive yes
+  ServerAliveInterval 30
+  ForwardAgent yes
+  AddKeysToAgent yes
+#  ControlMaster auto
+#  ControlPath ~/.ssh/ssh_mux_%h_%p_%r
+#  ControlPersist=60" >~/.ssh/config
+    perms
+    echo "Created ~/.ssh, ~/.ssh/config and ~/.ssh/config.d"
+}
+
 case $_ARG1 in
 l*)
     list $2
@@ -121,13 +157,17 @@ a*)
 rm | d*)
     del $2 $3
     ;;
+i*)
+    init
+    ;;
 p*)
-    find ~/.ssh -type d -exec chmod 700 {} +
-    find ~/.ssh -type f -exec chmod 600 {} +
-    echo "Changed perms for ~/.ssh"
+    perms
     ;;
 k*)
     [[ -f ~/.ssh/authorized_keys ]] && awk '{print $1"\t"$3}' ~/.ssh/authorized_keys
+    ;;
+*)
+    echo "Unkown command '$1'"
     ;;
 esac
 
