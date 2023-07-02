@@ -23,12 +23,12 @@ if [[ $OSTYP == openwrt ]]; then
     }
 fi
 
-f () { find . -type f -iname '*'$*'*'; }
+f() { find . -type f -iname '*'$*'*'; }
 
 if [[ $OSTYP == openwrt ]]; then
-    sc () { $SUDO /etc/init.d/$2 $1; }
+    sc() { $SUDO /etc/init.d/$2 $1; }
 elif [[ $OSTYP == alpine ]]; then
-    sc () {
+    sc() {
         if [ $1 = 'enable' ]; then
             $SUDO rc-update add $2
         elif [ $1 = 'disable' ]; then
@@ -38,18 +38,16 @@ elif [[ $OSTYP == alpine ]]; then
         fi
     }
 else
-    f () { find . -type f -iname '*'$*'*' -ls; }
-    sc () { $SUDO systemctl $1 $2; }
+    f() { find . -type f -iname '*'$*'*' -ls; }
+    sc() { $SUDO systemctl $1 $2; }
 fi
 
-chktime ()
-{
+chktime() {
     [[ $(($(stat -c %X $1) + $2)) < $(date +%s) ]] && return 0 || return 1
 }
 
-gethost ()
-{
-    cat << EOS
+gethost() {
+    cat <<EOS
 ADMIN='$ADMIN'
 AHOST='$AHOST'
 AMAIL='$AMAIL'
@@ -107,13 +105,11 @@ WUGID='$WUGID'
 EOS
 }
 
-getusers ()
-{
+getusers() {
     getent passwd | awk -F: '{if ($3 > 999 && $3 < 9999) print}'
 }
 
-getuser ()
-{
+getuser() {
     echo "\
 UUSER=$UUSER
 U_UID=$U_UID
@@ -123,8 +119,7 @@ UPATH=$UPATH
 U_SHL=$U_SHL"
 }
 
-go2 ()
-{
+go2() {
     if [[ $1 =~ "@" ]]; then
         cd /home/u/${1#*@}*/home/*${1%@*}
     else
@@ -132,24 +127,20 @@ go2 ()
     fi
 }
 
-grepuser ()
-{
+grepuser() {
     getusers | grep -E "$1[,:]"
 }
 
-newuid ()
-{
+newuid() {
     local uid=$(($(getusers | cut -d: -f3 | sort -n | tail -n1) + 1))
     [[ $uid == 1 ]] && echo 1000 || echo $uid
 }
 
-getdb ()
-{
+getdb() {
     echo $SQCMD
 }
 
-setuser ()
-{
+setuser() {
     local U_TMP=$(grepuser "$1")
     [[ $U_TMP && (($(grep -c . <<<"$U_TMP") != 1)) ]] && echo "Ambiguous result for '$1'" && return 10
     UUSER=$(echo $U_TMP | cut -d: -f1)
@@ -160,9 +151,8 @@ setuser ()
     U_SHL=$(echo $UUSER | cut -d: -f7)
 }
 
-sethost ()
-{
-    [[ $1 =~ -h ]] && echo "Usage: sethost [domain]" && return 1;
+sethost() {
+    [[ $1 =~ -h ]] && echo "Usage: sethost [domain]" && return 1
 
     local _FQDN=$(hostname -f | tr 'A-Z' 'a-z')
 
@@ -225,7 +215,7 @@ sethost ()
     WPUSR=$(head /dev/urandom | tr -dc a-z | head -c6)
 
     AMAIL="$VUSER@${VHOST#mail.}"
-    DNAME=${DNAME:-$([[ $UUSER == $ADMIN ]] &&  echo "$ADMIN" || echo "${VHOST//[.-]/_}")}
+    DNAME=${DNAME:-$([[ $UUSER == $ADMIN ]] && echo "$ADMIN" || echo "${VHOST//[.-]/_}")}
     UPATH="$VPATH/$VHOST"
     MPATH="$UPATH/home"
 
@@ -260,8 +250,7 @@ sethost ()
     fi
 }
 
-sx ()
-{
+sx() {
     [[ -z $2 || $1 =~ -h ]] &&
         echo "Usage: sx host command (host must be in ~/.ssh/config)" && return 1
     local _HOST=$1
@@ -269,8 +258,7 @@ sx ()
     ssh $_HOST -q -t "bash -ci '$@'"
 }
 
-rmenv ()
-{
+rmenv() {
     unset ADMIN AHOST AMAIL ANAME APASS A_GID A_UID BPATH CIMAP CSMTP C_DNS
     unset C_FPM C_SQL C_SSL C_WEB DBMYS DBSQL DHOST DNAME DPASS DPATH DPORT
     unset DTYPE DUSER EPASS EXMYS EXSQL HNAME HDOMN IP4_0 LROOT MHOST MPATH
@@ -280,8 +268,7 @@ rmenv ()
     unset -f newuid rmenv sethost setuser sc sx
 }
 
-mkenv ()
-{
+mkenv() {
     export ADMIN AHOST AMAIL ANAME APASS A_GID A_UID BPATH CIMAP CSMTP
     export C_DNS C_FPM C_SQL C_SSL C_WEB DBMYS DBSQL DHOST DNAME DPASS
     export DPATH DPORT DTYPE DUSER EPASS EXMYS EXSQL HNAME HDOMN IP4_0

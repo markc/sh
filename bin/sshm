@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+# .sh/bin/addwp 20230702 - 20230702
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+[[ -z $1 || $1 =~ -h ]] && echo "Usage: sshm cmd
+
+  list [keys|hosts]    List all keys, hosts or both
+  show host            Show the host file contents
+  add [key]            Add only new key or host and key
+  del [key name|host]  Delete key or host config
+  perms                Set correct ~/.ssh permissions
+  keys                 Summarize ~/.ssh/authorized_keys" && exit 1
+
+[[ $DEBUG ]] && set -x
+
+_ARG0=$(basename "$0")
+_ARG1=$1
+
+list() {
+    if [[ $1 == keys ]]; then
+        cd ~/.ssh && /bin/ls *.pub
+    elif [[ $1 == hosts ]]; then
+        /bin/ls ~/.ssh/config.d/
+    else
+        cd ~/.ssh && /bin/ls *.pub
+        echo
+        /bin/ls ~/.ssh/config.d/
+    fi
+}
+
+add_key() {
+    [[ $1 ]] && key=$1 || read -p "Enter key file name:" key
+
+    if [[ -f ~/.ssh/$key ]]; then
+        echo -e "Error: Key with this file name already exists"
+        return
+    fi
+
+    read -p "Enter key comment:" comment
+
+    ssh-keygen -o -a 100 -t ed25519 -f ~/.ssh/$key -C "$comment"
+
+    echo -e "Success: SSH key '$key' successfully created with comment '$comment'"
+}
+
+add() {
+    [[ $1 && $1 == key ]] && add_key $2 && return
+
+    [[ $1 ]] && name=$1 || read -p "Enter Host (short) name:" name
+
+    if [[ -f ~/.ssh/config.d/$name ]]; then
+        echo -e "Error: Host '$name' already exists"
+        return
+    fi
+
+    read -p "Enter remote Hostname:" host
+
+    if [[ -z $host ]]; then
+        echo -e "Error: Host name is required, try again"
+        return
+    fi
+
+    read -p "Enter host port (default 22):" port
+    port=${port:-"22"}
+
+    read -p "Enter host user (default root):" user
+    user=${user:-"root"}
+
+    echo "Host $name
+  Hostname $host
+  Port $port
+  User $user" >~/.ssh/config.d/$name
+
+    read -p "Enter SSH key name (default none):" key
+    key=${key:-"none"}
+
+    if [[ $key != none ]]; then
+        if [[ ! -f $HOME"/.ssh/"$key ]]; then
+            echo "~/.ssh/$key does not exist, so create it"
+            add_key $key
+        fi
+        echo "  IdentityFile ~/.ssh/$key" >>~/.ssh/config.d/$name
+    fi
+
+    read -p "Transfer '$key.pub' to '$host' ($name)? (y|n):" copy
+
+    if [[ $copy == y || $copy == yes ]]; then
+        pubkey="$(cat ~/.ssh/$key.pub)"
+        ssh $name "[[ ! -d ~/.ssh ]] && mkdir -p ~/.ssh && chmod 700 ~/.ssh; echo $pubkey >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys;"
+        echo "Success: Public key $key.pub was successfully transfered to $host"
+    fi
+}
+
+del() {
+    if [[ $1 == key && -f ~/.ssh/$2 ]] >/dev/null 2>&1; then
+        rm ~/.ssh/$2*
+        echo "Removed: SSH key '$2'"
+        return
+    fi
+
+    if [[ $1 && -f ~/.ssh/config.d/$1 ]]; then
+        rm ~/.ssh/config.d/$1
+        echo "Removed: SSH host '$1'"
+    else
+        echo "Errot: SSH host '$1' does not exist"
+    fi
+}
+
+case $_ARG1 in
+l*)
+    list $2
+    ;;
+sh*)
+    cat ~/.ssh/config.d/$2
+    ;;
+a*)
+    add $2 $3
+    ;;
+rm | d*)
+    del $2 $3
+    ;;
+p*)
+    find ~/.ssh -type d -exec chmod 700 {} +
+    find ~/.ssh -type f -exec chmod 600 {} +
+    echo "Changed perms for ~/.ssh"
+    ;;
+k*)
+    [[ -f ~/.ssh/authorized_keys ]] && awk '{print $1"\t"$3}' ~/.ssh/authorized_keys
+    ;;
+esac
+
+[[ $DEBUG ]] && set +x
