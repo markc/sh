@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# .sh/bin/sshm 20230702 - 20230705
+# .sh/bin/sshm 20230702 - 20230711
 # Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 # Introducing shell exit strategies to trigger Bootstrap5 alerts
@@ -14,127 +14,251 @@
 #
 # 251/252/253 strip the first line to be used in alert message
 
-[[ -z $1 || $1 =~ -h ]] && echo "Usage: sshm cmd
+# Introducing CRUDL functions - Create, Read, Update, Delete and List
 
-  list 'keys'                   - List host names OR keys
-  show name (.pub for key)      - Show the host or key file contents
-  add name host [port] [user]   - Add host and optionally key
-  add 'key' skey cmnt           - Add new new SSH key
-  del name                      - Delete SSH host config
-  del 'key' skey                - Delete SSH key
-  perms                         - Set correct ~/.ssh permissions
-  init                          - Initialize ~/.ssh if not exists
-  keys                          - Summarize ~/.ssh/authorized_keys" && exit 1
+help() {
+    case $1 in
+    c | create)
+        echo "Create: add a new SSH Host file to ~/.ssh/config.d/
+
+Name - for the Host field and SSH Host file (required)
+Host - remote FQDN/IP for the Hostname field (required)
+Port - port number for the Port field (default '22')
+User - user for the User login field (default 'root')
+Skey - IdentityFile field for SSH Key (default 'none')
+
+Ex: sshm c|create foo 192.168.1.1 2222 root ~/.ssh/lan"
+        ;;
+    r | read)
+        echo "Read: show the content values for a host
+
+Name - for the SSH host file (required)
+
+Ex: sshm r|read foo"
+        ;;
+    u | update)
+        echo "Update: the contents of a host (aliasd to create)
+
+Name - for the Host field and SSH host file (required)
+Host - remote FQDN/IP for the Hostname field (required)
+Port - port number for the Port field (default '22')
+User - user for the User login field (default 'root')
+Skey - IdentityFile field for SSH Key (default 'none')
+
+Ex: sshm u|update foo 192.168.1.1 9 root ~/.ssh/lan"
+        ;;
+    d | delete)
+        echo "Delete: a SSH Host config file
+
+Name - for the SSH Host file (required)
+
+Ex: sshm d|delete foo"
+        ;;
+    l | list)
+        echo "List: all host config files
+
+Ex: sshm l|list"
+        ;;
+    kc | key_create)
+        echo "Key Create: create a new SSH Key
+
+Name - for the SSH Key file (required)
+Cmnt - comment SSH Key file ($(hostname)@lan)
+Pass - password for SSH Key file (optional)
+
+Ex: sshm kc|key_create lan [me@lan] [password]"
+        ;;
+    kr | key_read)
+        echo "Key Read: show SSH Key
+
+Name - for the SSH Key file (required)
+
+Ex: sshm kr|key_read lan"
+        ;;
+    ku | key_update)
+        echo "Key Update: alias for Key Create
+
+Name - for the SSH Key file (required)
+Cmnt - comment SSH Key file ($(hostname)@lan)
+Pass - password for SSH Key file (optional)
+
+Ex: sshm ku|key_update lan [me@lan] [password]"
+        ;;
+    kd | key_delete)
+        echo "Key Delete: delete SSH Key
+
+Name - for the SSH Key file (required)
+
+Ex: sshm kd|key_delete lan"
+        ;;
+    kl | key_list)
+        echo "Key List: show all SSH Keys
+
+Ex: sshm kl|key_list"
+        ;;
+    i | init)
+        echo "Init: create and initialize ~/.ssh structure
+
+Ex: sshm i|init"
+        ;;
+    p | perms)
+        echo "Perms: reset permissions for ~/.ssh
+
+Ex: sshm p|perms"
+        ;;
+    a | all)
+        help c
+        echo -e "\n-------------------------------------------------------\n"
+        help r
+        echo -e "\n-------------------------------------------------------\n"
+        help u
+        echo -e "\n-------------------------------------------------------\n"
+        help d
+        echo -e "\n-------------------------------------------------------\n"
+        help l
+        echo -e "\n-------------------------------------------------------\n"
+        help kc
+        echo -e "\n-------------------------------------------------------\n"
+        help kr
+        echo -e "\n-------------------------------------------------------\n"
+        help ku
+        echo -e "\n-------------------------------------------------------\n"
+        help kd
+        echo -e "\n-------------------------------------------------------\n"
+        help kl
+        echo -e "\n-------------------------------------------------------\n"
+        help i
+        echo -e "\n-------------------------------------------------------\n"
+        help p
+        ;;
+    *)
+        echo "Usage: sshm cmd [args] or sshm help cmd
+
+c|create        - Create a new SSH Host config
+r|read          - Show the content values of SSH Host
+u|update        - Update SSH Host config (alias create)
+d|delete        - Delete a SSH Host config
+l|list          - Show all SSH Host configs
+kc|key_create   - Create a new SSH Key
+kr|key_read     - Show the contents of a SSH Key
+ku|key_update   - Update SSH Key (alias for key_create)
+kd|key_delete   - Delete a SSH key
+kl|key_list     - List all SSH Keys
+i|init          - Initialize ~/.ssh if not exists
+p|perms         - Set correct ~/.ssh permissions
+h|help          - Show help/usage for a|all commands"
+        ;;
+    esac
+}
+
+[[ -z $1 || $1 =~ -h ]] && help && exit 1
 
 [[ $DEBUG ]] && set -x
 
-list() {
-    if [[ ! -d ~/.ssh ]]; then
-        mkdir ~/.ssh && chmod 700 ~/.ssh
-        echo "Warning: ~/.ssh did not exist, created" && exit 254
-    fi
+# SSH Host files
 
-    if [[ ! -d ~/.ssh/config.d ]]; then
-        mkdir ~/.ssh/config.d && chmod 700 ~/.ssh/config.d
-        echo "Warning: ~/.ssh/config.d did not exist, created" && exit 254
-    fi
+create() {
+    local _n=${1:-''} _h=${2:-''} _p=${3:-'22'} _u=${4:-'root'} _k=${5:-'none'}
 
-    if [[ ! $(/bin/ls ~/.ssh/*.pub) ]] >/dev/null 2>&1; then
-        echo "You need to create a key first, ie; sshm add key lan" && exit 254
-    fi
+    echo "Host $_n
+  Hostname $_h
+  Port $_p
+  User $_u" >~/.ssh/config.d/$_n
 
-    if [[ $1 == keys ]]; then
-        /bin/ls -1 ~/.ssh/ | grep .pub$ | while read i
-            do printf "%-15s" $i ; cat ~/.ssh/$i | \
-                awk '{printf "%15s %25s\n", $1, $3}'
-            done
+    if [[ $_k =~ none ]]; then
+        echo "  #IdentityFile none" >>~/.ssh/config.d/$_n
     else
-        /bin/ls -1 ~/.ssh/config.d/ | while read i
-            do cat ~/.ssh/config.d/$i | \
-                tr '\n' ' ' | \
-                #sed 's/\(.*\)~\/.ssh\/\(.*\)\s/\1\2.pub/' | \
-                awk '{printf "%-15s %25s %5s %10s %20s\n", $2, $4, $6, $8, $10}'
-            done
+        echo "  IdentityFile $_k" >>~/.ssh/config.d/$_n
     fi
 }
 
-show() {
-
-    #echo $1 > /tmp/x && return
-
-    echo $1 | grep -q '.pub$'
-
-    if [[ $? -eq 0 ]]; then
-        SKEY=$(echo "${1/#\~/$HOME}") # PHP exec workaround for ~
-        if [[ -f $SKEY ]]; then
-            cat $SKEY
-        elif [[ -f ~/.ssh/$1 ]]; then
-            cat ~/.ssh/$1
-        else
-            echo "Warning: '$1' key does not exist (254)" && exit 254
-        fi
-    elif [[ -f ~/.ssh/config.d/$1 ]]; then
-        cat ~/.ssh/config.d/$1
-    else
-        echo "Warning: ~/.ssh/config.d/$1 does not exist (254)" && exit 254
-    fi
-}
-
-keys() {
-    /bin/ls -1 ~/.ssh/ | awk -F. '/.pub$/ {print "~/.ssh/"$1}'
-}
-
-host() {
+read() {
     if [[ -f ~/.ssh/config.d/$1 ]]; then
         cat ~/.ssh/config.d/$1 | awk '{print $2}'
     else
-        echo "Warning: ~/.ssh/config.d/'$1' does not exist" && exit 254
+        echo "Notice: ~/.ssh/config.d/'$1' does not exist (254)" && exit 254
     fi
 }
 
-add_key() {
-    local _skey=${1:-'lan'}
+update() {
+    create
+}
+
+delete() {
+    if [[ $1 == key && -f ~/.ssh/$2 ]] >/dev/null 2>&1; then
+        rm ~/.ssh/$2*
+        echo "Removed: SSH key '$2' (251)" && exit 251
+    elif [[ $1 && -f ~/.ssh/config.d/$1 ]]; then
+        rm ~/.ssh/config.d/$1
+        echo "Removed: SSH host '$1' (251)" && exit 251
+    else
+        echo "Error: SSH host '$1' does not exist (255)" && exit 255
+    fi
+}
+
+list() {
+    for i in $(/bin/ls -1 ~/.ssh/config.d/); do
+        cat ~/.ssh/config.d/$i |
+            tr '\n' ' ' |
+            awk '{printf "%-15s %25s %5s %10s %20s\n", $2, $4, $6, $8, $10}'
+    done
+}
+
+# SSH Key functions
+
+key_create() {
+    local _k=${1:-'lan'}
+    local _c=${2:-"$(hostname)@$_k"}
+    local _p=${3:-''}
 
     if [[ -f ~/.ssh/$_skey ]]; then
-        echo "Warning: SSH Key '~/.ssh/$_skey' already exists" && exit 254
+        echo "Warning: SSH Key '~/.ssh/$_k' already exists" && exit 254
     fi
 
-    ssh-keygen -o -a 100 -t ed25519 -f ~/.ssh/$_skey -N "" -C "$(hostname)@$_skey"
+    ssh-keygen -o -a 100 -t ed25519 -f ~/.ssh/$_k -C "$_c" -N "$_p"
 
     if [[ $? == 0 ]]; then
-        echo "Success: SSH key '$_skey' successfully created"
+        echo "Success: SSH key '$_k' successfully created"
     else
-        echo "Error: SSH key '$_skey' not created" && exit 1
+        echo "Error: SSH key '$_k' not created" && exit 254
     fi
 }
 
-del_key() {
-    if [[ -f ~/.ssh/$1 ]]; then
+key_read() {
+    #SKEY=$(echo "${1/#\~/$HOME}") # PHP exec workaround for ~
+    if [[ -f $(echo "${1/#\~/$HOME}") ]]; then
+        cat $1.pub
+    elif [[ -f ~/.ssh/$1.pub ]]; then
+        cat ~/.ssh/$1.pub
+    else
+        echo "Warning: '$1' key does not exist (254)" && exit 254
+    fi
+}
+
+key_delete() {
+    if [[ -f $(echo "${1/#\~/$HOME}") ]]; then
+        rm $1 $1.pub
+        echo "Success: removed $1 and $1.pub"
+    elif [[ -f ~/.ssh/$1 ]]; then
         rm ~/.ssh/$1 ~/.ssh/$1.pub
-        echo "Success: remove ~/.ssh/$1 ~/.ssh/$1.pub"
+        echo "Success: removed ~/.ssh/$1 and ~/.ssh/$1.pub"
     else
         echo "Error: ~/.ssh/$1 does not exist" && exit 255
     fi
 }
 
-add() {
-    local _name=${1:-''}
-    local _host=${2:-''}
-    local _port=${3:-'22'}
-    local _user=${4:-'root'}
-    local _skey=${5:-'none'}
-
-    echo "Host $_name
-  Hostname $_host
-  Port $_port
-  User $_user" >~/.ssh/config.d/$_name
-
-    if [[ $_skey =~ none ]]; then
-        echo "  #IdentityFile none" >>~/.ssh/config.d/$_name
+key_list() {
+    if [[ $1 == all ]]; then
+        for i in $(/bin/ls -1 ~/.ssh/ | grep .pub$); do
+            echo -n $i | sed 's#\(.*\).pub$#~/.ssh/\1 #'
+            ssh-keygen -lf ~/.ssh/$i
+        done
     else
-        echo "  IdentityFile $_skey" >>~/.ssh/config.d/$_name
+        /bin/ls -1 ~/.ssh/ | awk -F. '/.pub$/ {print "~/.ssh/"$1}'
     fi
 }
+
+# Supplementary functions
 
 copy() {
     local _skey=$1
@@ -148,34 +272,37 @@ copy() {
     echo "Success: Public key $_skey.pub was successfully transfered to $_name"
 }
 
-del() {
-    if [[ $1 == key && -f ~/.ssh/$2 ]] >/dev/null 2>&1; then
-        rm ~/.ssh/$2*
-        echo "Removed: SSH key '$2' (251)" && exit 251
-    elif [[ $1 && -f ~/.ssh/config.d/$1 ]]; then
-        rm ~/.ssh/config.d/$1
-        echo "Removed: SSH host '$1' (251)" && exit 251
-    else
-        echo "Errot: SSH host '$1' does not exist (255)" && exit 255
-    fi
-}
-
 perms() {
     find ~/.ssh -type d -exec chmod 700 {} +
     find ~/.ssh -type f -exec chmod 600 {} +
-    echo "Changed perms for ~/.ssh"
+    echo "Updated permissions for ~/.ssh"
 }
 
 init() {
-    [[ ! -d ~/.ssh ]] && mkdir ~/.ssh && chmod 700 ~/.ssh
-    [[ ! -d ~/.ssh/config.d ]] && mkdir ~/.ssh/config.d && chmod 700 ~/.ssh/config.d
-    [[ ! -f ~/.ssh/config ]] && echo "# Created by sshm on $(date +'%Y%m%d')
+    if [[ -d ~/.ssh ]]; then
+        echo "Warning: ~/.ssh already exists"
+    else
+        mkdir ~/.ssh && chmod 700 ~/.ssh
+        echo "Warning: ~/.ssh did not exist, created"
+    fi
+
+    if [[ -d ~/.ssh/config.d ]]; then
+        echo "Warning: ~/.ssh/config.d already exists"
+    else
+        mkdir ~/.ssh/config.d && chmod 700 ~/.ssh/config.d
+        echo "Warning: ~/.ssh/config.d did not exist, created"
+    fi
+
+    if [[ -f ~/.ssh/config ]]; then
+        echo "Warning: ~/.ssh/config already exists"
+    else
+        echo "# Created by sshm on $(date +'%Y%m%d')
 #
 # To avoid manually typing a password for SSH keys with passwords, add this to
 # ~/.myrc or ~/.bashrc, then add 'echo YOUR_PASSWORD' to ~/.lan_password and
 # 'chmod 700 ~/.lan_password'
 #
-# export SSH_AUTH_SOCK=\"$XDG_RUNTIME_DIR/ssh-agent.socket\"
+# export SSH_AUTH_SOCK=\"\$XDG_RUNTIME_DIR/ssh-agent.socket\"
 # cat ~/.ssh/lan | SSH_ASKPASS=~/.lan_password ssh-add - >/dev/null 2>&1
 #
 # Do not add a password to SSH keys used in automated scripts.
@@ -191,42 +318,52 @@ Host *
 #  ControlMaster auto
 #  ControlPath ~/.ssh/ssh_mux_%h_%p_%r
 #  ControlPersist=60" >~/.ssh/config
+    fi
     perms
-    echo "Created ~/.ssh, ~/.ssh/config and ~/.ssh/config.d (251)" && exit 251
 }
 
 case $1 in
-l*)
-    list $2
+c | create)
+    create $2 $3 $4 $5 $6
     ;;
-sh*)
-    show $2
+r | read)
+    read $2
     ;;
-keys)
-    keys
+u | update)
+    create $2 $3 $4 $5 $6
     ;;
-host)
-    host $2
+d | delete)
+    delete $2
     ;;
-a*)
-    [[ $2 && $2 == key ]] && add_key "$3" "$4" && return
-    add $2 $3 $4 $5 $6 $7
+l | list)
+    list
     ;;
-rm | d*)
-    [[ $2 && $2 == key ]] && del_key "$3" && return
-    del $2
+kc | key_create)
+    key_create $2
     ;;
-i*)
+kr | key_read)
+    key_read $2
+    ;;
+ku | key_update)
+    key_create $2
+    ;;
+kd | key_delete)
+    key_delete $2
+    ;;
+kl | key_list)
+    key_list $2
+    ;;
+i | init)
     init
     ;;
-p*)
+p | perms)
     perms
     ;;
-auth_keys)
-    [[ -f ~/.ssh/authorized_keys ]] && awk '{print $1"\t"$3}' ~/.ssh/authorized_keys
+h | help)
+    help $2
     ;;
 *)
-    echo "Unknown command '$1'"
+    echo "Unknown command '$1'" && echo && help
     ;;
 esac
 
