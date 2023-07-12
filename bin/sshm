@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# .sh/bin/sshm 20230702 - 20230711
+# .sh/bin/sshm 20230702 - 20230712
 # Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 # Introducing shell exit strategies to trigger Bootstrap5 alerts
@@ -27,7 +27,7 @@ Port - port number for the Port field (default '22')
 User - user for the User login field (default 'root')
 Skey - IdentityFile field for SSH Key (default 'none')
 
-Ex: sshm c|create foo 192.168.1.1 2222 root ~/.ssh/lan"
+Ex: sshm c|create foo 192.168.1.1 22 root '~/.ssh/lan'"
         ;;
     r | read)
         echo "Read: show the content values for a host
