@@ -1,16 +1,22 @@
 #!/usr/bin/env bash
-# .sh/bin/setup-db 20170319 - 20221122
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/setup-db 20170319 - 20230716
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
-[[ $1 =~ '-h' ]] && echo "Usage: setup-db [(mysql)|sqlite]" && exit 1
+[[ $1 =~ '-h' ]] &&
+    echo "Usage: setup-db [(mysql)|sqlite] [sqlite path]" && exit 1
 
-[[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
+#[[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
 . ~/.shrc
 
 [[ $DEBUG ]] && set -x
-
+set -x
 DTYPE=${1:-'mysql'}
+
+if [[ -n $2 ]]; then
+    DBSQL=$2
+    DPATH=$DBSQL/sysadm/sysadm.db
+fi
 
 if [[ $DTYPE == sqlite ]]; then
 
@@ -19,9 +25,11 @@ if [[ $DTYPE == sqlite ]]; then
     else
         echo "### Create $DBSQL"
         mkdir -p $DBSQL/{dovecot,postfix,$ADMIN}
-        chown dovecot:dovecot $DBSQL/dovecot
-        chown postfix:postfix $DBSQL/postfix
-        chown $A_UID:$A_GID -R $DBSQL/$ADMIN
+        if [[ $(id -u) -eq 0 ]]; then
+            chown dovecot:dovecot $DBSQL/dovecot
+            chown postfix:postfix $DBSQL/postfix
+            chown $A_UID:$A_GID -R $DBSQL/$ADMIN
+        fi
         chmod 700 $DBSQL/*
     fi
 
@@ -337,10 +345,13 @@ if [[ $DTYPE == sqlite && ! -L $DPATH/dovecot ]]; then
     echo "### PRAGMA journal_mode=DELETE" | $SQCMD
     echo "### Create hardlinks for dovecot/postfix"
     cd $DBSQL
-    chown $A_UID:$A_GID -R $ADMIN
-    chmod 644 $DPATH
+    if [[ $(id -u) -eq 0 ]]; then
+        chown $A_UID:$A_GID -R $ADMIN
+        chmod 644 $DPATH
+    fi
     ln $ADMIN/$(basename $DPATH) dovecot
     ln $ADMIN/$(basename $DPATH) postfix
+    cd -
 fi
 
 # Put create indexes last because when rerun it will fail
