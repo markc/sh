@@ -30,7 +30,7 @@ find $TPATH -type d -name .spamprobe | while read i; do
     mkdir spamprobe-bkp
     cp -a .spamprobe/* spamprobe-bkp
     db5.3_recover -h spamprobe-bkp
-    spamprobe -d spamprobe-bkp cleanup 2 366
+    spamprobe -d spamprobe-bkp cleanup 2 183
     [[ DBG ]] && echo -n "$(du -sh .spamprobe | cut -f1) "
     mkdir spamprobe-new
     spamprobe -d spamprobe-bkp export | spamprobe -d spamprobe-new import
