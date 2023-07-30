@@ -1,24 +1,23 @@
 #!/usr/bin/env bash
-# .sh/bin/shdu 20190216 - 20190610
-# Copyright (C) 1995-2019 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/shdu 20190216 - 20230730
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
-[[ $1 =~ '-h' ]] && echo "Usage: shdu" && exit 1
+[[ -z $1 || $1 =~ '-h' ]] && echo "Usage: shdu domain|email" && exit 1
 
-source ~/.vhosts/$(hostname -f) || exit 2
+[[ $DEBUG ]] && set -x
 
-[[ $DTYPE = sqlite ]] && CMD=(sqlite3 -separator ' ' $DPATH) || CMD=($SQCMD)
+if [[ $1 =~ @ ]]; then
+    if [[ -d /home/u/${1#*@}/home/${1%@*} ]]; then
+        du -sh /home/u/${1#*@}/home/${1%@*}
+    else
+        echo "No such user: $1"
+    fi
+else
+    if [[ -d /home/u/$1 ]]; then
+        du -sh /home/u/$1
+    else
+        echo "No such domain: $1"
+    fi
+fi
 
-printf "%-40s %10s %10s %10s\n" 'Per Domain Usage In MB' 'Mail' 'Web' 'Total'
-echo "-------------------------------------------------------------------------"
-
-cat <<EOS | "${CMD[@]}" | awk '{printf "%-40s %10d %10d %10d\n", $1, $2, $3, $4}'
- SELECT vhosts.domain as Domain,
-        round(size_mpath/1000000,0) AS Mpath,
-        round(size_wpath/1000000,0) AS Wpath,
-        round(size_upath/1000000,0) AS Upath
-   FROM vhost_log,vhosts
-  WHERE vhosts.id=vhost_log.hid
-  ORDER BY size_upath DESC
-EOS
-
-systemd-cat -t hlog echo "$(whoami) $(basename $0) $*"
+[[ $DEBUG ]] && set +x
