@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# .sh/bin/addproxy 20160121 - 20220728
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/addproxy 20160121 - 20230802
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ -z $2 || $1 =~ ' -h' ]] &&
-    echo "Usage: addproxy domain proxy:port [ip]" && exit 1
+    echo "Usage: addproxy domain proxy[:port] [ip]" && exit 1
+
+[[ $DEBUG ]] && set -x
 
 VHOST=$1
 PROXY=$2
@@ -61,4 +63,4 @@ EOS
     [[ -d /etc/nginx ]] && serva reload nginx
 fi
 
-systemd-cat -t hlog echo "$(whoami) $(basename $0) $*"
+[[ $DEBUG ]] && set +x
