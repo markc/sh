@@ -34,7 +34,7 @@ ls /root/.vhosts | while read i; do
             echo "OSTYP='$_OSTYP'" >>/root/.vhosts/$i
         fi
 
-        sed "s/^WPATH='[^']*'/WPATH='/home/u/$i/var/www/html'/" -i /root/.vhosts/$i
+        sed "s#^WPATH='[^']*'#WPATH='/home/u/$i/var/www/html'#" -i /root/.vhosts/$i
 
         sed "s/^OSREL='[^']*'/OSREL='$_OSREL'/" -i /root/.vhosts/$i
         sed "s/^V_PHP='[^']*'/V_PHP='$_V_PHP'/" -i /root/.vhosts/$i
