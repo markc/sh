@@ -16,7 +16,7 @@ IPARG=${3:-''}
 #IPREG="^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$"
 
 AHOST=$(hostname -f | tr 'A-Z' 'a-z')
-WPATH="$VPATH/$AHOST/var/www"
+WPATH="$VPATH/$AHOST/var/www/html"
 WACME="$WPATH/.well-known/acme-challenge"
 LEGIT="https://github.com/lukas2511/dehydrated.git"
 LECFG="/etc/dehydrated"
