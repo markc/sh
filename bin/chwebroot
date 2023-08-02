@@ -12,7 +12,7 @@
 
 _OSREL=${1:-'lunar'}
 _OSTYP=${2:-'ubuntu'}
-_V_PHP=${3:-'8.2'}
+_V_PHP=${3:-'8.1'}
 _WUGID=${4:-'www-data'}
 
 sed 's#/var/www;#/var/www/html;#' -i /etc/nginx/hcp.conf
