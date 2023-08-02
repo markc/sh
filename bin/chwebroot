@@ -60,4 +60,4 @@ ls -d /home/u/*/var/www | while read i; do
     fi
 done
 
-[[ $DEBUG ]] && set -+x
+[[ $DEBUG ]] && set +x
