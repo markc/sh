@@ -4,16 +4,16 @@
 
 # Update the default webroot from var/www to var/www/html
 
-[[ $1 =~ -h ]] && echo "Usage: chwebroot" && exit 1
+[[ $1 =~ -h ]] && echo "Usage: chwebroot [OSREL] [OSTYP] [V_PHP] [WUGID]" && exit 1
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
 [[ $DEBUG ]] && set -x
 
-_OSREL='lunar'
-_OSTYP='ubuntu'
-_V_PHP='8.2'
-_WUGID='www-data'
+_OSREL=${1:-'lunar'}
+_OSTYP=${2:-'ubuntu'}
+_V_PHP=${3:-'8.2'}
+_WUGID=${4:-'www-data'}
 
 sed 's#/var/www;#/var/www/html;#' -i /etc/nginx/hcp.conf
 sed 's#/var/www;#/var/www/html;#' -i /etc/nginx/common.conf
