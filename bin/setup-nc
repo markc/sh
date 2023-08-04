@@ -65,7 +65,7 @@ php occ config:system:set trusted_domains 1 --value=$VHOST
 "
 fi
 
-cat <<EOS | tee -a /root/.vhosts/$vhost.conf >/dev/null
+cat <<EOS | tee -a ~/.vhosts/$VHOST.conf >/dev/null
 
 Nextcloud
 =========
