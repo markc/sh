@@ -6,7 +6,7 @@
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
-. /root/.vhosts/$1 || exit 3
+. ~/.vhosts/$1 || exit 3
 
 [[ $DEBUG ]] && set -x
 
