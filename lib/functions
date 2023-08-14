@@ -1,4 +1,4 @@
-# .sh/lib/functions 20151231 - 20230527
+# .sh/lib/functions 20151231 - 20230814
 # Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ $DEBUG ]] && set -x
@@ -215,7 +215,7 @@ sethost() {
     WPUSR=$(head /dev/urandom | tr -dc a-z | head -c6)
 
     AMAIL="$VUSER@${VHOST#mail.}"
-    DNAME=${DNAME:-$([[ $UUSER == $ADMIN ]] && echo "$ADMIN" || echo "${VHOST//[.-]/_}")}
+    DNAME=$([[ $UUSER == $ADMIN ]] && echo "$ADMIN" || echo "${VHOST//[.-]/_}")
     UPATH="$VPATH/$VHOST"
     MPATH="$UPATH/home"
 
