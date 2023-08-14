@@ -26,7 +26,7 @@ root. Please [review the script] at Github first...
 
 To install this project manually, copy and paste these 3 lines below...
 
-    git clone --depth 1 https://github.com/netserva/sh ~/.sh
+    git clone --depth 1 https://github.com/markc/sh ~/.sh
     ~/.sh/bin/shm install
     . ~/.shrc
 
