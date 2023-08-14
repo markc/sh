@@ -65,11 +65,14 @@ else
     alias u=$SUDO'apt-get update && '$SUDO'apt-get -y -f dist-upgrade && '$SUDO'apt-get -y autoremove && '$SUDO'apt-get clean'
 fi
 
-alias block=""
+#alias block=""
+
 alias shblock="nft list set ip sshguard attackers | tr '\n' ' '| sed 's/.*elements = {\([^}]*\)}.*/\1\n/' | sed -r 's/\s+//g' | tr ',' '\n'"
-unblock() {
-    nft delete element ip sshguard attackers { $1 }
-}
+
+# this throws an error, for now
+#unblock() {
+#    nft delete element ip sshguard attackers { $1 }
+#}
 
 # Old iptables version, change to sshguard w/ nft format above
 #alias block='iptables -A INPUT -j DROP -s '
