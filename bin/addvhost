@@ -18,6 +18,8 @@ DOCMS=${2:-''}
 DOSSL=${3:-''}
 USEIP=${4:-''}
 
+[[ $USEIP ]] && USEIP="$USEIP:"
+
 Y_M_D=$(date +"%Y-%m-%d")
 _UTMP=""
 
@@ -254,7 +256,6 @@ if [[ $DOSSL == self ]]; then
 
     if [[ ! -f $C_WEB/sites-enabled/$VHOST.selfsigned ]]; then
         echo "### Create $C_WEB/sites-enabled/$VHOST.selfsigned"
-        [[ $USEIP ]] && USEIP="$USEIP:"
         cat <<EOS | tee $C_WEB/sites-enabled/$VHOST.selfsigned >/dev/null
 server {
     listen                      ${USEIP}443 ssl http2;
@@ -312,14 +313,13 @@ if [[ $DOSSL != wild ]]; then
     chshpw $UUSER $UPASS
 
     MID=$(
-    cat <<EOS | $SQCMD
+        cat <<EOS | $SQCMD
  SELECT id FROM vmails
   WHERE user = '$VUSER@$VHOST'
 EOS
-
+    )
     echo "### Create $VUSER@$VHOST entry in $ADMIN.vmail_log ($DTYPE)"
 
-    DO_VMAILLOG=$(
     cat <<EOS | $SQCMD
  INSERT INTO vmail_log (
         mid,
@@ -329,7 +329,6 @@ EOS
         '$Y_M_D'
 )
 EOS
-
     logging $VHOST update >/dev/null
 fi
 
