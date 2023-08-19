@@ -299,20 +299,27 @@ else
     echo "### Warning: no SSL certificate has been added"
 fi
 
+if [[ -d $WPATH && $DOCMS == wp ]]; then
+    if [[ $DTYPE == mysql ]]; then
+        addwp $VHOST
+    else
+        echo "### ERROR: WordPress requires MySQL"
+    fi
+fi
+
 if [[ $DOSSL != wild ]]; then
     addvmail $VUSER@$VHOST
     chshpw $UUSER $UPASS
-fi
 
-MID=$(
+    MID=$(
     cat <<EOS | $SQCMD
  SELECT id FROM vmails
   WHERE user = '$VUSER@$VHOST'
 EOS
-)
 
-echo "### Create $VUSER@$VHOST entry in $ADMIN.vmail_log ($DTYPE)"
-DO_VMAILLOG=$(
+    echo "### Create $VUSER@$VHOST entry in $ADMIN.vmail_log ($DTYPE)"
+
+    DO_VMAILLOG=$(
     cat <<EOS | $SQCMD
  INSERT INTO vmail_log (
         mid,
@@ -322,19 +329,8 @@ DO_VMAILLOG=$(
         '$Y_M_D'
 )
 EOS
-)
 
-if [[ -d $WPATH && $DOCMS == wp ]]; then
-    if [[ $DTYPE == mysql ]]; then
-        addwp $VHOST
-    else
-        echo "### ERROR: WordPress requires MySQL"
-    fi
+    logging $VHOST update >/dev/null
 fi
-
-# TODO: cleanup $(hostname -f) /etc/ssl and /etc/nginx/sites-enabled
-#       unless a better place is found or a dedicated script is created
-
-logging $VHOST update >/dev/null
 
 [[ $DEBUG ]] && set +x
