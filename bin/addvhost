@@ -299,8 +299,10 @@ else
     echo "### Warning: no SSL certificate has been added"
 fi
 
-addvmail $VUSER@$VHOST
-chshpw $UUSER $UPASS
+if [[ $DOSSL != wild ]]; then
+    addvmail $VUSER@$VHOST
+    chshpw $UUSER $UPASS
+fi
 
 MID=$(
     cat <<EOS | $SQCMD
