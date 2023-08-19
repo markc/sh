@@ -280,7 +280,7 @@ elif [[ $DOSSL == le ]]; then
 elif [[ $DOSSL == wild ]]; then
 
     # "wild" assumes there is a wilcard DNS record and a wildcard SSL
-    # certificate for the parent domain (HDOMN)
+    # certificate in /root/.acme.sh/ for the parent domain (HDOMN)
 
     [[ -f $C_WEB/sites-enabled/*.selfsigned ]] &&
         rm $C_WEB/sites-enabled/*.selfsigned
@@ -290,9 +290,13 @@ server {
     listen                      ${IPARG}443 ssl http2;
     server_name                 $VHOST;
     include                     $C_WEB/common.conf;
-    ssl_certificate             $C_SSL/$HDOMN/fullchain.pem;
-    ssl_certificate_key         $C_SSL/$HDOMN/privkey.pem;
-    ssl_trusted_certificate     $C_SSL/$HDOMN/chain.pem;
+    ssl_certificate             /root/.acme.sh/$HDOMN/fullchain.cer;
+    ssl_certificate_key         /root/.acme.sh/$HDOMN/$HDOMN.key;
+    ssl_trusted_certificate     /root/.acme.sh/$HDOMN/ca.cer;
+    # Wildcard SSL certificates are not available via http-01 lookups
+    #ssl_certificate             $C_SSL/$HDOMN/fullchain.pem;
+    #ssl_certificate_key         $C_SSL/$HDOMN/privkey.pem;
+    #ssl_trusted_certificate     $C_SSL/$HDOMN/chain.pem;
 }
 EOS
     serva restart nginx
