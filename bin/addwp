@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# .sh/bin/addwp 20160231 - 20230723
+# .sh/bin/addwp 20160231 - 20230820
 # Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ -z $1 || $1 =~ -h ]] && echo "Usage: addwp domain [path]" && exit 1
@@ -133,12 +133,12 @@ $WPAPP option update show_on_front page
 " >/dev/null
 
     chperms "$VHOST"
-    cat <<EOS | tee -a "/root/.vhosts/$VHOST.conf" >/dev/null
+    cat <<EOS | tee -a "/root/.vhosts/$VHOST.conf"
 WordPress
 =========
 
 Wordpress: $WPURL/wp-admin/
-Username: $WPUSR or $AMAIL
+Username: $WPUSR
 Password: $WPASS
 
 EOS
