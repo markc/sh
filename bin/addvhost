@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# .sh/bin/addvhost 20170217 - 20230528
+# .sh/bin/addvhost 20170217 - 20230820
 # Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 # TODO: move anything to do with hosting plans into another script
 
-[[ -z $1 || $1 =~ -h ]] && echo "Usage: addvhost [uuser@]domain [cms(none|wp)] [ssl(none|le|self)] [ip]" && exit 1
+[[ -z $1 || $1 =~ -h ]] && echo "Usage: addvhost [uuser@]domain [cms(none|wp)] [ssl(none|le|wild|self)] [ip]" && exit 1
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
@@ -268,11 +268,35 @@ server {
 EOS
     fi
     serva restart nginx
+
 elif [[ $DOSSL == le ]]; then
+
     [[ -f $C_WEB/sites-enabled/*.selfsigned ]] &&
         rm $C_WEB/sites-enabled/*.selfsigned
 
     newssl $VHOST mail www autoconfig autodiscover $USEIP
+
+elif [[ $DOSSL == wild ]]; then
+
+    # "wild" assumes there is a wilcard DNS record and a wildcard SSL
+    # certificate for the parent domain (HDOMN)
+
+    [[ -f $C_WEB/sites-enabled/*.selfsigned ]] &&
+        rm $C_WEB/sites-enabled/*.selfsigned
+
+    cat <<EOS >>$C_WEB/sites-enabled/$VHOST
+server {
+    listen                      ${IPARG}443 ssl http2;
+    server_name                 $VHOST;
+    include                     $C_WEB/common.conf;
+    ssl_certificate             $C_SSL/$HDOMN/fullchain.pem;
+    ssl_certificate_key         $C_SSL/$HDOMN/privkey.pem;
+    ssl_trusted_certificate     $C_SSL/$HDOMN/chain.pem;
+}
+EOS
+    serva restart nginx
+else
+    echo "### Warning: no SSL certificate has been added"
 fi
 
 addvmail $VUSER@$VHOST
