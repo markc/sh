@@ -126,11 +126,12 @@ $WPAPP menu item add-post primary-menu $_HOMEPAGE
 $WPAPP menu item add-post primary-menu $_ABOUTPAGE
 $WPAPP menu item add-post primary-menu $_NEWSPAGE
 $WPAPP menu item add-post primary-menu $_CONTACTPAGE
-$WPAPP menu location assign primary-menu primary
 $WPAPP option update page_on_front $_HOMEPAGE
 $WPAPP option update page_for_posts $_NEWSPAGE
 $WPAPP option update show_on_front page
-" >/dev/null
+"
+    #" >/dev/null
+    #$WPAPP menu location assign primary-menu primary
 
     chperms "$VHOST"
     cat <<EOS | tee -a "/root/.vhosts/$VHOST.conf"
