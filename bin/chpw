@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# .sh/bin/chpw 20190603 - 20250829
+# .sh/bin/chpw 20190603 - 20250904
 # Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ -z $1 || $1 =~ '-h' ]] && echo "Usage: chpw user@domain [newpw]" && exit 1
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
-. ~/.shrc || exit 3 # only needed for SQCMD
+. ~/.vhosts/$(hostname -f) || exit 3 # only needed for SQCMD
 
 [[ $DEBUG ]] && set -x
 
