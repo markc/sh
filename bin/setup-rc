@@ -108,6 +108,11 @@ EOS
         "endroid/qr-code": "*",
         "johndoh/contextmenu": "*",
         "roundcube/carddav": "*"
+    },
+    "config": {
+        "allow-plugins": {
+            "roundcube/plugin-installer": true
+        }
     }
 }
 EOS
