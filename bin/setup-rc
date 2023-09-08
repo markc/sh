@@ -9,7 +9,7 @@
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
 _HOST=${1:-$(hostname -f | tr 'A-Z' 'a-z')}
-_RC_V=${2:-'1.6.1'}
+_RC_V=${2:-'1.6.2'}
 _DBID=${3:-'webmail'}
 
 [[ -f ~/.vhosts/$_HOST ]] && . ~/.vhosts/$_HOST || exit 3
