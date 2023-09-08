@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# .sh/bin/addvhost 20170217 - 20230820
+# .sh/bin/addvhost 20170217 - 20230908
 # Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 # TODO: move anything to do with hosting plans into another script
@@ -9,7 +9,7 @@
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
 # We need general env vars and bash functions
-. ~/.shrc
+. ~/.vhosts/$(hostname -f)
 
 [[ $DEBUG ]] && set -x
 
