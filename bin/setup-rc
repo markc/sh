@@ -111,6 +111,9 @@ EOS
     }
 }
 EOS
+    [[ -d roundcubemail-$_RC_V ]] && rm -rf roundcubemail-$_RC_V
+    [[ -f roundcubemail-$_RC_V-complete.tar.gz ]] && rm roundcubemail-$_RC_V-complete.tar.gz
+
     chperms $MHOST
 
     su - $UUSER -c "cd $_PATH; php composer.phar -n update" >/dev/null 2>&1
