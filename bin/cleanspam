@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
-# .sh/bin/cleanspam 20190706 - 20230824
-# Copyright (C) 1995-2021 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/cleanspam 20190706 - 20230908
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
-[[ $1 =~ -h ]] && echo "Usage: cleanspam [email] [-v]" && exit 1
+[[ $1 =~ -h ]] && echo "Usage: cleanspam [email] [days]" && exit 1
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
-[[ $@ =~ -v ]] && DBG=1 || DBG=0
+[[ $DEBUG ]] && set -x
 
-if [[ "$1" && ! $1 = "-v" ]]; then
+_DAYS=${2:-'366'}
+
+if [[ $1 ]]; then
     if [[ $1 =~ (.+)@(.+) ]]; then
         TPATH="$VPATH/${BASH_REMATCH[2]}/home/${BASH_REMATCH[1]}"
         if [[ ! -d $TPATH ]]; then
@@ -24,21 +26,28 @@ else
 fi
 
 find $TPATH -type d -name .spamprobe | while read i; do
-    [[ DBG ]] && echo $i
+    echo $i
+
     HPATH=$(dirname $i)
     cd $HPATH
     mkdir spamprobe-bkp
     cp -a .spamprobe/* spamprobe-bkp
     db5.3_recover -h spamprobe-bkp
-    spamprobe -d spamprobe-bkp cleanup 2 90
-    [[ DBG ]] && echo -n "$(du -sh .spamprobe | cut -f1) "
+    spamprobe -d spamprobe-bkp cleanup 2 $_DAYS
+
+    echo -n "$(du -sh .spamprobe | cut -f1) "
+
     mkdir spamprobe-new
     spamprobe -d spamprobe-bkp export | spamprobe -d spamprobe-new import
     chown $(stat -c "%u:%g" $HPATH) -R spamprobe-new
     mv .spamprobe spamprobe-old
     mv spamprobe-new .spamprobe
-    [[ DBG ]] && du -sh .spamprobe | cut -f1
+
+    du -sh .spamprobe | cut -f1
+
     sleep 2
     rm -rf spamprobe-old spamprobe-bkp
-    sleep 1
+    sleep 2
 done
+
+[[ $DEBUG ]] && set +x
