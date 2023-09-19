@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# .sh/bin/addvhost 20170217 - 20230908
+# .sh/bin/addvhost 20170217 - 20230919
 # Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 # TODO: move anything to do with hosting plans into another script
@@ -225,9 +225,6 @@ else
     echo "<?php error_log(__FILE__.' '.\$_SERVER['REMOTE_ADDR']); phpinfo();" >$WPATH/phpinfo.php
 fi
 
-chperms $VHOST
-serva reload php
-
 #LOCIP=$(ip -4 route get 1.1.1.1 | awk '/src/ {print $7}')
 #DNSIP=$(host -t a $VHOST|cut -d' ' -f4)
 #if [[ $LOCIP =~ ^192.168 || $LOCIP =~ ^10 ]]; then
@@ -268,7 +265,6 @@ server {
 }
 EOS
     fi
-    serva restart nginx
 
 elif [[ $DOSSL == le ]]; then
 
@@ -299,7 +295,6 @@ server {
     #ssl_trusted_certificate     $C_SSL/$HDOMN/chain.pem;
 }
 EOS
-    serva restart nginx
 else
     echo "### Warning: no SSL certificate has been added"
 fi
@@ -335,5 +330,8 @@ EOS
 EOS
     logging $VHOST update >/dev/null
 fi
+
+chperms $VHOST
+serva restart web
 
 [[ $DEBUG ]] && set +x
