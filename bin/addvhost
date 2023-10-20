@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# .sh/bin/addvhost 20170217 - 20230919
+# .sh/bin/addvhost 20170217 - 20231020
 # Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 # TODO: move anything to do with hosting plans into another script
 
-[[ -z $1 || $1 =~ -h ]] && echo "Usage: addvhost [uuser@]domain [cms(none|wp)] [ssl(none|le|wild|self)] [ip]" && exit 1
+[[ -z $1 || $1 =~ -h ]] && echo "Usage: addvhost [uuser@]domain [cms(none|wp)] [ssl(none|le|wild|self)] [wp email] [ip]" && exit 1
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
@@ -16,7 +16,8 @@
 VHOST=$1
 DOCMS=${2:-''}
 DOSSL=${3:-''}
-USEIP=${4:-''}
+EMAIL=${4:-''}
+USEIP=${5:-''}
 
 [[ $USEIP ]] && USEIP="$USEIP:"
 
@@ -301,7 +302,7 @@ fi
 
 if [[ -d $WPATH && $DOCMS == wp ]]; then
     if [[ $DTYPE == mysql ]]; then
-        addwp $VHOST
+        addwp $VHOST "" $EMAIL
     else
         echo "### ERROR: WordPress requires MySQL"
     fi
