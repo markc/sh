@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# .sh/bin/setup-host 20170524 - 20230526
+# .sh/bin/setup-host 20170524 - 20231105
 # Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ $1 =~ '-h' ]] && echo "Usage: setup-host [fqdn] [(mysql)|sqlite]" && exit 1
@@ -86,7 +86,7 @@ rsync sqlite sudo time minizip wget which whois yay"
 
         mv /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.orig
         echo "### Normalize mirrorlist, use 'pacman-mirrors --geoip --api -B stable' to update"
-        echo "Server = http://$OSMIR/$OSREL/\$repo/\$arch" > /etc/pacman.d/mirrorlist
+        echo "Server = http://$OSMIR/$OSREL/\$repo/\$arch" >/etc/pacman.d/mirrorlist
 
         pacman -Syu >/dev/null 2>&1
         yes | pacman -S iptables-nft >/dev/null 2>&1
@@ -121,8 +121,8 @@ php-imagick php-redis postfix postfix-lmdb postfix-policyd-spf-perl
 postfix-sqlite pwgen redis-server rsyslog rsync sqlite3 sudo time unzip wget
 whois"
 
-# Latest list from sury tested with Debian bullseye
-#php8.2 php8.2-bcmath php8.2-cli php8.2-common php8.2-curl php8.2-fpm php8.2-gd php8.2-gmp php8.2-igbinary php8.2-imagick php8.2-imap php8.2-intl php8.2-mbstring php8.2-mysql php8.2-opcache php8.2-readline php8.2-redis php8.2-soap php8.2-sqlite3 php8.2-xml php8.2-zip
+    # Latest list from sury tested with Debian bullseye
+    #php8.2 php8.2-bcmath php8.2-cli php8.2-common php8.2-curl php8.2-fpm php8.2-gd php8.2-gmp php8.2-igbinary php8.2-imagick php8.2-imap php8.2-intl php8.2-mbstring php8.2-mysql php8.2-opcache php8.2-readline php8.2-redis php8.2-soap php8.2-sqlite3 php8.2-xml php8.2-zip
 
     # Mysql List of packages (not need if using SQLite)
     MLIST="dovecot-mysql mariadb-common mariadb-client mariadb-server
@@ -156,7 +156,7 @@ sasl2-bin ttf-* vi* xinetd snapd"
         echo "### Setup apt sources list for $OSREL"
         mv /etc/apt/sources.list /etc/apt/sources.list.orig
         if [[ $OSTYP == debian ]]; then
-            curl -fsSL  https://packages.sury.org/php/apt.gpg |\
+            curl -fsSL https://packages.sury.org/php/apt.gpg |
                 gpg --dearmor -o /etc/apt/trusted.gpg.d/sury-keyring.gpg
             cat <<EOS >/etc/apt/sources.list
 deb http://$OSMIR/debian $OSREL main
@@ -177,8 +177,8 @@ postfix postfix/mailname string 'localhost'
 postfix postfix/main_mailer_type string 'Internet Site'
 EOS
 
-#        echo "### Create key for bionic (18.04) repo"
-#        apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 3B4FE6ACC0B21F32 >/dev/null 2>&1
+        #        echo "### Create key for bionic (18.04) repo"
+        #        apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 3B4FE6ACC0B21F32 >/dev/null 2>&1
 
         echo "### Create key for openlitespeed repo"
         apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 011AA62DEDA1F085 >/dev/null 2>&1
@@ -206,22 +206,24 @@ EOS
         systemctl stop pdns >/dev/null 2>&1
         systemctl disable pdns >/dev/null 2>&1
 
-#### This is still required when using jammy+ on very active mailservers
-#        echo "### Install bionic spamprobe (the focal+ spamprobe crashes)"
-#        apt-get -yqq install spamprobe=1.4d-14build1 >/dev/null
-#        apt-mark hold spamprobe >/dev/null
+        #### This is still required when using jammy+ on very active mailservers
+        #        echo "### Install bionic spamprobe (the focal+ spamprobe crashes)"
+        #        apt-get -yqq install spamprobe=1.4d-14build1 >/dev/null
+        #        apt-mark hold spamprobe >/dev/null
 
-#### Let's try a default cloud-init ubuntu for a while and see how it goes
-#### A few days later on 20230528
-#### Nope, can't easily get rid of netplan.io without removing cloud-init so
-#### may as well stick to removing python/cloud-init and take the resource win.
+        #### Let's try a default cloud-init ubuntu for a while and see how it goes
+        #### A few days later on 20230528
+        #### Nope, can't easily get rid of netplan.io without removing cloud-init so
+        #### may as well stick to removing python/cloud-init and take the resource win.
 
         # Comment out if cloud-init is required otherwise this is the lazy way
         # to get rid of netplan so that systemd-networkd will work, especially
         # when a bridge is wanted via the LXDBR env var.
 
-        echo "### Remove python and all related packages"
-        apt-get -yqq --purge remove $RLIST >/dev/null
+        # Okay, let's try a default cloud-init ubuntu again, but if this sticks then
+        # anything to do with restarting the network will have to switch to netplan.
+        #        echo "### Remove python and all related packages"
+        #        apt-get -yqq --purge remove $RLIST >/dev/null
 
     fi
 
@@ -240,13 +242,13 @@ else
     mv /etc/ssh/sshd_config /etc/ssh/sshd_config.orig
     cp ~/.sh/etc/_etc_ssh_sshd__config /etc/ssh/sshd_config
 
-#    if [[ ! -d /etc/systemd/system/ssh.socket.d ]]; then
-#        echo "### Handle post 22.10 releases using ssh.socket"
-#        mkdir /etc/systemd/system/ssh.socket.d
-#        echo -e "[Socket]\nListenStream=\nListenStream=9\n" \
-#            > /etc/systemd/system/ssh.socket.d/port.conf
-#        systemctl daemon-reload
-#    fi
+    #    if [[ ! -d /etc/systemd/system/ssh.socket.d ]]; then
+    #        echo "### Handle post 22.10 releases using ssh.socket"
+    #        mkdir /etc/systemd/system/ssh.socket.d
+    #        echo -e "[Socket]\nListenStream=\nListenStream=9\n" \
+    #            > /etc/systemd/system/ssh.socket.d/port.conf
+    #        systemctl daemon-reload
+    #    fi
 
     # The easy way to revert the 22.10+ socket activation disaster
     systemctl disable --now ssh.socket
@@ -283,7 +285,7 @@ EOS
 else
     [[ ! -d /etc/systemd/network ]] && mkdir /etc/systemd/network
 
-    ls /etc/systemd/network/*.network > /dev/null 2>&1
+    ls /etc/systemd/network/*.network >/dev/null 2>&1
     if [[ $? -eq 0 ]]; then
         echo "### Exists /etc/systemd/network/*.network"
     else
@@ -301,11 +303,11 @@ else
     else
         echo "### Change /etc/resolv.conf to 1.1.1.1 (systemd)"
 
-#### TODO this needs to be configurable, ie; via DNS_1 and DNS_2 env vars
-#### and maybe disable systemd-resolved if stub-resolve interferes with pdns
+        #### TODO this needs to be configurable, ie; via DNS_1 and DNS_2 env vars
+        #### and maybe disable systemd-resolved if stub-resolve interferes with pdns
 
-# Leave the stub-resolv.conf in place
-#        cd /etc && rm resolv.conf && ln -s ../run/systemd/resolve/resolv.conf
+        # Leave the stub-resolv.conf in place
+        #        cd /etc && rm resolv.conf && ln -s ../run/systemd/resolve/resolv.conf
         sed -i /etc/systemd/resolved.conf \
             -e 's/^#DNS=.*/DNS=1.1.1.1/' \
             -e 's/^#FallbackDNS=.*/FallbackDNS=8.8.8.8/' \
