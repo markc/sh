@@ -175,11 +175,11 @@ sethost() {
     DPORT=${DPORT:-'3306'}
     DTYPE=${DTYPE:-'mysql'}
     OSMIR=${OSMIR:-'archive.ubuntu.com'}
-    OSREL=${OSREL:-'jammy'}
+    OSREL=${OSREL:-'mantic'}
     OSTYP=${OSTYP:-'ubuntu'}
     TAREA=${TAREA:-'Australia'}
     TCITY=${TCITY:-'Sydney'}
-    V_PHP=${V_PHP:-'8.1'}
+    V_PHP=${V_PHP:-'8.2'}
     VPATH=${VPATH:-'/home/u'}
     VUSER=${VUSER:-'admin'}
     WUGID=${WUGID:-'www-data'}
