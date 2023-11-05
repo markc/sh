@@ -3,26 +3,6 @@
 
 [[ $DEBUG ]] && set -x
 
-if [[ $OSTYP == openwrt ]]; then
-    function getent {
-        if [[ $1 == passwd ]]; then
-            cat /etc/passwd
-        elif [[ $1 == group ]]; then
-            cat /etc/group
-        fi
-    }
-    function hostname {
-        local _host=$(uci get system.@system[0].hostname)
-        if [[ -z $1 ]]; then
-            echo $_host
-        elif [[ $1 == -f ]]; then
-            echo $_host.$(uci get dhcp.@dnsmasq[0].domain)
-        elif [[ $1 == -d ]]; then
-            uci get dhcp.@dnsmasq[0].domain
-        fi
-    }
-fi
-
 f() { find . -type f -iname '*'$*'*'; }
 
 if [[ $OSTYP == openwrt ]]; then

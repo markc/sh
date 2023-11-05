@@ -12,6 +12,29 @@ COLOR=31
 # Set the OS type
 [[ -f /etc/os-release ]] && OSTYP=$(awk -F= '/^ID=/ {print $2}' /etc/os-release | sed 's/"//g')
 
+# This needs to be before the first use of hostname for OpenWrt
+if [[ $OSTYP == openwrt ]]; then
+    function getent {
+        if [[ $1 == passwd ]]; then
+            cat /etc/passwd
+        elif [[ $1 == group ]]; then
+            cat /etc/group
+        fi
+    }
+    function hostname {
+        local _host=$(uci get system.@system[0].hostname)
+        if [[ -z $1 ]]; then
+            echo $_host
+        elif [[ $1 == -f ]]; then
+            echo $_host.$(uci get dhcp.@dnsmasq[0].domain)
+        elif [[ $1 == -d ]]; then
+            uci get dhcp.@dnsmasq[0].domain
+        fi
+    }
+fi
+
+LABEL=$(hostname)
+
 # Import global aliases
 [[ -f ~/.sh/lib/aliases ]] && . ~/.sh/lib/aliases
 
@@ -27,8 +50,6 @@ if [[ -f ~/.vhosts/$_HOST ]]; then
 else
     sethost
 fi
-
-LABEL=$(hostname)
 
 PS1="\[\033[1;${COLOR}m\]${LABEL} \w\[\033[0m\] "
 
