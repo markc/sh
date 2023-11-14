@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# .sh/bin/addwp 20160231 - 20231020
+# .sh/bin/addwp 20160231 - 20231114
 # Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ -z $1 || $1 =~ -h ]] && echo "Usage: addwp domain [path] [email]" && exit 1
@@ -105,7 +105,7 @@ cd $FPATH
 $WPAPP plugin delete $_PLUGINS
 $WPAPP post delete $_POSTS
 $WPAPP post delete $_PAGES
-$WPAPP theme delete twentytwentyone twentytwentytwo
+$WPAPP theme delete twentytwentytwo twentytwentythree
 
 echo 'Install WPvivid plugin'
 $WPAPP plugin --quiet install wpvivid-backuprestore 2> /dev/null
