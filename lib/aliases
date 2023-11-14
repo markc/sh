@@ -65,7 +65,7 @@ else
     alias u=$SUDO'apt-get update && '$SUDO'apt-get -y -f dist-upgrade && '$SUDO'apt-get -y autoremove && '$SUDO'apt-get clean'
 fi
 
-#alias block=""
+#alias block="nft version?"
 
 alias shblock="nft list set ip sshguard attackers | tr '\n' ' '| sed 's/.*elements = {\([^}]*\)}.*/\1\n/' | sed -r 's/\s+//g' | tr ',' '\n'"
 
@@ -75,9 +75,9 @@ alias shblock="nft list set ip sshguard attackers | tr '\n' ' '| sed 's/.*elemen
 #}
 
 # Old iptables version, change to sshguard w/ nft format above
-#alias block='iptables -A INPUT -j DROP -s '
-#alias shblock='iptables -L -n | grep ^DROP | awk '\''{print $4}'\'' | sort -n'
-#alias unblock='iptables -D INPUT -j DROP -s '
+alias oldblock='iptables -A INPUT -j DROP -s '
+alias oldshblock='iptables -L -n | grep ^DROP | awk '\''{print $4}'\'' | sort -n'
+alias oldunblock='iptables -D INPUT -j DROP -s '
 
 alias dlog='journalctl -f -t pdns_server -t pdns_recursor'
 alias hlog='journalctl -f -t hlog'
