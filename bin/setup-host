@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# .sh/bin/setup-host 20170524 - 20231105
+# .sh/bin/setup-host 20170524 - 20231115
 # Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ $1 =~ '-h' ]] && echo "Usage: setup-host [fqdn] [(mysql)|sqlite]" && exit 1
@@ -104,8 +104,8 @@ elif [[ $OSTYP == ubuntu || $OSTYP == debian ]]; then
     echo "### Install Debian/Ubuntu base packages"
 
     if [[ $OSTYP == debian ]]; then
-        OSMIR=${OSMIR:-'ftp.debian.org'}
-        OSREL=${OSREL:-'bullseye'}
+        OSMIR=${OSMIR:-'ftp.au.debian.org'}
+        OSREL=${OSREL:-'bookworm'}
     fi
 
     # Default List of required core Netserva Debian packages
@@ -113,16 +113,13 @@ elif [[ $OSTYP == ubuntu || $OSTYP == debian ]]; then
 busybox-static ca-certificates curl db5.3-util deborphan dnsutils dovecot-imapd
 dovecot-lmtpd dovecot-managesieved dovecot-sqlite ebtables fcgiwrap gawk git
 gnupg iptables iputils-ping jq libxml2-utils mailgraph msmtp mtr-tiny mutt nano
-net-tools nginx-light opendkim opendkim-tools opendmarc openssh-server
+net-tools nginx opendkim opendkim-tools opendmarc openssh-server
 pdns-backend-sqlite3 pflogsumm php$V_PHP php$V_PHP-bcmath php$V_PHP-curl
 php$V_PHP-fpm php$V_PHP-gd php$V_PHP-gmp php$V_PHP-imap php$V_PHP-intl
 php$V_PHP-mbstring php$V_PHP-soap php$V_PHP-sqlite3 php$V_PHP-xml php$V_PHP-zip
 php-imagick php-redis postfix postfix-lmdb postfix-policyd-spf-perl
 postfix-sqlite pwgen redis-server rsyslog rsync sqlite3 sudo time unzip wget
 whois"
-
-    # Latest list from sury tested with Debian bullseye
-    #php8.2 php8.2-bcmath php8.2-cli php8.2-common php8.2-curl php8.2-fpm php8.2-gd php8.2-gmp php8.2-igbinary php8.2-imagick php8.2-imap php8.2-intl php8.2-mbstring php8.2-mysql php8.2-opcache php8.2-readline php8.2-redis php8.2-soap php8.2-sqlite3 php8.2-xml php8.2-zip
 
     # Mysql List of packages (not need if using SQLite)
     MLIST="dovecot-mysql mariadb-common mariadb-client mariadb-server
@@ -153,12 +150,14 @@ sasl2-bin ttf-* vi* xinetd snapd"
         export DEBIAN_FRONTEND=noninteractive
         export TERM=linux
 
-        echo "### Setup apt sources list for $OSREL"
-        mv /etc/apt/sources.list /etc/apt/sources.list.orig
-        if [[ $OSTYP == debian ]]; then
-            curl -fsSL https://packages.sury.org/php/apt.gpg |
-                gpg --dearmor -o /etc/apt/trusted.gpg.d/sury-keyring.gpg
-            cat <<EOS >/etc/apt/sources.list
+        # If Proxmox then leave /etc/apt/sources.list alone
+        if [[ ! -d /etc/pve ]]; then
+            echo "### Setup apt sources list for $OSREL"
+            mv /etc/apt/sources.list /etc/apt/sources.list.orig
+            if [[ $OSTYP == debian ]]; then
+                curl -fsSL https://packages.sury.org/php/apt.gpg |
+                    gpg --dearmor -o /etc/apt/trusted.gpg.d/sury-keyring.gpg
+                cat <<EOS >/etc/apt/sources.list
 deb http://$OSMIR/debian $OSREL main
 deb http://$OSMIR/debian $OSREL-updates main
 deb http://$OSMIR/debian $OSREL-backports main
@@ -166,9 +165,10 @@ deb http://security.debian.org/debian-security $OSREL-security main
 # For php8.2
 deb https://packages.sury.org/php bullseye main
 EOS
-        else
-            sed ~/.sh/etc/_etc_apt_sources.list \
-                -e "s/_OSMIR/$OSMIR/" -e "s/_OSREL/$OSREL/" >/etc/apt/sources.list
+            else
+                sed ~/.sh/etc/_etc_apt_sources.list \
+                    -e "s/_OSMIR/$OSMIR/" -e "s/_OSREL/$OSREL/" >/etc/apt/sources.list
+            fi
         fi
 
         cat <<EOS | debconf-set-selections
@@ -176,12 +176,6 @@ postfix postfix/destinations string 'localhost'
 postfix postfix/mailname string 'localhost'
 postfix postfix/main_mailer_type string 'Internet Site'
 EOS
-
-        #        echo "### Create key for bionic (18.04) repo"
-        #        apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 3B4FE6ACC0B21F32 >/dev/null 2>&1
-
-        echo "### Create key for openlitespeed repo"
-        apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 011AA62DEDA1F085 >/dev/null 2>&1
 
         echo "### Update package list for $OSREL, patience please..."
         apt-get -yqq update >/dev/null
