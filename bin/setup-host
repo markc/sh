@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# .sh/bin/setup-host 20170524 - 20231115
+# .sh/bin/setup-host 20170524 - 20231116
 # Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
-[[ $1 =~ '-h' ]] && echo "Usage: setup-host [fqdn] [(mysql)|sqlite]" && exit 1
+[[ $1 =~ '-h' ]] && echo "Usage: setup-host [fqdn] [(mysql)|sqlite] [lxdbr]" && exit 1
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
@@ -12,6 +12,10 @@
 
 VHOST=${1:-$VHOST}
 DTYPE=${2:-$DTYPE}
+LXDBR=${3:-''}
+_VIRT=""
+
+[[ -e /usr/bin/systemd-detect-virt ]] && _VIRT=$(systemd-detect-virt)
 
 if [[ $OSTYP == alpine ]]; then
 
@@ -112,7 +116,7 @@ elif [[ $OSTYP == ubuntu || $OSTYP == debian ]]; then
     DLIST="apache2-utils apt-utils bash bc bind9-host bridge-utils bsd-mailx
 busybox-static ca-certificates curl db5.3-util deborphan dnsutils dovecot-imapd
 dovecot-lmtpd dovecot-managesieved dovecot-sqlite ebtables fcgiwrap gawk git
-gnupg iptables iputils-ping jq libxml2-utils mailgraph msmtp mtr-tiny mutt nano
+gnupg nftables iputils-ping jq libxml2-utils mailgraph msmtp mtr-tiny mutt nano
 net-tools nginx opendkim opendkim-tools opendmarc openssh-server
 pdns-backend-sqlite3 pflogsumm php$V_PHP php$V_PHP-bcmath php$V_PHP-curl
 php$V_PHP-fpm php$V_PHP-gd php$V_PHP-gmp php$V_PHP-imap php$V_PHP-intl
@@ -124,11 +128,6 @@ whois"
     # Mysql List of packages (not need if using SQLite)
     MLIST="dovecot-mysql mariadb-common mariadb-client mariadb-server
 pdns-backend-mysql php$V_PHP-mysql postfix-mysql"
-
-    # Remove List of packages (RLIST="" to ignore removal)
-    RLIST="*golang* *python* accountsservice apache2 at bind9 cloud*
-install-info lxcfs man* multipath-tools open-iscsi open-vm-tools rpcbind
-sasl2-bin ttf-* vi* xinetd snapd"
 
     # Make sure that IP4 is the default
     grep -q '^#precedence ::ffff:0:0/96  100' /etc/gai.conf
@@ -155,15 +154,10 @@ sasl2-bin ttf-* vi* xinetd snapd"
             echo "### Setup apt sources list for $OSREL"
             mv /etc/apt/sources.list /etc/apt/sources.list.orig
             if [[ $OSTYP == debian ]]; then
-                curl -fsSL https://packages.sury.org/php/apt.gpg |
-                    gpg --dearmor -o /etc/apt/trusted.gpg.d/sury-keyring.gpg
                 cat <<EOS >/etc/apt/sources.list
 deb http://$OSMIR/debian $OSREL main
 deb http://$OSMIR/debian $OSREL-updates main
-deb http://$OSMIR/debian $OSREL-backports main
 deb http://security.debian.org/debian-security $OSREL-security main
-# For php8.2
-deb https://packages.sury.org/php bullseye main
 EOS
             else
                 sed ~/.sh/etc/_etc_apt_sources.list \
@@ -199,31 +193,13 @@ EOS
         echo "### Disable pdns until actually needed"
         systemctl stop pdns >/dev/null 2>&1
         systemctl disable pdns >/dev/null 2>&1
-
-        #### This is still required when using jammy+ on very active mailservers
-        #        echo "### Install bionic spamprobe (the focal+ spamprobe crashes)"
-        #        apt-get -yqq install spamprobe=1.4d-14build1 >/dev/null
-        #        apt-mark hold spamprobe >/dev/null
-
-        #### Let's try a default cloud-init ubuntu for a while and see how it goes
-        #### A few days later on 20230528
-        #### Nope, can't easily get rid of netplan.io without removing cloud-init so
-        #### may as well stick to removing python/cloud-init and take the resource win.
-
-        # Comment out if cloud-init is required otherwise this is the lazy way
-        # to get rid of netplan so that systemd-networkd will work, especially
-        # when a bridge is wanted via the LXDBR env var.
-
-        # Okay, let's try a default cloud-init ubuntu again, but if this sticks then
-        # anything to do with restarting the network will have to switch to netplan.
-        #        echo "### Remove python and all related packages"
-        #        apt-get -yqq --purge remove $RLIST >/dev/null
-
     fi
 
-    # Let's make sure a few services are enabled
-    systemctl enable systemd-networkd
-    systemctl enable systemd-resolved
+    # Ubuntu uses netplan, Debian uses ifupdown, Proxmox uses ifupdown2 (python)
+    # systemctl enable systemd-networkd
+    [[ $_VIRT != lxc ]] && systemctl enable systemd-resolved
+
+    # TODO: deprecated, find a better all round logging system
     systemctl enable mailgraph >/dev/null 2>&1
 fi
 
@@ -236,20 +212,12 @@ else
     mv /etc/ssh/sshd_config /etc/ssh/sshd_config.orig
     cp ~/.sh/etc/_etc_ssh_sshd__config /etc/ssh/sshd_config
 
-    #    if [[ ! -d /etc/systemd/system/ssh.socket.d ]]; then
-    #        echo "### Handle post 22.10 releases using ssh.socket"
-    #        mkdir /etc/systemd/system/ssh.socket.d
-    #        echo -e "[Socket]\nListenStream=\nListenStream=9\n" \
-    #            > /etc/systemd/system/ssh.socket.d/port.conf
-    #        systemctl daemon-reload
-    #    fi
-
-    # The easy way to revert the 22.10+ socket activation disaster
+    # The easy way to revert the Ubuntu 22.10+ socket activation disaster
     systemctl disable --now ssh.socket
     systemctl enable --now ssh.service
 fi
 
-[[ ! -d ~/.ssh ]] && sshm i
+[[ ! -f ~/.ssh/config ]] && sshm i
 
 # If we are NOT on a systemd system (ie; Alpine)
 if [[ $OSTYP == alpine ]]; then
@@ -261,7 +229,10 @@ nameserver 1.1.1.1
 nameserver 8.8.8.8
 EOS
     fi
-else
+fi
+
+# Only create a network bridge if requested
+if [[ $LXDBR ]]; then
     [[ ! -d /etc/systemd/network ]] && mkdir /etc/systemd/network
 
     ls /etc/systemd/network/*.network >/dev/null 2>&1
@@ -272,29 +243,11 @@ else
         cp ~/.sh/etc/_etc_systemd_network_lxdbr.network /etc/systemd/network/lxdbr.network
         cp ~/.sh/etc/_etc_systemd_network_lxdbr.netdev /etc/systemd/network/lxdbr.netdev
         cp ~/.sh/etc/_etc_systemd_network_eth0.network /etc/systemd/network/eth0.network
-        chmod 644 /etc/systemd/network/*
+        chmod 640 /etc/systemd/network/*
         systemctl restart systemd-networkd >/dev/null 2>&1
         systemctl enable systemd-networkd >/dev/null 2>&1
     fi
-
-    if [[ /etc/resolv.conf -ef /run/systemd/resolve/stub-resolv.conf ]]; then
-        echo "### Exists /etc/resolv.conf to 1.1.1.1 (systemd)"
-    else
-        echo "### Change /etc/resolv.conf to 1.1.1.1 (systemd)"
-
-        #### TODO this needs to be configurable, ie; via DNS_1 and DNS_2 env vars
-        #### and maybe disable systemd-resolved if stub-resolve interferes with pdns
-
-        # Leave the stub-resolv.conf in place
-        #        cd /etc && rm resolv.conf && ln -s ../run/systemd/resolve/resolv.conf
-        sed -i /etc/systemd/resolved.conf \
-            -e 's/^#DNS=.*/DNS=1.1.1.1/' \
-            -e 's/^#FallbackDNS=.*/FallbackDNS=8.8.8.8/' \
-            -e "s/^#Domains=.*/Domains=$HDOMN/" \
-            -e 's/^#MulticastDNS=.*/MulticastDNS=yes/'
-        systemctl restart systemd-resolved >/dev/null 2>&1
-        systemctl enable systemd-resolved >/dev/null 2>&1
-    fi
+    # TODO: might have to disable ifupdown or netplan
 fi
 
 if [[ -f /etc/sysctl.d/50-nginx-tweaks.conf ]]; then
