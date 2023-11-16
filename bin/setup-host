@@ -249,12 +249,7 @@ else
     systemctl enable --now ssh.service
 fi
 
-if [[ -d ~/.ssh ]]; then
-    echo "### Exists ~/.ssh"
-else
-    echo "### Create ~/.ssh"
-    sshm i
-fi
+[[ ! -d ~/.ssh ]] && sshm i
 
 # If we are NOT on a systemd system (ie; Alpine)
 if [[ $OSTYP == alpine ]]; then
