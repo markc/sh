@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# .sh/bin/setup-fqdn 20210327 - 20221230
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/setup-fqdn 20210327 - 20231116
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ $1 =~ '-h' ]] && echo "Usage: setup-fqdn [domain]" && exit 1
 
@@ -23,7 +23,7 @@ gethost
 
 _1000=$(getent passwd 1000)
 
-echo $_1000 | grep "^sysadm:x:1000:1000:$MHOST:/home/u/$MHOST:/bin/bash" > /dev/null
+echo $_1000 | grep "^sysadm:x:1000:1000:$MHOST:/home/u/$MHOST:/bin/bash" >/dev/null
 
 if [[ $? -eq 0 ]]; then
     echo "### Exists $_1000"
@@ -274,7 +274,7 @@ if [[ ! $HDOMN =~ local ]]; then
     if [[ -e /usr/sbin/opendmarc ]]; then
         sc enable opendmarc >/dev/null 2>&1
         sc restart opendmarc
-fi
+    fi
 fi
 
 serva restart web
@@ -327,17 +327,15 @@ else
 fi
 
 if [[ "$DIGIP" != "$IP4_0" ]]; then
-    cat <<EOS
-
+    echo -e "
 Warning: you need to set up DNS records for $MHOST (example)
 
 $HDOMN\t300\tIN\tA\t$IP4_0
 $HDOMN\t300\tIN\tMX\t10 $MHOST.
 $MHOST\t300\tIN\tA\t$IP4_0
-$HDOMN\t300\tIN\tTXT\t"v=spf1 ip4:$IP4_0/32 -all"
-$HDOMN\t300\tIN\tCAA\t0 issue "letsencrypt.org"
-
-EOS
+$HDOMN\t300\tIN\tTXT\t\"v=spf1 ip4:$IP4_0/32 -all\"
+$HDOMN\t300\tIN\tCAA\t0 issue \"letsencrypt.org\"
+"
 fi
 
 [[ $DEBUG ]] && set +x
