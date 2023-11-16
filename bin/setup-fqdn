@@ -52,7 +52,7 @@ else
     fi
 
     echo "### Append domain search to /etc/resolv.conf"
-    if [[ -e /usr/bin/systemctl ]]; then
+    if [[ -f /etc/systemd/resolved.conf ]]; then
         sed -i /etc/systemd/resolved.conf \
             -e "s/^#Domains=/Domains=$VHOST/"
         sc restart systemd-resolved
