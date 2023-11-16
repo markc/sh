@@ -253,20 +253,10 @@ if [[ -d ~/.ssh ]]; then
     echo "### Exists ~/.ssh"
 else
     echo "### Create ~/.ssh"
-    mkdir ~/.ssh
-    chmod 700 ~/.ssh
-fi
-
-if [[ -f ~/.ssh/config ]]; then
-    echo "### Exists ~/.ssh/config"
-else
-    echo "### Create host ~/.ssh/config"
-    cp ~/.sh/etc/_.ssh_config ~/.ssh/config
-    chmod 600 ~/.ssh/*
+    sshm i
 fi
 
 # If we are NOT on a systemd system (ie; Alpine)
-
 if [[ $OSTYP == alpine ]]; then
     if [[ ! -f /etc/resolv.conf.orig ]]; then
         mv /etc/resolv.conf /etc/resolv.conf.orig
