@@ -1,4 +1,4 @@
-# .sh/lib/functions 20151231 - 20230814
+# .sh/lib/functions 20151231 - 20231116
 # Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ $DEBUG ]] && set -x
@@ -212,7 +212,7 @@ sethost() {
         WUGID='nginx'
     elif [[ $OSTYP == debian ]]; then
         OSMIR='deb.debian.org'
-        OSREL='bullseye'
+        OSREL='bookworm'
     elif [[ $OSTYP == manjaro || $OSTYP == arch ]]; then
         C_DNS='/etc/powerdns'
         C_FPM='/etc/php'
