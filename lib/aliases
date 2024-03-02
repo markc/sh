@@ -47,7 +47,7 @@ elif [[ $OSTYP == alpine ]]; then
     alias ram=$SUDO'ps ax -o rss:10,vsz:10,comm | grep -v "   0" | sort -n'
     alias s=$SUDO'apk search -v'
     alias u=$SUDO'apk update && '$SUDO'apk upgrade'
-elif [[ $OSTYP == manjaro || $OSTYP == arch ]]; then
+elif [[ $OSTYP == manjaro || $OSTYP == cachyos ]]; then
     alias edpkg=$SUDO'nano -t -x -c /etc/pacman.conf'
     alias i=$SUDO'pacman -S'
     alias lspkg=$SUDO'pacman -Qs'

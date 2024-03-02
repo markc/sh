@@ -213,16 +213,15 @@ sethost() {
     elif [[ $OSTYP == debian ]]; then
         OSMIR='deb.debian.org'
         OSREL='bookworm'
-    elif [[ $OSTYP == manjaro || $OSTYP == arch ]]; then
+    elif [[ $OSTYP == manjaro || $OSTYP == cachyos ]]; then
         C_DNS='/etc/powerdns'
         C_FPM='/etc/php'
         C_SQL='/etc/my.cnf.d'
         OSMIR='manjaro.moson.eu'
         OSREL=${OSREL:-'stable'}
-        if [[ $OSTYP == arch ]]; then
-            echo "TODO: add OSMIR and OSREL for Archlinux"
-            # OSMIR='?'
-            # OSREL='?'
+        if [[ $OSTYP == cachyos ]]; then
+            OSMIR='mirror.jingk.ai'
+            OSREL='extra-testing'
         fi
         WUGID='http'
     elif [[ $OSTYP == openwrt ]]; then
