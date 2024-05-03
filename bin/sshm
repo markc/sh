@@ -37,15 +37,11 @@ Name - for the SSH host file (required)
 Ex: sshm r|read foo"
         ;;
     u | update)
-        echo "Update: the contents of a host (aliasd to create)
+        echo "Update: edit the contents of a SSH Host file
 
 Name - for the Host field and SSH host file (required)
-Host - remote FQDN/IP for the Hostname field (required)
-Port - port number for the Port field (default '22')
-User - user for the User login field (default 'root')
-Skey - IdentityFile field for SSH Key (default 'none')
 
-Ex: sshm u|update foo 192.168.1.1 9 root ~/.ssh/lan"
+Ex: sshm u|update foo"
         ;;
     d | delete)
         echo "Delete: a SSH Host config file
@@ -136,7 +132,7 @@ Ex: sshm p|perms"
 
 c|create        - Create a new SSH Host config
 r|read          - Show the content values of SSH Host
-u|update        - Update SSH Host config (alias create)
+u|update        - Update (edit) SSH Host config
 d|delete        - Delete a SSH Host config
 l|list          - Show all SSH Host configs
 kc|key_create   - Create a new SSH Key
@@ -181,7 +177,11 @@ read() {
 }
 
 update() {
-    create
+    if [[ -f ~/.ssh/config.d/$1 ]]; then
+        nano -t -x -c ~/.ssh/config.d/$1
+    else
+        echo "Notice: ~/.ssh/config.d/'$1' does not exist (254)" && exit 254
+    fi
 }
 
 delete() {
@@ -330,7 +330,7 @@ r | read)
     read $2
     ;;
 u | update)
-    create $2 $3 $4 $5 $6
+    update $2
     ;;
 d | delete)
     delete $2
