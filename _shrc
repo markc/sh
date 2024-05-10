@@ -1,5 +1,5 @@
-# .sh/_shrc 20130315 - 20231105
-# Copyright (C) 2015-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/_shrc 20130315 - 20240511
+# Copyright (C) 2015-2024 Mark Constable <markc@renta.net> (AGPL-3.0)
 #shopt -s expand_aliases
 
 [[ $DEBUG ]] && set -x
