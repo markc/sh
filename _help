@@ -1,5 +1,5 @@
-# .sh/_help 20130212 - 20210416
-# Copyright (C) 1995-2021 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/_help 20130212 - 20240511
+# Copyright (C) 1995-2024 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 cat <<EOS
 ## How to set up a small 512MB swapfile as /swapfile

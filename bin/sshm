@@ -179,6 +179,7 @@ read() {
 
 update() {
     if [[ -f ~/.ssh/config.d/$1 ]]; then
+        echo "Path: ~/.ssh/config.d/$1"
         nano -t -x -c ~/.ssh/config.d/$1
     else
         echo "Notice: ~/.ssh/config.d/'$1' does not exist (254)" && exit 254

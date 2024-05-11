@@ -10,10 +10,10 @@ a simple Web, Mail and DNS server which also provides a foundation for the
 
 Currently tested on:
 ```
-- Ubuntu Lunar         # Most tested
-- Manjaro Stable       # Partly done
-- Alpine Edge          # Almost done
 - Debian Bookworm      # Mostly done
+- Ubuntu Lunar         # Most tested
+- CachyOS (Arch)       # Partly done
+- Alpine Edge          # Almost done
 - OpenWrt Latest       # WIP
 ```
 ## Usage
@@ -164,14 +164,14 @@ VPATH='/home/u'
 VUSER='admin'
 V_PHP='8.2'
 WPASS='phSdkd1XVxXWVDyT'
-WPATH='/home/u/netserva.local/var/www'
+WPATH='/home/u/netserva.local/var/www/html'
 WPUSR='wzoqqh'
 WUGID='www-data'
 ```
 If this host is a server then using `addvhost example.org` would add
 yet another virtual host and create another config file called
 `~/.vhosts/example.org` where `grep PASS ~/.vhosts/example.org` would
-reveal the passwords used during the setup procedure.
+reveal the auto generated passwords used during the setup procedure.
 
 ## More documentation
 
@@ -182,7 +182,7 @@ standalone from the command line as well.
 
 There are also some semi-related posts on my [personal blog].
 
-_All scripts and documentation are Copyright (C) 1995-2023 Mark Constable and Licensed [AGPL-3.0]_
+_All scripts and documentation are Copyright (C) 1995-2024 Mark Constable and Licensed [AGPL-3.0]_
 
 [Github]: https://github.com/markc/sh
 [NetServa HCP]: https://github.com/markc/hcp
