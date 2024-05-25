@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# .sh/bin/sshm 20230702 - 20230712
-# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/sshm 20230702 - 20240525
+# Copyright (C) 1995-2024 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 # Introducing shell exit strategies to trigger Bootstrap5 alerts
 #
@@ -286,6 +286,13 @@ init() {
     else
         mkdir ~/.ssh && chmod 700 ~/.ssh
         echo "Warning: ~/.ssh did not exist, created"
+    fi
+
+    if [[ -f ~/.ssh/authorized_keys ]]; then
+        echo "Warning: ~/.ssh/authorized_keys already exists"
+    else
+        touch ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys
+        echo "Warning: ~/.ssh/authorized_keys did not exist, created"
     fi
 
     if [[ -d ~/.ssh/config.d ]]; then
