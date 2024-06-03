@@ -35,7 +35,7 @@ if [[ $OSTYP == openwrt ]]; then
     alias lspkg=$SUDO'opkg list-installed | sort | grep'
     alias p='ps | grep -v grep | grep'
     alias r=$SUDO'opkg remove'
-    alias ram=$SUDO'ps w | grep -v "   0" | awk \'{print $3" "$5" "$6" "$7" "$8" "$9}\' | sort -n'
+    alias ram=$SUDO"ps w | grep -v \"   0\" | awk '{print \$3\" \"\$5\" \"\$6\" \"\$7\" \"\$8\" \"\$9}' | sort -n"
     alias s=$SUDO'opkg list | sort | grep '
     alias u=$SUDO'opkg update && '$SUDO'opkg list-upgradable | cut -f 1 -d " " | xargs -r opkg upgrade'
 elif [[ $OSTYP == alpine ]]; then
