@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# .sh/bin/sshm 20230702 - 20240525
+# .sh/bin/sshm 20230702 - 20240606
 # Copyright (C) 1995-2024 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 # Introducing shell exit strategies to trigger Bootstrap5 alerts
@@ -306,7 +306,8 @@ init() {
         echo "Warning: ~/.ssh/config already exists"
     else
         echo "# Created by sshm on $(date +'%Y%m%d')
-#
+Ciphers aes128-ctr,aes192-ctr,aes256-ctr,aes128-gcm@openssh.com,aes256-gcm@openssh.com,chacha20-poly1305@openssh.com
+
 # To avoid manually typing a password for SSH keys with passwords, add this to
 # ~/.myrc or ~/.bashrc, then add 'echo YOUR_PASSWORD' to ~/.lan_password and
 # 'chmod 700 ~/.lan_password'
