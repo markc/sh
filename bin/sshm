@@ -332,6 +332,16 @@ Host *
     perms
 }
 
+start() {
+  sudo systemctl start sshd
+  sudo systemctl enable sshd
+}
+
+stop() {
+  sudo systemctl stop sshd
+  sudo systemctl disable sshd
+}
+
 case $1 in
 c | create)
     create $2 $3 $4 $5 $6
@@ -371,6 +381,12 @@ p | perms)
     ;;
 h | help)
     help $2
+    ;;
+start)
+    start
+    ;;
+stop)
+    stop
     ;;
 *)
     echo "Unknown command '$1'" && echo && help
