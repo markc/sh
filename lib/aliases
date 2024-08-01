@@ -27,7 +27,7 @@ alias ram='ps -eo rss:10,vsz:10,%cpu:5,cmd --sort=rss | grep -v "^\s\+0" | cut -
 alias se='sudo nano -t -x -c'
 alias sn='[ -f ~/.note ] && cat ~/.note'
 alias wt="curl -s -w '%{time_total}\n' -o /dev/null"
-alias ff="fastfetch --logo none"
+alias ff="fastfetch --logo none --colors-block-width 0"
 
 if [[ $OSTYP == openwrt ]]; then
     alias edpkg=$SUDO'nano -t -x -c /etc/opkg/customfeeds.conf'
