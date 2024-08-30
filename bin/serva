@@ -8,6 +8,10 @@ if [[ $# -lt 2 || $1 == '-h' ]]; then
     exit 1
 fi
 
+. ~/.shrc || exit 2
+
+[[ $DEBUG ]] && set -x
+
 # Assign the arguments to variables
 ACTION=$1
 SERVICE=$2
@@ -23,9 +27,7 @@ SERVICES=(
   "opendkim"
   "opendmarc"
   "pdns"
-  "php8.1-fpm"
-  "php8.2-fpm"
-  "php8.3-fpm"
+  "php{$V_PHP}-fpm"
   "postfix"
   "redis-server"
   "rsyslog"
@@ -100,3 +102,6 @@ if [[ $SERVICE == "all" ]]; then
 else
     manage_service "$SERVICE"
 fi
+
+[[ $DEBUG ]] && set +x
+
