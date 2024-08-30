@@ -8,7 +8,7 @@ if [[ $# -lt 2 || $1 == '-h' ]]; then
     exit 1
 fi
 
-. ~/.shrc || exit 2
+. ~/.shrc
 
 [[ $DEBUG ]] && set -x
 
