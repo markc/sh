@@ -1,277 +1,158 @@
 #!/usr/bin/env bash
-# .sh/bin/sshm 20230702 - 20240606
+# .sh/bin/sshm 20230702 - 20240830
 # Copyright (C) 1995-2024 Mark Constable <markc@renta.net> (AGPL-3.0)
 
-# Introducing shell exit strategies to trigger Bootstrap5 alerts
-#
-# exit 0        - success, no alert and continue
-# exit 1-250    - error, with 'danger' alert and continue
-# exit 251      - success, with 'success' alert and continue
-# exit 252      - info, with 'info' alert and continue
-# exit 253      - warning, with 'warning' alert and continue
-# exit 254      - warning, with 'warning' alert and empty content
-# exit 255      - error, with 'danger' alert and empty content
-#
-# 251/252/253 strip the first line to be used in alert message
+# Exit strategies for triggering Bootstrap5 alerts
+# exit 0    - success, no alert and continue
+# exit 1-250- error, 'danger' alert and continue
+# exit 251  - success, 'success' alert and continue
+# exit 252  - info, 'info' alert and continue
+# exit 253  - warning, 'warning' alert and continue
+# exit 254  - warning, 'warning' alert and empty content
+# exit 255  - error, 'danger' alert and empty content
 
-# Introducing CRUDL functions - Create, Read, Update, Delete and List
+# Strip the first line for alert message in 251/252/253 cases
 
+# Help function to display usage information
 help() {
     case $1 in
-    c | create)
-        echo "Create: add a new SSH Host file to ~/.ssh/config.d/
-
-Name - for the Host field and SSH Host file (required)
-Host - remote FQDN/IP for the Hostname field (required)
-Port - port number for the Port field (default '22')
-User - user for the User login field (default 'root')
-Skey - IdentityFile field for SSH Key (default 'none')
-
-Ex: sshm c|create foo 192.168.1.1 22 root '~/.ssh/lan'"
-        ;;
-    r | read)
-        echo "Read: show the content values for a host
-
-Name - for the SSH host file (required)
-
-Ex: sshm r|read foo"
-        ;;
-    u | update)
-        echo "Update: edit the contents of a SSH Host file
-
-Name - for the Host field and SSH host file (required)
-
-Ex: sshm u|update foo"
-        ;;
-    d | delete)
-        echo "Delete: a SSH Host config file
-
-Name - for the SSH Host file (required)
-
-Ex: sshm d|delete foo"
-        ;;
-    l | list)
-        echo "List: all host config files
-
-Ex: sshm l|list"
-        ;;
-    kc | key_create)
-        echo "Key Create: create a new SSH Key
-
-Name - for the SSH Key file (required)
-Cmnt - comment SSH Key file ($(hostname)@lan)
-Pass - password for SSH Key file (optional)
-
-Ex: sshm kc|key_create lan [me@lan] [password]"
-        ;;
-    kr | key_read)
-        echo "Key Read: show SSH Key
-
-Name - for the SSH Key file (required)
-
-Ex: sshm kr|key_read lan"
-        ;;
-    ku | key_update)
-        echo "Key Update: alias for Key Create
-
-Name - for the SSH Key file (required)
-Cmnt - comment SSH Key file ($(hostname)@lan)
-Pass - password for SSH Key file (optional)
-
-Ex: sshm ku|key_update lan [me@lan] [password]"
-        ;;
-    kd | key_delete)
-        echo "Key Delete: delete SSH Key
-
-Name - for the SSH Key file (required)
-
-Ex: sshm kd|key_delete lan"
-        ;;
-    kl | key_list)
-        echo "Key List: show all SSH Keys
-
-Ex: sshm kl|key_list"
-        ;;
-    i | init)
-        echo "Init: create and initialize ~/.ssh structure
-
-Ex: sshm i|init"
-        ;;
-    p | perms)
-        echo "Perms: reset permissions for ~/.ssh
-
-Ex: sshm p|perms"
-        ;;
-    a | all)
-        help c
-        echo -e "\n-------------------------------------------------------\n"
-        help r
-        echo -e "\n-------------------------------------------------------\n"
-        help u
-        echo -e "\n-------------------------------------------------------\n"
-        help d
-        echo -e "\n-------------------------------------------------------\n"
-        help l
-        echo -e "\n-------------------------------------------------------\n"
-        help kc
-        echo -e "\n-------------------------------------------------------\n"
-        help kr
-        echo -e "\n-------------------------------------------------------\n"
-        help ku
-        echo -e "\n-------------------------------------------------------\n"
-        help kd
-        echo -e "\n-------------------------------------------------------\n"
-        help kl
-        echo -e "\n-------------------------------------------------------\n"
-        help i
-        echo -e "\n-------------------------------------------------------\n"
-        help p
-        ;;
-    *)
-        echo "Usage: sshm cmd [args] or sshm help cmd
-
-c|create        - Create a new SSH Host config
-r|read          - Show the content values of SSH Host
-u|update        - Update (edit) SSH Host config
-d|delete        - Delete a SSH Host config
-l|list          - Show all SSH Host configs
-kc|key_create   - Create a new SSH Key
-kr|key_read     - Show the contents of a SSH Key
-ku|key_update   - Update SSH Key (alias for key_create)
-kd|key_delete   - Delete a SSH key
-kl|key_list     - List all SSH Keys
-i|init          - Initialize ~/.ssh if not exists
-p|perms         - Set correct ~/.ssh permissions
-h|help          - Show help/usage for a|all commands"
-        ;;
+        c|create)
+            echo "Create a new SSH Host file in ~/.ssh/config.d/"
+            echo "Usage: sshm create <Name> <Host> [Port] [User] [Skey]"
+            ;;
+        r|read)
+            echo "Show the content values for a host"
+            echo "Usage: sshm read <Name>"
+            ;;
+        u|update)
+            echo "Edit the contents of an SSH Host file"
+            echo "Usage: sshm update <Name>"
+            ;;
+        d|delete)
+            echo "Delete an SSH Host config file"
+            echo "Usage: sshm delete <Name>"
+            ;;
+        l|list)
+            echo "List all host config files"
+            echo "Usage: sshm list"
+            ;;
+        kc|key_create)
+            echo "Create a new SSH Key"
+            echo "Usage: sshm key_create <Name> [Comment] [Password]"
+            ;;
+        kr|key_read)
+            echo "Show SSH Key"
+            echo "Usage: sshm key_read <Name>"
+            ;;
+        ku|key_update)
+            echo "Update SSH Key (alias for key_create)"
+            echo "Usage: sshm key_update <Name> [Comment] [Password]"
+            ;;
+        kd|key_delete)
+            echo "Delete SSH Key"
+            echo "Usage: sshm key_delete <Name>"
+            ;;
+        kl|key_list)
+            echo "List all SSH Keys"
+            echo "Usage: sshm key_list"
+            ;;
+        i|init)
+            echo "Initialize ~/.ssh structure"
+            echo "Usage: sshm init"
+            ;;
+        p|perms)
+            echo "Reset permissions for ~/.ssh"
+            echo "Usage: sshm perms"
+            ;;
+        *)
+            echo "Usage: sshm <cmd> [args]"
+            echo "Commands: create, read, update, delete, list, key_create, key_read, key_update, key_delete, key_list, init, perms, help"
+            ;;
     esac
 }
 
+# Check if the user has provided a command or needs help
 [[ -z $1 || $1 =~ -h ]] && help && exit 1
 
+# Enable debugging if DEBUG is set
 [[ $DEBUG ]] && set -x
 
-# SSH Host files
-
+# SSH Host management functions
 create() {
-    local _n=${1:-''} _h=${2:-''} _p=${3:-'22'} _u=${4:-'root'} _k=${5:-'none'}
+    local name=$1 host=$2 port=${3:-22} user=${4:-root} skey=${5:-none}
 
-    echo "Host $_n
-  Hostname $_h
-  Port $_p
-  User $_u" >~/.ssh/config.d/$_n
+    echo "Host $name
+    Hostname $host
+    Port $port
+    User $user" > ~/.ssh/config.d/$name
 
-    if [[ $_k =~ none ]]; then
-        echo "  #IdentityFile none" >>~/.ssh/config.d/$_n
-    else
-        echo "  IdentityFile $_k" >>~/.ssh/config.d/$_n
-    fi
+    [[ $skey != "none" ]] && echo "  IdentityFile $skey" >> ~/.ssh/config.d/$name || echo "  #IdentityFile none" >> ~/.ssh/config.d/$name
 }
 
 read() {
-    if [[ -f ~/.ssh/config.d/$1 ]]; then
-        echo "Path: ~/.ssh/config.d/$1"
-        cat ~/.ssh/config.d/$1 | awk '{print $2}'
-    else
-        echo "Notice: ~/.ssh/config.d/'$1' does not exist (254)" && exit 254
-    fi
+    local name=$1
+    [[ -f ~/.ssh/config.d/$name ]] && cat ~/.ssh/config.d/$name | awk '{print $2}' || echo "Notice: ~/.ssh/config.d/'$name' does not exist (254)" && exit 254
 }
 
 update() {
-    if [[ -f ~/.ssh/config.d/$1 ]]; then
-        echo "Path: ~/.ssh/config.d/$1"
-        nano -t -x -c ~/.ssh/config.d/$1
-    else
-        echo "Notice: ~/.ssh/config.d/'$1' does not exist (254)" && exit 254
-    fi
+    local name=$1
+    [[ -f ~/.ssh/config.d/$name ]] && nano -t -x -c ~/.ssh/config.d/$name || echo "Notice: ~/.ssh/config.d/'$name' does not exist (254)" && exit 254
 }
 
 delete() {
-    if [[ $1 == key && -f ~/.ssh/$2 ]] >/dev/null 2>&1; then
-        rm ~/.ssh/$2*
-        echo "Removed: SSH key '$2' (251)" && exit 251
-    elif [[ $1 && -f ~/.ssh/config.d/$1 ]]; then
-        rm ~/.ssh/config.d/$1
-        echo "Removed: SSH host '$1' (251)" && exit 251
+    local name=$1
+    if [[ -f ~/.ssh/config.d/$name ]]; then
+        rm ~/.ssh/config.d/$name
+        echo "Removed: SSH host '$name' (251)" && exit 251
     else
-        echo "Error: SSH host '$1' does not exist (255)" && exit 255
+        echo "Error: SSH host '$name' does not exist (255)" && exit 255
     fi
 }
 
 list() {
-    for i in $(/bin/ls -1 ~/.ssh/config.d/); do
-        cat ~/.ssh/config.d/$i |
-            tr '\n' ' ' |
-            awk '{printf "%-15s %25s %5s %10s %20s\n", $2, $4, $6, $8, $10}'
+    for file in ~/.ssh/config.d/*; do
+        awk '{printf "%-15s %25s %5s %10s %20s\n", $2, $4, $6, $8, $10}' $file | tr '\n' ' '
     done
 }
 
-# SSH Key functions
-
+# SSH Key management functions
 key_create() {
-    local _k=${1:-'lan'}
-    local _c=${2:-"$(hostname)@$_k"}
-    local _p=${3:-''}
+    local name=$1 comment=${2:-"$(hostname)@lan"} password=$3
 
-    if [[ -f ~/.ssh/$_skey ]]; then
-        echo "Warning: SSH Key '~/.ssh/$_k' already exists" && exit 254
+    if [[ -f ~/.ssh/$name ]]; then
+        echo "Warning: SSH Key '~/.ssh/$name' already exists" && exit 254
     fi
 
-    ssh-keygen -o -a 100 -t ed25519 -f ~/.ssh/$_k -C "$_c" -N "$_p"
-
-    if [[ $? == 0 ]]; then
-        echo "Success: SSH key '$_k' successfully created"
-    else
-        echo "Error: SSH key '$_k' not created" && exit 254
-    fi
+    ssh-keygen -o -a 100 -t ed25519 -f ~/.ssh/$name -C "$comment" -N "$password" || echo "Error: SSH key '$name' not created" && exit 254
 }
 
 key_read() {
-    #SKEY=$(echo "${1/#\~/$HOME}") # PHP exec workaround for ~
-    if [[ -f $(echo "${1/#\~/$HOME}") ]]; then
-        cat $1.pub
-    elif [[ -f ~/.ssh/$1.pub ]]; then
-        cat ~/.ssh/$1.pub
-    else
-        echo "Warning: '$1' key does not exist (254)" && exit 254
-    fi
+    local name=$1
+    [[ -f ~/.ssh/$name.pub ]] && cat ~/.ssh/$name.pub || echo "Warning: '$name' key does not exist (254)" && exit 254
 }
 
 key_delete() {
-    if [[ -f $(echo "${1/#\~/$HOME}") ]]; then
-        rm $1 $1.pub
-        echo "Success: removed $1 and $1.pub"
-    elif [[ -f ~/.ssh/$1 ]]; then
-        rm ~/.ssh/$1 ~/.ssh/$1.pub
-        echo "Success: removed ~/.ssh/$1 and ~/.ssh/$1.pub"
-    else
-        echo "Error: ~/.ssh/$1 does not exist" && exit 255
-    fi
+    local name=$1
+    [[ -f ~/.ssh/$name ]] && rm ~/.ssh/$name ~/.ssh/$name.pub && echo "Success: removed ~/.ssh/$name and ~/.ssh/$name.pub" || echo "Error: ~/.ssh/$name does not exist" && exit 255
 }
 
 key_list() {
-    if [[ $1 == all ]]; then
-        for i in $(/bin/ls -1 ~/.ssh/ | grep .pub$); do
-            echo -n $i | sed 's#\(.*\).pub$#~/.ssh/\1 #'
-            ssh-keygen -lf ~/.ssh/$i
-        done
-    else
-        /bin/ls -1 ~/.ssh/ | awk -F. '/.pub$/ {print "~/.ssh/"$1}'
-    fi
+    for key in ~/.ssh/*.pub; do
+        echo -n "$(basename "$key" .pub) "
+        ssh-keygen -lf "$key"
+    done
 }
 
 # Supplementary functions
-
 copy() {
-    local _skey=$1
-    local _name=$2
+    local skey=$1 name=$2
 
-    [[ ! -f ~/.ssh/$_skey.pub ]] && echo "Error: ~/.ssh/$_skey.pub does not exist" && exit 255
-    [[ ! -f ~/.ssh/config.d/$_name ]] && echo "Error: ~/.ssh/config.f/$_name does not exist" && exit 255
+    [[ ! -f ~/.ssh/$skey.pub ]] && echo "Error: ~/.ssh/$skey.pub does not exist" && exit 255
+    [[ ! -f ~/.ssh/config.d/$name ]] && echo "Error: ~/.ssh/config.d/$name does not exist" && exit 255
 
-    pubkey="$(cat ~/.ssh/$_skey.pub)"
+    local pubkey=$(cat ~/.ssh/$skey.pub)
     ssh $name "[[ ! -d ~/.ssh ]] && mkdir -p ~/.ssh && chmod 700 ~/.ssh; echo $pubkey >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys;"
-    echo "Success: Public key $_skey.pub was successfully transfered to $_name"
+    echo "Success: Public key $skey.pub was successfully transferred to $name"
 }
 
 perms() {
@@ -281,41 +162,13 @@ perms() {
 }
 
 init() {
-    if [[ -d ~/.ssh ]]; then
-        echo "Warning: ~/.ssh already exists"
-    else
-        mkdir ~/.ssh && chmod 700 ~/.ssh
-        echo "Warning: ~/.ssh did not exist, created"
-    fi
+    [[ -d ~/.ssh ]] || { mkdir ~/.ssh && chmod 700 ~/.ssh && echo "Created ~/.ssh"; }
+    [[ -f ~/.ssh/authorized_keys ]] || { touch ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys && echo "Created ~/.ssh/authorized_keys"; }
+    [[ -d ~/.ssh/config.d ]] || { mkdir ~/.ssh/config.d && chmod 700 ~/.ssh/config.d && echo "Created ~/.ssh/config.d"; }
 
-    if [[ -f ~/.ssh/authorized_keys ]]; then
-        echo "Warning: ~/.ssh/authorized_keys already exists"
-    else
-        touch ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys
-        echo "Warning: ~/.ssh/authorized_keys did not exist, created"
-    fi
-
-    if [[ -d ~/.ssh/config.d ]]; then
-        echo "Warning: ~/.ssh/config.d already exists"
-    else
-        mkdir ~/.ssh/config.d && chmod 700 ~/.ssh/config.d
-        echo "Warning: ~/.ssh/config.d did not exist, created"
-    fi
-
-    if [[ -f ~/.ssh/config ]]; then
-        echo "Warning: ~/.ssh/config already exists"
-    else
+    [[ -f ~/.ssh/config ]] || {
         echo "# Created by sshm on $(date +'%Y%m%d')
 Ciphers aes128-ctr,aes192-ctr,aes256-ctr,aes128-gcm@openssh.com,aes256-gcm@openssh.com,chacha20-poly1305@openssh.com
-
-# To avoid manually typing a password for SSH keys with passwords, add this to
-# ~/.myrc or ~/.bashrc, then add 'echo YOUR_PASSWORD' to ~/.lan_password and
-# 'chmod 700 ~/.lan_password'
-#
-# export SSH_AUTH_SOCK=\"\$XDG_RUNTIME_DIR/ssh-agent.socket\"
-# cat ~/.ssh/lan | SSH_ASKPASS=~/.lan_password ssh-add - >/dev/null 2>&1
-#
-# Do not add a password to SSH keys used in automated scripts.
 
 Include ~/.ssh/config.d/*
 
@@ -324,75 +177,43 @@ Host *
   ServerAliveInterval 30
   ForwardAgent yes
   AddKeysToAgent yes
-  IdentitiesOnly yes
-#  ControlMaster auto
-#  ControlPath ~/.ssh/ssh_mux_%h_%p_%r
-#  ControlPersist=60" >~/.ssh/config
-    fi
+  IdentitiesOnly yes" > ~/.ssh/config
+    }
     perms
 }
 
+# Systemctl control functions
 start() {
-  sudo systemctl start sshd
-  sudo systemctl enable sshd
+    sudo systemctl start sshd
+    sudo systemctl enable sshd
 }
 
 stop() {
-  sudo systemctl stop sshd
-  sudo systemctl disable sshd
+    sudo systemctl stop sshd
+    sudo systemctl disable sshd
 }
 
+# Command handler
 case $1 in
-c | create)
-    create $2 $3 $4 $5 $6
-    ;;
-r | read)
-    read $2
-    ;;
-u | update)
-    update $2
-    ;;
-d | delete)
-    delete $2
-    ;;
-l | list)
-    list
-    ;;
-kc | key_create)
-    key_create $2
-    ;;
-kr | key_read)
-    key_read $2
-    ;;
-ku | key_update)
-    key_create $2
-    ;;
-kd | key_delete)
-    key_delete $2
-    ;;
-kl | key_list)
-    key_list $2
-    ;;
-i | init)
-    init
-    ;;
-p | perms)
-    perms
-    ;;
-h | help)
-    help $2
-    ;;
-start)
-    start
-    ;;
-stop)
-    stop
-    ;;
-*)
-    echo "Unknown command '$1'" && echo && help
-    ;;
+    c|create) create $2 $3 $4 $5 $6 ;;
+    r|read) read $2 ;;
+    u|update) update $2 ;;
+    d|delete) delete $2 ;;
+    l|list) list ;;
+    kc|key_create) key_create $2 $3 $4 ;;
+    kr|key_read) key_read $2 ;;
+    ku|key_update) key_create $2 $3 $4 ;;
+    kd|key_delete) key_delete $2 ;;
+    kl|key_list) key_list ;;
+    i|init) init ;;
+    p|perms) perms ;;
+    start) start ;;
+    stop) stop ;;
+    h|help) help $2 ;;
+    *) echo "Unknown command '$1'" && help ;;
 esac
 
+# Disable debugging if it was enabled
 [[ $DEBUG ]] && set +x
 
 exit 0
