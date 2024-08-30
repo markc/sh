@@ -27,7 +27,7 @@ SERVICES=(
   "opendkim"
   "opendmarc"
   "pdns"
-  "php{$V_PHP}-fpm"
+  "php$V_PHP-fpm"
   "postfix"
   "redis-server"
   "rsyslog"
