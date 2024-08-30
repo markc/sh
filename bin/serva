@@ -1,65 +1,74 @@
 #!/usr/bin/env bash
-# .sh/bin/serva 20170417 - 20221122
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/serva 20170417 - 20240830
+# Copyright (C) 1995-2024 Mark Constable <markc@renta.net> (AGPL-3.0)
 
-[[ -z $2 || $1 == '-h' ]] &&
-    echo "Usage: serva start|stop|restart|reload all|dns|mail|web|php|nginx" && exit 1
+# Check if at least two arguments are passed
+if [[ $# -lt 2 || $1 == '-h' ]]; then
+    echo "Usage: $0 start|stop|enable|disable|restart|reload <service_name|all>"
+    exit 1
+fi
 
-. ~/.shrc
+# Assign the arguments to variables
+ACTION=$1
+SERVICE=$2
 
-serva_mail() {
-    if [[ -f /usr/sbin/postfix ]]; then
-        $SUDO /usr/sbin/postfix check
-        [[ $? -eq 0 ]] && sc $1 postfix && echo "$1 postfix"
-    fi
+# List of services to manage when 'all' is specified
+SERVICES=(
+  "cron"
+  "dovecot"
+  "mailgraph"
+  "mariadb"
+  "multipathd"
+  "nginx"
+  "opendkim"
+  "opendmarc"
+  "pdns"
+  "php8.1-fpm"
+  "php8.2-fpm"
+  "php8.3-fpm"
+  "postfix"
+  "redis-server"
+  "rsyslog"
+  "sshguard"
+  "vnstat"
+)
 
-    if [[ -f /usr/bin/doveconf ]]; then
-        $SUDO /usr/bin/doveconf check
-        [[ $? -eq 0 ]] && sc $1 dovecot && echo "$1 dovecot"
+# Function to perform an action on a service
+manage_service() {
+    local service=$1
+    case $ACTION in
+        start|stop|restart|reload)
+            echo "${ACTION^}ing service '$service'..."
+            sudo systemctl $ACTION $service
+            ;;
+        enable|disable)
+            if sudo systemctl is-enabled --quiet $service; then
+                [[ $ACTION == "enable" ]] && echo "Service '$service' is already enabled." && return
+            else
+                [[ $ACTION == "disable" ]] && echo "Service '$service' is already disabled." && return
+            fi
+            echo "${ACTION^}ing service '$service'..."
+            sudo systemctl $ACTION $service
+            ;;
+        *)
+            echo "Invalid action: $ACTION"
+            exit 1
+            ;;
+    esac
+
+    # Verify action result
+    if [[ $? -eq 0 ]]; then
+        echo "Service '$service' ${ACTION}ed successfully."
+    else
+        echo "Failed to ${ACTION} service '$service'."
     fi
 }
 
-serva_dns() {
-    [[ -f /usr/sbin/pdns_server ]] && sc $1 pdns && echo "$1 pdns"
-    [[ -f /usr/sbin/pdns_recursor ]] && sc $1 pdns-recursor && echo "$1 pdns-recursor"
-}
-
-# TODO: PHP needs to be checked for Debian and Manjaro
-serva_php() {
-    local _BFPM="php-fpm$V_PHP" _SFPM="php$V_PHP-fpm"
-    [[ $OSTYP == alpine ]] && _SFPM=$_BFPM
-
-    if [[ -f /usr/sbin/$_BFPM ]]; then
-        $SUDO /usr/sbin/$_BFPM -t >/dev/null 2>&1
-        [[ $? -eq 0 ]] && sc $1 $_SFPM && echo "$1 $_SFPM"
-    fi
-}
-
-serva_nginx() {
-    if [[ -f /usr/sbin/nginx ]]; then
-        $SUDO /usr/sbin/nginx -t >/dev/null 2>&1
-        [[ $? -eq 0 ]] && sc $1 nginx && echo "$1 nginx"
-    fi
-}
-
-if [[ $2 == all ]]; then
-    serva_nginx $1
-    serva_php $1
-    serva_mail $1
-    sc $1 opendkim
-    [[ $OSTYP != alpine ]] && sc $1 opendmarc # not available for Alpine
-#    serva_dns $1
-elif [[ $2 == dns ]]; then
-    serva_dns $1
-elif [[ $2 == php ]]; then
-    serva_php $1
-elif [[ $2 == web ]]; then
-    serva_php $1
-    serva_nginx $1
-elif [[ $2 == mail ]]; then
-    serva_mail $1
-elif [[ $2 == nginx ]]; then
-    serva_nginx $1
+# Main script logic
+if [[ $SERVICE == "all" ]]; then
+    for svc in "${SERVICES[@]}"; do
+        manage_service "$svc"
+    done
 else
-    echo "Warning: unknown service '$2'"
+    manage_service "$SERVICE"
 fi
