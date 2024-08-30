@@ -18,6 +18,7 @@ SERVICE=$2
 
 # List of services to manage when 'all' is specified
 SERVICES=(
+  "coolwsd"
   "cron"
   "dovecot"
   "mailgraph"
