@@ -47,7 +47,9 @@ is_service_active() {
 manage_service() {
     local service="$1"
 
-    [[ service_exists "$service" -eq 0 ]] || return
+    if ! service_exists "$service"; then
+        return
+    fi
 
     case $ACTION in
         start)
