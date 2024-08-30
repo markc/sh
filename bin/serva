@@ -33,13 +33,38 @@ SERVICES=(
   "vnstat"
 )
 
+# Function to check if a service is active (running)
+is_service_active() {
+    systemctl is-active --quiet $1
+}
+
 # Function to perform an action on a service
 manage_service() {
     local service=$1
     case $ACTION in
-        start|stop|restart|reload)
-            echo "${ACTION^}ing service '$service'..."
-            sudo systemctl $ACTION $service
+        start)
+            if is_service_active $service; then
+                echo "Service '$service' is already running."
+            else
+                echo "Starting service '$service'..."
+                sudo systemctl start $service
+            fi
+            ;;
+        stop)
+            if is_service_active $service; then
+                echo "Stopping service '$service'..."
+                sudo systemctl stop $service
+            else
+                echo "Service '$service' is not running."
+            fi
+            ;;
+        restart|reload)
+            if is_service_active $service; then
+                echo "${ACTION^}ing service '$service'..."
+                sudo systemctl $ACTION $service
+            else
+                echo "Service '$service' is not running; cannot ${ACTION}."
+            fi
             ;;
         enable|disable)
             if sudo systemctl is-enabled --quiet $service; then
