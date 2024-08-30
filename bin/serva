@@ -24,6 +24,8 @@ SERVICES=(
   "opendmarc"
   "pdns"
   "php8.1-fpm"
+  "php8.2-fpm"
+  "php8.3-fpm"
   "postfix"
   "redis-server"
   "rsyslog"
@@ -45,10 +47,7 @@ is_service_active() {
 manage_service() {
     local service="$1"
 
-    if ! service_exists "$service"; then
-        echo "Service '$service' does not exist."
-        return
-    fi
+    [[ ! service_exists "$service" ]] && return
 
     case $ACTION in
         start)
@@ -89,13 +88,6 @@ manage_service() {
             exit 1
             ;;
     esac
-
-    # Verify action result
-#    if [[ $? -eq 0 ]]; then
-#        echo "Service '$service' ${ACTION}ed successfully."
-#    else
-#        echo "Failed to ${ACTION} service '$service'."
-#    fi
 }
 
 # Main script logic
