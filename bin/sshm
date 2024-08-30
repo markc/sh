@@ -111,7 +111,7 @@ delete() {
 
 list() {
     for file in ~/.ssh/config.d/*; do
-        awk '{printf "%-15s %25s %5s %10s %20s\n", $2, $4, $6, $8, $10}' $file | tr '\n' ' '
+        cat $file | tr '\n' ' ' | awk '{printf "%-15s %25s %5s %10s %20s\n", $2, $4, $6, $8, $10}'
     done
 }
 
