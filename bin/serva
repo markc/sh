@@ -37,7 +37,8 @@ SERVICES=(
 
 # Function to check if a service file exists
 service_exists() {
-    systemctl list-units --full -all | grep -Fq "$1.service"
+#    systemctl list-units --full -all | grep -Fq "$1.service"
+    [[ -f "/usr/lib/systemd/system/$1.service" ]]
 }
 
 # Function to check if a service is active (running)
