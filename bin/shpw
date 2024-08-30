@@ -1,19 +1,37 @@
 #!/usr/bin/env bash
-# .sh/bin/shpw 20190603 - 20210112
-# Copyright (C) 1995-2021 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/shpw 20190603 - 20240830
+# Copyright (C) 1995-2024 Mark Constable <markc@renta.net> (AGPL-3.0)
 
-[[ -z $1 || $1 =~ '-h' ]] && echo "Usage: shpw user@domain" && exit 1
-
-[[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
-
-EMAIL=${1,,}      # lowercase user@domain
-VHOST=${EMAIL#*@} # userid @ $VHOST
-#VUSER=${EMAIL%@*} # $VUSER @ domain
-
-if [[ ! -f /root/.vhosts/$VHOST.conf ]]; then
-    echo "ERROR: /root/.vhosts/$VHOST.conf does not exist"
-else
-    grep -A1 "Username: $EMAIL" /root/.vhosts/$VHOST.conf | grep Password: | sed 's/Password: //'
+# Ensure a user@domain argument is provided
+if [[ -z $1 || $1 =~ '-h' ]]; then
+    echo "Usage: shpw user@domain"
+    exit 1
 fi
 
-#systemd-cat -t hlog echo "$(whoami) $(basename $0) $*"
+# Ensure the script is run as root
+if [[ $(id -u) -ne 0 ]]; then
+    echo "ERROR: must be root (use sudo -i)"
+    exit 2
+fi
+
+# Enable debugging if DEBUG is set
+[[ $DEBUG ]] && set -x
+
+# Normalize the email to lowercase and extract the domain
+EMAIL=${1,,}      # lowercase user@domain
+VHOST=${EMAIL#*@} # extract domain part of the email
+
+# Check if the vhost configuration file exists
+CONFIG_FILE="/root/.vhosts/$VHOST.conf"
+if [[ ! -f $CONFIG_FILE ]]; then
+    echo "ERROR: $CONFIG_FILE does not exist"
+else
+    # Extract the password associated with the given email
+    PASSWORD=$(grep -A1 "Username: $EMAIL" "$CONFIG_FILE" | grep Password: | sed 's/Password: //')
+    echo "$PASSWORD"
+fi
+
+# Disable debugging if it was enabled
+[[ $DEBUG ]] && set +x
+
+exit 0
