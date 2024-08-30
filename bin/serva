@@ -82,11 +82,11 @@ manage_service() {
     esac
 
     # Verify action result
-    if [[ $? -eq 0 ]]; then
-        echo "Service '$service' ${ACTION}ed successfully."
-    else
-        echo "Failed to ${ACTION} service '$service'."
-    fi
+#    if [[ $? -eq 0 ]]; then
+#        echo "Service '$service' ${ACTION}ed successfully."
+#    else
+#        echo "Failed to ${ACTION} service '$service'."
+#    fi
 }
 
 # Main script logic
