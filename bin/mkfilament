@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# .sh/bin/mkfilament 20241021 - 20241021
+# Copyright (C) 1995-2024 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+[[ $1 =~ '-h' ]] && echo "Usage: mkfilament [myapp] [user] [email] [passwd]" && exit 1
+
+[[ $DEBUG ]] && set -x
+
+DEVEL=${DEVEL:-"$HOME/Dev"}
+
+MYAPP=${1:-'filament-test'}
+USERN=${2:-'Test User'}
+EMAIL=${3:-'test@example.com'}
+PASSW=${4:-'password'}
+
+[[ $(php -v 2>/dev/null) ]] || {
+    echo -e "\nPlease install PHP\n\nhttps://laravel.com/docs/11.x/deployment#server-requirements\n"
+    exit
+}
+
+[[ $(composer -V 2>/dev/null) ]] || {
+    echo -e "\nPlease install composer\n\nhttps://getcomposer.org/download/\n"
+    exit
+}
+
+[[ -d $DEVEL ]] || mkdir $DEVEL
+
+[[ -d $DEVEL/$MYAPP ]] && {
+    echo -e "\n$DEVEL/$MYAPP already exists\n\nRemove it first or start another project...\n\nrm -rf $DEVEL/$MYAPP\n"
+    exit
+}
+
+cd $DEVEL
+
+composer create-project laravel/laravel $MYAPP && cd $MYAPP
+composer require filament/filament:"^3.2" -W
+php artisan filament:install --no-interaction --panels
+php artisan make:filament-user --no-interaction --name="$USERN" --email="$EMAIL" --password="$PASSW"
+npm install
+echo -e "\n!!! 'cd $DEVEL/$MYAPP' and run 'code .' in another shell !!!\n"
+composer run dev
+
+[[ $DEBUG ]] && set +x
