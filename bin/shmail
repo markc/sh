@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# .sh/bin/shmail 20150529 - 20210523
-# Copyright (C) 1995-2021 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/bin/shmail 20150529 - 20241025
+# Copyright (C) 1995-2024 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 #VHOST=${_ARG1#*@} # userid @ $VHOST
 #VUSER=${_ARG1%@*} # $VUSER @ domain
@@ -8,6 +8,8 @@
 [[ $1 =~ '-h' ]] && echo "Usage: shmail [email@|domain]" && exit 1
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
+
+[[ $DEBUG ]] && set -x
 
 _ARG1=${1,,} # lowercase user@domain
 VPATH="/home/u"
@@ -94,3 +96,5 @@ else
         printf "%-45s %7d %9s\n" $_mail $_fnum $_sstr
     done
 fi
+
+[[ $DEBUG ]] && set +x
