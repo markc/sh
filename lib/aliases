@@ -1,4 +1,4 @@
-# .sh/lib/aliases 20151231 - 20240801
+# .sh/lib/aliases 20151231 - 20241030
 # Copyright (C) 1995-2024 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ $DEBUG ]] && set -x
@@ -7,7 +7,8 @@
 
 alias ..='cd ..'
 alias ?='bash ~/.help'
-alias c='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
+alias a='php artisan'
+alias c='composer'
 alias df='df -kTh'
 alias e='nano -t -x -c'
 alias eh='e ~/.help'
