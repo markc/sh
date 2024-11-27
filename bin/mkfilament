@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# .sh/bin/mkfilament 20241021 - 20241021
+# .sh/bin/mkfilament 20241021 - 20241110
 # Copyright (C) 1995-2024 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ $1 =~ '-h' ]] && echo "Usage: mkfilament [myapp] [user] [email] [passwd]" && exit 1
@@ -14,30 +14,42 @@ EMAIL=${3:-'test@example.com'}
 PASSW=${4:-'password'}
 
 [[ $(php -v 2>/dev/null) ]] || {
-    echo -e "\nPlease install PHP\n\nhttps://laravel.com/docs/11.x/deployment#server-requirements\n"
-    exit
-}
-
-[[ $(composer -V 2>/dev/null) ]] || {
-    echo -e "\nPlease install composer\n\nhttps://getcomposer.org/download/\n"
-    exit
+    curl -fsSL https://php.new/install/linux | bash
 }
 
 [[ -d $DEVEL ]] || mkdir $DEVEL
 
 [[ -d $DEVEL/$MYAPP ]] && {
-    echo -e "\n$DEVEL/$MYAPP already exists\n\nRemove it first or start another project...\n\nrm -rf $DEVEL/$MYAPP\n"
+    echo "
+$DEVEL/$MYAPP already exists
+Remove it first or start another project...
+rm -rf $DEVEL/$MYAPP
+"
     exit
 }
 
 cd $DEVEL
 
-composer create-project laravel/laravel $MYAPP && cd $MYAPP
+# Including Jetstream, not needed when using the filament-jetstream plugin
+#laravel new --stack=livewire --git --jet --dark --verification --pest --database=sqlite --teams --api -n $MYAPP
+
+laravel new --git --dark --pest --database=sqlite -n $MYAPP
+
+cd $MYAPP
+
+npm install
+
 composer require filament/filament:"^3.2" -W
 php artisan filament:install --no-interaction --panels
 php artisan make:filament-user --no-interaction --name="$USERN" --email="$EMAIL" --password="$PASSW"
-npm install
+
+#composer require stephenjude/filament-jetstream
+#php artisan filament:jetstream:install --teams --api
+
+npm run build
+
 echo -e "\n!!! 'cd $DEVEL/$MYAPP' and run 'code .' in another shell !!!\n"
+
 composer run dev
 
 [[ $DEBUG ]] && set +x

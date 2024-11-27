@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# .sh/bin/shmail 20150529 - 20241025
+# .sh/bin/shmail 20150529 - 20241127
 # Copyright (C) 1995-2024 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 #VHOST=${_ARG1#*@} # userid @ $VHOST
@@ -18,7 +18,8 @@ VUSER='*'
 
 if [[ $_ARG1 ]]; then
     if [[ $_ARG1 =~ "@" ]]; then
-        VUSER="*${_ARG1%@*}*"
+#        VUSER="*${_ARG1%@*}*"
+        VUSER="${_ARG1%@*}*"
         VHOST="${_ARG1#*@}*"
     else
         VHOST="$_ARG1*"
