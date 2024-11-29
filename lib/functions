@@ -234,7 +234,12 @@ sx() {
         echo "Usage: sx host command (host must be in ~/.ssh/config)" && return 1
     local _HOST=$1
     shift
-    ssh $_HOST -q -t "bash -ci '$@'"
+    ssh $_HOST -q -T "bash -ci '$@'"
+
+#    ssh $_HOST -q -t "bash -ci '$@'"
+
+#-T' Disable pseudo-tty allocation.
+#-t' Force pseudo-tty allocation. This can be used to execute arbitrary screen-based programs on a remote machine, which can be very useful, e.g. when implementing menu services. Multiple -t options force tty allocation, even if ssh has no local tty. 
 }
 
 rmenv() {
