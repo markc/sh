@@ -1,4 +1,4 @@
-# .sh/lib/functions 20151231 - 20241201
+# .sh/lib/functions 20151231 - 20241223
 # Copyright (C) 1995-2024 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ $DEBUG ]] && set -x
@@ -224,8 +224,8 @@ sethost() {
             OSREL='extra-testing'
         fi
         WUGID='http'
-    elif [[ $OSTYP == openwrt ]]; then
-        echo "TODO: add settings for OpenWrt"
+#    elif [[ $OSTYP == openwrt ]]; then
+#        echo "TODO: add settings for OpenWrt"
     fi
 }
 
