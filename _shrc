@@ -22,13 +22,13 @@ if [[ $OSTYP == openwrt ]]; then
         fi
     }
     function hostname {
-        local _host=$(uci get system.@system[0].hostname)
+        local _host=$($SUDO uci get system.@system[0].hostname)
         if [[ -z $1 ]]; then
             echo $_host
         elif [[ $1 == -f ]]; then
-            echo $_host.$(uci get dhcp.@dnsmasq[0].domain)
+            echo $_host.$($SUDO uci get dhcp.@dnsmasq[0].domain)
         elif [[ $1 == -d ]]; then
-            uci get dhcp.@dnsmasq[0].domain
+            $SUDO uci get dhcp.@dnsmasq[0].domain
         fi
     }
 fi
