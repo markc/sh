@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# .sh/bin/mkfilament 20241021 - 20241110
+# .sh/bin/mkfilament 20241021 - 20250116
 # Copyright (C) 1995-2024 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+set -e  # Exit immediately if a command exits with a non-zero status.
 
 [[ $1 =~ '-h' ]] && echo "Usage: mkfilament [myapp] [user] [email] [passwd]" && exit 1
 
@@ -13,9 +15,17 @@ USERN=${2:-'Test User'}
 EMAIL=${3:-'test@example.com'}
 PASSW=${4:-'password'}
 
-[[ $(php -v 2>/dev/null) ]] || {
-    curl -fsSL https://php.new/install/linux | bash
-}
+# Check for required software
+command -v php >/dev/null 2>&1 || { echo >&2 "PHP is required but not installed. Aborting."; exit 1; }
+command -v composer >/dev/null 2>&1 || { echo >&2 "Composer is required but not installed. Aborting."; exit 1; }
+command -v npm >/dev/null 2>&1 || { echo >&2 "npm is required but not installed. Aborting."; exit 1; }
+
+# Check PHP version
+PHP_VERSION=$(php -r "echo PHP_VERSION;")
+if [[ "${PHP_VERSION:0:1}" -lt 8 ]]; then
+    echo "PHP version 8.0 or higher is required. You have $PHP_VERSION"
+    exit 1
+fi
 
 [[ -d $DEVEL ]] || mkdir $DEVEL
 
@@ -25,28 +35,36 @@ $DEVEL/$MYAPP already exists
 Remove it first or start another project...
 rm -rf $DEVEL/$MYAPP
 "
-    exit
+    exit 1
 }
 
 cd $DEVEL
 
-# Including Jetstream, not needed when using the filament-jetstream plugin
-#laravel new --stack=livewire --git --jet --dark --verification --pest --database=sqlite --teams --api -n $MYAPP
-
-laravel new --git --dark --pest --database=sqlite -n $MYAPP
+laravel new --git --dark --pest --database=sqlite -n $MYAPP || { echo "Laravel project creation failed"; exit 1; }
 
 cd $MYAPP
 
-npm install
+# Create .env file and generate app key
+cp .env.example .env
+php artisan key:generate
 
-composer require filament/filament:"^3.2" -W
-php artisan filament:install --no-interaction --panels
-php artisan make:filament-user --no-interaction --name="$USERN" --email="$EMAIL" --password="$PASSW"
+# Create SQLite database
+touch database/database.sqlite
 
-#composer require stephenjude/filament-jetstream
-#php artisan filament:jetstream:install --teams --api
+npm install || { echo "npm install failed"; exit 1; }
 
-npm run build
+composer require filament/filament:"^3.2" -W || { echo "Filament installation failed"; exit 1; }
+php artisan filament:install --no-interaction --panels || { echo "Filament panel installation failed"; exit 1; }
+php artisan make:filament-user --no-interaction --name="$USERN" --email="$EMAIL" --password="$PASSW" || { echo "Filament user creation failed"; exit 1; }
+
+# Enable Filament dark mode
+sed -i "s/->colors(/->darkMode(true)->colors(/" app/Providers/Filament/AdminPanelProvider.php || { echo "Failed to enable Filament dark mode"; exit 1; }
+
+npm run build || { echo "npm build failed"; exit 1; }
+
+# Initialize Git repository
+git add .
+git commit -m "Initial commit with Laravel and Filament setup"
 
 echo -e "\n!!! 'cd $DEVEL/$MYAPP' and run 'code .' in another shell !!!\n"
 
