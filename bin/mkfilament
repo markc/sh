@@ -48,6 +48,11 @@ cd $MYAPP
 cp .env.example .env
 php artisan key:generate
 
+# Modify .env file (for markc using msmtp-mta OS package)
+sed -i 's#APP_URL=http://localhost#APP_URL=http://localhost:8000#' .env
+sed -i 's/MAIL_MAILER=log/MAIL_MAILER=sendmail/' .env
+sed -i "s/MAIL_FROM_ADDRESS=\"hello@example.com\"/MAIL_FROM_ADDRESS=\"$EMAIL\"/" .env
+
 # Create SQLite database
 touch database/database.sqlite
 
