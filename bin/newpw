@@ -6,4 +6,4 @@
 
 # It's a pain tomake sure pwgen is available everywhere
 #echo $(pwgen -sB ${2:-'16'} ${1:-'1'})
-echo $(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9!@#$%^&*' | head -c 16)
+echo $(openssl rand -base64 12)
