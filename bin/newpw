@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# .sh/bin/newpw 20170715 - 20210112
+# .sh/bin/newpw 20170715 - 20250124
 # Copyright (C) 1995-2021 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ $1 =~ -h ]] && echo "Usage: newpw [howmany(1)] [length(16)]" && exit 1
 
-echo $(pwgen -sB ${2:-'16'} ${1:-'1'})
-
-#systemd-cat -t hlog echo "$(whoami) $(basename $0) $*"
+# It's a pain tomake sure pwgen is available everywhere
+#echo $(pwgen -sB ${2:-'16'} ${1:-'1'})
+echo $(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9!@#$%^&*' | head -c 16)
