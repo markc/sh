@@ -205,7 +205,7 @@ sethost() {
         V_PHP='84'
         C_DNS='/etc/pdns'
         C_DNS='/etc/pdns'
-        C_FPM="/etc/php$V_PHP"
+        C_FPM="/etc/php$V_PHP/php-fpm.d"
         C_SQL='/etc/my.cnf.d'
         OSMIR='nl.alpinelinux.org'
         OSREL=${OSREL:-'stable'}
