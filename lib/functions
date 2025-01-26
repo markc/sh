@@ -159,7 +159,7 @@ sethost() {
     OSTYP=${OSTYP:-'ubuntu'}
     TAREA=${TAREA:-'Australia'}
     TCITY=${TCITY:-'Sydney'}
-    V_PHP=${V_PHP:-'8.2'}
+    V_PHP=${V_PHP:-'8.4'}
     VPATH=${VPATH:-'/home/u'}
     VUSER=${VUSER:-'admin'}
     WUGID=${WUGID:-'www-data'}
@@ -201,7 +201,7 @@ sethost() {
 
     # OS dependent overrides (WIP)
 
-    if [[ $OSTYP == alpine ]]; then
+    if [[ $OSTYP == alpine || $OSTYP == linux-musl ]]; then
         V_PHP='84'
         C_DNS='/etc/pdns'
         C_DNS='/etc/pdns'
