@@ -1,5 +1,5 @@
-# .sh/lib/functions 20151231 - 20241223
-# Copyright (C) 1995-2024 Mark Constable <markc@renta.net> (AGPL-3.0)
+# .sh/lib/functions 20151231 - 20250126
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ $DEBUG ]] && set -x
 
@@ -202,13 +202,13 @@ sethost() {
     # OS dependent overrides (WIP)
 
     if [[ $OSTYP == alpine ]]; then
-        V_PHP='8'
+        V_PHP='84'
         C_DNS='/etc/pdns'
         C_DNS='/etc/pdns'
         C_FPM="/etc/php$V_PHP"
         C_SQL='/etc/my.cnf.d'
         OSMIR='nl.alpinelinux.org'
-        OSREL=${OSREL:-'edge'}
+        OSREL=${OSREL:-'stable'}
         WUGID='nginx'
     elif [[ $OSTYP == debian ]]; then
         OSMIR='deb.debian.org'
