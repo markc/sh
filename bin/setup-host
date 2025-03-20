@@ -23,7 +23,7 @@ if [[ $OSTYP == alpine ]]; then
 
     OSMIR=nl.alpinelinux.org
     OSREL=latest-stable
-    V_PHP=8
+    V_PHP=84
 
     # Missing OpenDMARC and SpamProbe
     ALIST="bash bc bind-tools bogofilter busybox-static bridge-utils
@@ -36,7 +36,7 @@ php$V_PHP-session php$V_PHP-simplexml php$V_PHP-zip postfix postfix-pcre
 postfix-policyd-spf-perl postfix-sqlite pwgen redis rsync s-nail shadow sqlite
 sudo wget which whois"
 
-    MLIST="dovecot-mysql mariadb mariadb-client pdns-backend-mysql
+    MLIST="dovecot-mysql mariadb mariadb-client pdns-backend-mariadb
 php$V_PHP-pdo_mysql postfix-mysql"
 
     if [[ -f /etc/apk/repositories.orig ]]; then
