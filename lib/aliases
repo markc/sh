@@ -24,7 +24,6 @@ alias m='bash ~/.menu'
 alias n='echo -e "-- $(date) --\n" >> ~/.note && e +10000 ~/.note'
 alias p='ps auxxww | grep -v grep | grep'
 alias q='find -type f -print0 | xargs -0 grep '
-alias ram='ps -eo rss:10,vsz:10,%cpu:5,cmd --sort=rss | grep -v "^\s\+0" | cut -c -79'
 alias se='sudo nano -t -x -c'
 alias sn='[ -f ~/.note ] && cat ~/.note'
 alias wt="curl -s -w '%{time_total}\n' -o /dev/null"
@@ -49,6 +48,7 @@ elif [[ $OSTYP == alpine ]]; then
     alias ram=$SUDO'ps ax -o rss:10,vsz:10,comm | grep -v "   0" | sort -n'
     alias s=$SUDO'apk search -v'
     alias u=$SUDO'apk update && '$SUDO'apk upgrade'
+    alias ram='ps ax -o rss,vsz,comm | grep -v "   0" | sort -n'
 elif [[ $OSTYP == manjaro || $OSTYP == cachyos || $OSTYP == arch ]]; then
     alias edpkg=$SUDO'nano -t -x -c /etc/pacman.conf'
     alias i=$SUDO'pacman -S'
@@ -65,6 +65,7 @@ else
     alias r=$SUDO'apt-get remove --purge'
     alias s='apt-cache search'
     alias u=$SUDO'apt-get update && '$SUDO'apt-get -y -f dist-upgrade && '$SUDO'apt-get -y autoremove && '$SUDO'apt-get clean'
+    alias ram='ps -eo rss:10,vsz:10,%cpu:5,cmd --sort=rss | grep -v "^\s\+0" | cut -c -79'
 fi
 
 #alias block="nft version?"
