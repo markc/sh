@@ -208,51 +208,59 @@ fi
 
 if [[ -f $C_FPM/common.conf ]]; then
     echo "### Exists $C_FPM/common.conf"
+elif [[ -f /etc/php$V_PHP/common.conf ]]; then
+    echo "### Exists /etc/php$V_PHP/common.conf"
 else
     echo "### Create $C_FPM/common.conf"
-    cp ~/.sh/etc/_etc_php_7.0_fpm_common.conf $C_FPM/common.conf
     if [[ $OSTYP == alpine ]]; then
         # this won't work until $C_FPM is adjusted as per manjaro
+        cp ~/.sh/etc/_etc_php_7.0_fpm_common.conf /etc/php$V_PHP/common.conf
         sed -i $C_FPM/common.conf -e 's/www-data/nginx/g'
     elif [[ $OSTYP == manjaro ]]; then
+        # this may not be right, needs testing
+        cp ~/.sh/etc/_etc_php_7.0_fpm_common.conf $C_FPM/common.conf
         sed -i $C_FPM/common.conf -e 's/www-data/http/g'
+    else
+        cp ~/.sh/etc/_etc_php_7.0_fpm_common.conf $C_FPM/common.conf
     fi
 fi
 
-if [[ -f $C_FPM/php.ini.orig ]]; then
-    echo "### Exists $C_FPM/php.ini.orig"
-else
-    echo "### Modify $C_FPM/php.ini"
-    cp $C_FPM/php.ini $C_FPM/php.ini.orig
-    sed -i $C_FPM/php.ini \
-        -e 's/;opcache.enable=1/opcache.enable=1/' \
-        -e 's/;opcache.enable_cli=0/opcache.enable_cli=1/' \
-        -e 's/;opcache.interned_strings_buffer=8/opcache.interned_strings_buffer=8/' \
-        -e 's/;opcache.max_accelerated_files=10000/opcache.max_accelerated_files=10000/' \
-        -e 's/;opcache.memory_consumption=128/opcache.memory_consumption=128/' \
-        -e 's/;opcache.save_comments=1/opcache.save_comments=1/' \
-        -e 's/;opcache.revalidate_freq=2/opcache.revalidate_freq=1/' \
-        -e 's/memory_limit = 128M/memory_limit = 512M/'
+# This section below needs a complete redo and may not be needed in 2025
 
-    if [[ $OSTYP == manjaro ]]; then
-        sed -i $C_FPM/php.ini \
-            -e 's/;extension=curl/extension=curl/' \
-            -e 's/;extension=exif/extension=exif/' \
-            -e 's/;extension=gd/extension=gd/' \
-            -e 's/;extension=iconv/extension=iconv/' \
-            -e 's/;extension=imap/extension=imap/' \
-            -e 's/;extension=intl/extension=intl/' \
-            -e 's/;extension=mysqli/extension=mysqli/' \
-            -e 's/;zend_extension=opcache/zend_extension=opcache/' \
-            -e 's/;extension=pdo_mysql/extension=pdo_mysql/' \
-            -e 's/;extension=pdo_sqlite/extension=pdo_sqlite/' \
-            -e 's/;extension=zip/extension=zip/'
-
-        sed -i $C_FPM/conf.d/igbinary.ini -e 's/;extension=igbinary.so/extension=igbinary.so/'
-        sed -i $C_FPM/conf.d/imagick.ini -e 's/;extension = imagick/extension=imagick/'
-        sed -i $C_FPM/conf.d/redis.ini -e 's/;extension=redis/extension=redis/'
-    fi
-fi
+#if [[ -f $C_FPM/php.ini.orig ]]; then
+#    echo "### Exists $C_FPM/php.ini.orig"
+#else
+#    echo "### Modify $C_FPM/php.ini"
+#    cp $C_FPM/php.ini $C_FPM/php.ini.orig
+#    sed -i $C_FPM/php.ini \
+#        -e 's/;opcache.enable=1/opcache.enable=1/' \
+#        -e 's/;opcache.enable_cli=0/opcache.enable_cli=1/' \
+#        -e 's/;opcache.interned_strings_buffer=8/opcache.interned_strings_buffer=8/' \
+#        -e 's/;opcache.max_accelerated_files=10000/opcache.max_accelerated_files=10000/' \
+#        -e 's/;opcache.memory_consumption=128/opcache.memory_consumption=128/' \
+#        -e 's/;opcache.save_comments=1/opcache.save_comments=1/' \
+#        -e 's/;opcache.revalidate_freq=2/opcache.revalidate_freq=1/' \
+#        -e 's/memory_limit = 128M/memory_limit = 512M/'
+#
+#    if [[ $OSTYP == manjaro ]]; then
+#        sed -i $C_FPM/php.ini \
+#            -e 's/;extension=curl/extension=curl/' \
+#            -e 's/;extension=exif/extension=exif/' \
+#            -e 's/;extension=gd/extension=gd/' \
+#            -e 's/;extension=iconv/extension=iconv/' \
+#            -e 's/;extension=imap/extension=imap/' \
+#            -e 's/;extension=intl/extension=intl/' \
+#            -e 's/;extension=mysqli/extension=mysqli/' \
+#            -e 's/;zend_extension=opcache/zend_extension=opcache/' \
+#            -e 's/;extension=pdo_mysql/extension=pdo_mysql/' \
+#            -e 's/;extension=pdo_sqlite/extension=pdo_sqlite/' \
+#            -e 's/;extension=zip/extension=zip/'
+#
+#        sed -i $C_FPM/conf.d/igbinary.ini -e 's/;extension=igbinary.so/extension=igbinary.so/'
+#        sed -i $C_FPM/conf.d/imagick.ini -e 's/;extension = imagick/extension=imagick/'
+#        sed -i $C_FPM/conf.d/redis.ini -e 's/;extension=redis/extension=redis/'
+#    fi
+#fi
 
 ### pdns
 
