@@ -59,7 +59,7 @@ EOS
         echo "### Exists $DBMYS/$ADMIN"
     else
         echo "### Create MySQL privileges"
-        cat <<EOS | mysql
+        cat <<EOS | mariadb
 CREATE DATABASE IF NOT EXISTS $ADMIN;
 CREATE DATABASE IF NOT EXISTS pdns;
 GRANT ALL ON $ADMIN . * TO '$DUSER'@'localhost' IDENTIFIED BY '$DPASS';
@@ -69,8 +69,8 @@ EOS
     fi
     SQLPK="int(11) PRIMARY KEY AUTO_INCREMENT"
     # are these next two really necessary?
-    SQCMD="mysql -BN $ADMIN"
-    SQDNS="mysql -BN pdns"
+    SQCMD="mariadb -BN $ADMIN"
+    SQDNS="mariadb -BN pdns"
 
 else
     echo "### ERROR: unknown argument '$DTYPE'" && exit 2
