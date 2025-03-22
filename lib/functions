@@ -207,8 +207,8 @@ sethost() {
         C_DNS='/etc/pdns'
         C_FPM="/etc/php$V_PHP/php-fpm.d"
         C_SQL='/etc/my.cnf.d'
-        OSMIR='nl.alpinelinux.org'
-        OSREL=${OSREL:-'stable'}
+        OSMIR='dl-cdn.alpinelinux.org'
+        OSREL='latest-stable'
         WUGID='nginx'
     elif [[ $OSTYP == debian ]]; then
         OSMIR='deb.debian.org'

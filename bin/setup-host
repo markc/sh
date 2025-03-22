@@ -33,7 +33,7 @@ opendkim opendkim-utils pdns pdns-backend-sqlite3 php$V_PHP php$V_PHP-curl
 php$V_PHP-fpm php$V_PHP-gd php$V_PHP-imap php$V_PHP-opcache php$V_PHP-pdo
 php$V_PHP-pdo_sqlite php$V_PHP-pecl-redis php$V_PHP-phar php$V_PHP-posix
 php$V_PHP-session php$V_PHP-simplexml php$V_PHP-zip postfix postfix-pcre
-postfix-policyd-spf-perl postfix-sqlite pwgen redis rsync s-nail shadow sqlite
+postfix-policyd-spf-perl postfix-sqlite procps redis rsync s-nail shadow sqlite
 sudo wget which whois"
 
     MLIST="dovecot-mysql mariadb mariadb-client pdns-backend-mariadb
@@ -46,7 +46,6 @@ php$V_PHP-pdo_mysql postfix-mysql"
         mv /etc/apk/repositories /etc/apk/repositories.orig
         cat <<EOS >/etc/apk/repositories
 https://$OSMIR/alpine/$OSREL/main
-https://$OSMIR/alpine/$OSREL/testing
 https://$OSMIR/alpine/$OSREL/community
 EOS
         apk update && apk upgrade
