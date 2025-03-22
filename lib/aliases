@@ -36,9 +36,9 @@ if [[ $OSTYP == openwrt ]]; then
     alias lspkg=$SUDO'opkg list-installed | sort | grep'
     alias p='ps | grep -v grep | grep'
     alias r=$SUDO'opkg remove'
-    alias ram=$SUDO"ps w | grep -v \"   0\" | awk '{print \$3\"\t\"\$5\" \"\$6\" \"\$7\" \"\$8\" \"\$9}' | sort -n"
     alias s=$SUDO'opkg list | sort | grep '
     alias u=$SUDO'opkg update && '$SUDO'opkg list-upgradable | cut -f 1 -d " " | xargs -r opkg upgrade'
+    alias ram=$SUDO"ps w | grep -v \"   0\" | awk '{print \$3\"\t\"\$5\" \"\$6\" \"\$7\" \"\$8\" \"\$9}' | sort -n"
 elif [[ $OSTYP == alpine ]]; then
     alias edpkg=$SUDO'nano -t -x -c /etc/apk/repositories'
     alias i=$SUDO'apk add'
@@ -57,6 +57,7 @@ elif [[ $OSTYP == manjaro || $OSTYP == cachyos || $OSTYP == arch ]]; then
     alias s=$SUDO'pacman -Ss'
     alias u=$SUDO'pacman -Syu --noconfirm ; '$SUDO' pacman -Scc --noconfirm'
     alias uu='yay -Syyuu --noconfirm ; yay -Scc --noconfirm ; '$SUDO' pacman -Scc --noconfirm'
+    alias ram='ps -eo rss:10,vsz:10,%cpu:5,cmd --sort=rss | grep -v "^\s\+0" | cut -c -79'
 else
     alias aptkey=$SUDO'apt-key adv --recv-keys --keyserver keyserver.ubuntu.com'
     alias edpkg=$SUDO'nano -t -x -c /etc/apt/sources.list'
