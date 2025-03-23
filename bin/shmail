@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# .sh/bin/shmail 20150529 - 20241127
+# .sh/bin/shmail 20150529 - 20250323
 # Copyright (C) 1995-2024 Mark Constable <markc@renta.net> (AGPL-3.0)
 
-#VHOST=${_ARG1#*@} # userid @ $VHOST
-#VUSER=${_ARG1%@*} # $VUSER @ domain
+# VHOST=${_ARG1#*@} # userid @ $VHOST
+# VUSER=${_ARG1%@*} # $VUSER @ domain
 
 [[ $1 =~ '-h' ]] && echo "Usage: shmail [email@|domain]" && exit 1
 
@@ -18,7 +18,7 @@ VUSER='*'
 
 if [[ $_ARG1 ]]; then
     if [[ $_ARG1 =~ "@" ]]; then
-#        VUSER="*${_ARG1%@*}*"
+        # VUSER="*${_ARG1%@*}*"
         VUSER="${_ARG1%@*}*"
         VHOST="${_ARG1#*@}*"
     else
@@ -55,9 +55,9 @@ if [[ $_MNUM -eq 1 ]]; then
             if [[ $N1 -lt 5 ]]; then
                 N1STR=" "
             elif [[ $N1 -lt 1000000 ]]; then
-                N1STR=$(printf "%'3.3fM" $(echo $N1/1000 | bc -l))
+                N1STR=$(awk "BEGIN { printf \"%'3.2fM\", $N1/1000 }")
             else
-                N1STR=$(printf "%'3.3fG" $(echo $N1/1000000 | bc -l))
+                N1STR=$(awk "BEGIN { printf \"%'3.2fG\", $N1/1000000 }")
             fi
             [[ $N2 -eq 0 ]] && N2STR=" " || N2STR=$N2
             printf "%-45s %7s %9s\n" "$(echo $dir | cut -c 3-)" "$N2STR" "$N1STR"
@@ -66,9 +66,9 @@ if [[ $_MNUM -eq 1 ]]; then
         if [[ $STOTAL -lt 5 ]]; then
             _STOT=" "
         elif [[ $STOTAL -lt 1000000 ]]; then
-            _STOT=$(printf "%'3.3fM" $(echo $STOTAL/1000 | bc -l))
+            _STOT=$(awk "BEGIN { printf \"%'3.2fM\", $STOTAL/1000 }")
         else
-            _STOT=$(printf "%'3.3fG" $(echo $STOTAL/1000000 | bc -l))
+            _STOT=$(awk "BEGIN { printf \"%'3.2fG\", $STOTAL/1000000 }")
         fi
         echo "---------------------------------------------------------------"
         printf "%-45s %7s %9s\n" Total $NTOTAL $_STOT
@@ -80,7 +80,8 @@ if [[ $_MNUM -eq 1 ]]; then
     else
         find -L . -xtype l
     fi
-    [ -d ${MPATH}/.spamprobe ] && du -h ${MPATH}/.spamprobe | awk '{printf "%-55s %7s\n", $2, $1}'
+    [ -d ${MPATH}/.spamprobe ] &&
+        du -h ${MPATH}/.spamprobe | awk '{printf "%-55s %7s\n", $2, $1}'
 
 else
     du -s ${_MBOX} | sort -n | while read -r _size _path; do
@@ -90,9 +91,9 @@ else
         if [[ $_size -lt 5 ]]; then
             _sstr=" "
         elif [[ $_size -lt 1000000 ]]; then
-            _sstr=$(printf "%'3.3fM" $(echo $_size/1000 | bc -l))
+            _sstr=$(awk "BEGIN { printf \"%'3.2fM\", $_size/1000 }")
         else
-            _sstr=$(printf "%'3.3fG" $(echo $_size/1000000 | bc -l))
+            _sstr=$(awk "BEGIN { printf \"%'3.2fG\", $_size/1000000 }")
         fi
         printf "%-45s %7d %9s\n" $_mail $_fnum $_sstr
     done
