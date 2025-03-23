@@ -177,7 +177,7 @@ sethost() {
     DPATH="$DBSQL/$ADMIN/$ADMIN.db"
     DUSER="$UUSER"
     EPASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c16)
-    EXMYS="mysql -BN $ADMIN"
+    EXMYS="mariadb -BN $ADMIN"
     EXSQL="sqlite3 $DPATH"
     HDOMN=${VHOST#*.}
     HNAME=${VHOST%%.*}
@@ -185,7 +185,7 @@ sethost() {
     LROOT=${LROOT:-'/usr/local/lsws'}
     MHOST=$([[ $HNAME == mail ]] && echo "$HNAME.$HDOMN" || echo "$VHOST")
     SQCMD=$([[ $DTYPE == mysql ]] && echo "$EXMYS" || echo "$EXSQL")
-    SQDNS=$([[ $DTYPE == mysql ]] && echo "mysql -BN pdns" || echo "sqlite3 $DBSQL/$ADMIN/pdns.db")
+    SQDNS=$([[ $DTYPE == mysql ]] && echo "mariadb -BN pdns" || echo "sqlite3 $DBSQL/$ADMIN/pdns.db")
     UPASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c16)
     UUSER=$([[ $U_UID == $A_UID ]] && echo "$ADMIN" || echo "u$U_UID")
     U_GID="$U_UID"
