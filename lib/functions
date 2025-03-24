@@ -16,12 +16,18 @@ elif [[ $OSTYP == alpine ]]; then
         elif [[ $1 == start || $1 == status || $1 == stop ]]; then
             $SUDO rc-service $2 $1
         else
-            $SUDO rc-status --all
+            $SUDO rc-status --all | awk '{print $1}'
         fi
     }
 else
     f() { find . -type f -iname '*'$*'*' -ls; }
-    sc() { $SUDO systemctl $1 $2; }
+    sc() {
+        if [[ -z $1 ]]; then
+            systemctl list-units --type=service --all | awk '{sub(".service", "", $1); print $1}'
+        else
+            $SUDO systemctl $1 $2;
+        fi
+    }
 fi
 
 chktime() {
