@@ -16,7 +16,7 @@ elif [[ $OSTYP == alpine ]]; then
         elif [[ $1 == start || $1 == status || $1 == stop ]]; then
             $SUDO rc-service $2 $1
         else
-            $SUDO rc-status --all | awk '{print $1}'
+            $SUDO rc-status --all | awk '/\[.*\]/ {print $1}'
         fi
     }
 else
