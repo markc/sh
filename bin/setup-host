@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# .sh/bin/setup-host 20170524 - 20231116
-# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20170524 - Updated: 20250324
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ $1 =~ '-h' ]] && echo "Usage: setup-host [fqdn] [(mysql)|sqlite] [lxdbr]" && exit 1
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
-. ~/.shrc
+source ~/.shrc
 
 [[ $DEBUG ]] && set -x
 
@@ -211,9 +211,13 @@ else
     mv /etc/ssh/sshd_config /etc/ssh/sshd_config.orig
     cp ~/.sh/etc/_etc_ssh_sshd__config /etc/ssh/sshd_config
 
-    # The easy way to revert the Ubuntu 22.10+ socket activation disaster
-    systemctl disable --now ssh.socket
-    systemctl enable --now ssh.service
+    if [[ -d "/run/systemd/system" ]]; then
+        # The easy way to revert the Ubuntu 22.10+ socket activation disaster
+        systemctl disable --now ssh.socket
+        systemctl enable --now ssh.service
+    else
+        sc restart sshd
+    fi
 fi
 
 [[ ! -f ~/.ssh/config ]] && sshm i

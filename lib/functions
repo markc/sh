@@ -1,4 +1,4 @@
-# .sh/lib/functions 20151231 - 20250126
+# Created: 20151231 - Updated: 20250324
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ $DEBUG ]] && set -x
@@ -9,12 +9,14 @@ if [[ $OSTYP == openwrt ]]; then
     sc() { $SUDO /etc/init.d/$2 $1; }
 elif [[ $OSTYP == alpine ]]; then
     sc() {
-        if [ $1 = 'enable' ]; then
+        if [[ $1 == enable ]]; then
             $SUDO rc-update add $2
-        elif [ $1 = 'disable' ]; then
+        elif [[ $1 == disable ]]; then
             $SUDO rc-update del $2
-        else
+        elif [[ $1 == start || $1 == status || $1 == stop ]]
             $SUDO rc-service $2 $1
+        else
+            $SUDO rc-status --all
         fi
     }
 else
