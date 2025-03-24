@@ -13,7 +13,7 @@ elif [[ $OSTYP == alpine ]]; then
             $SUDO rc-update add $2
         elif [[ $1 == disable ]]; then
             $SUDO rc-update del $2
-        elif [[ $1 == start || $1 == status || $1 == stop ]]
+        elif [[ $1 == start || $1 == status || $1 == stop ]]; then
             $SUDO rc-service $2 $1
         else
             $SUDO rc-status --all
