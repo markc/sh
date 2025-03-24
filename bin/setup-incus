@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+# Created: 20250324 - Updated: 20250324
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+[[ $1 =~ '-h' ]] &&
+    echo "Usage: setup-incus [pool size (25) GB] [passwd] [IP]" && exit 1
+
+[[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
+
+LSTOR=zfs # btrfs, zfs, lvm, dir
+
+PSIZE=${1:-'3'}
+APASS=${2:-$(openssl rand -base64 12)} # Generate a random password
+IP4_0=${3:-$(hostname -I | awk '{print $1}')} # Use hostname -I for multiple IPs, grab first
+
+[[ $DEBUG ]] && set -x
+
+# Function to check if a command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Function to add idmap entries
+add_idmap() {
+    local user=$1
+    local start_uid=$2
+    local count=$3
+
+    # Check if entries already exist
+    grep "^${user}:${start_uid}:${count}" /etc/subuid >/dev/null 2>&1
+    if [[ $? -ne 0 ]]; then
+        echo "${user}:${start_uid}:${count}" | sudo tee -a /etc/subuid
+        echo "${user}:${start_uid}:${count}" | sudo tee -a /etc/subgid
+        echo "Added idmap entries for user ${user} with UID ${start_uid} and count ${count}"
+    else
+        echo "Idmap entries already exist for user ${user}."
+    fi
+}
+
+# Function to add user to group
+add_user_to_group() {
+    local user=$1
+    local group=$2
+
+    # Check if user is already in the group
+    groups "$user" | grep -q "$group"
+    if [[ $? -ne 0 ]]; then
+        sudo usermod -aG "$group" "$user"
+        echo "Added user $user to group $group."
+        echo "You will have to either logout or run 'newgrp'"
+    else
+        echo "User $user is already a member of group $group."
+    fi
+}
+
+# Check if Incus is already installed
+if command_exists incus; then
+    echo "Warning: Incus already installed."
+else
+    echo "Installing Incus..."
+    # Determine the package manager and install Incus
+    if [[ -f /etc/pacman.conf ]]; then
+        echo "Detected Arch-based system. Installing Incus"
+        sudo pacman -S --noconfirm incus # Install incus
+    elif [[ -f /etc/debian_version ]]; then
+        echo "Detected Debian-based system."
+        # For Debian-based systems, you might need to add the Incus repository first
+        # and follow the official installation instructions
+        echo "Please follow the official Incus installation instructions for Debian."
+        echo "https://incus.org/docs/main/installation/"
+        exit 3
+    else
+        echo "Unsupported operating system. Please install Incus manually."
+        exit 4
+    fi
+fi
+
+# Add idmap entries after installing Incus
+CURRENT_USER=$(whoami)
+add_idmap "root" 100000 65536
+add_idmap "${CURRENT_USER}" 165536 65536
+
+# Add the current user to the incus-admin group
+add_user_to_group "${CURRENT_USER}" "incus-admin"
+
+# Check if a storage pool exists
+if incus storage list | grep incus-pool >/dev/null; then
+    echo "Warning: incus-pool already exists."
+else
+    echo "Initializing Incus with $PSIZE GB $LSTOR incus-pool at $IP4_0 with password $APASS"
+    # Initialize Incus
+    incus admin init --auto \
+        --network-address "$IP4_0" \
+        --network-port 8443 \
+        --storage-backend "$LSTOR" \
+        --storage-create-loop "$PSIZE" \
+        --storage-pool incus-pool \
+        --trust-password "$APASS"
+
+    # Handle potential errors during initialization
+    if [[ $? -ne 0 ]]; then
+        echo "Error: Incus initialization failed. Check the output above for details."
+        exit 5
+    fi
+fi
+
+# Start and enable Incus service
+sudo systemctl enable --now incus
+
+[[ $DEBUG ]] && set +x

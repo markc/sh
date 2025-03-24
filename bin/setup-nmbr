@@ -35,12 +35,7 @@ _dns1="${3:-192.168.1.1}"
 BRIDGE_NAME="bridge-br0"
 BRIDGE_SLAVE="bridge-slave"
 
-# --- Debugging ---
-if $DEBUG; then
-    # If DEBUG is true, enable verbose output (set -x) to show each
-    # command being executed.
-    set -x
-fi
+[[ $DEBUG ]] && set +x
 
 if [[ "$_ipv4" == "-h" ]]; then
     # If the first argument is '-h', display the usage instructions and exit.
@@ -227,3 +222,5 @@ else
     ip link show $BRIDGE_NAME
     ip -4 addr show $BRIDGE_NAME
 fi
+
+[[ $DEBUG ]] && set +x
