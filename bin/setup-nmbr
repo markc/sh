@@ -1,19 +1,234 @@
 #!/usr/bin/env bash
-# .sh/bin/setup-nmbr 20210314 - 20210318
-# Copyright (C) 1995-2021 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20210314 - Updated: 20250324
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
-[[ $1 =~ -h ]] && echo "Usage: setp-nmbr [remove]" && exit 1
+# --- Usage ---
+usage() {
+    # Display usage instructions for the script.
+    echo "Usage: $(basename "$0") [remove|ip] [gw] [dns]"
+    echo "  remove:  Remove bridge configuration."
+    echo "  ip:      IP address for the bridge (e.g., 192.168.1.226)."
+    # This will configure a static IP address for the bridge.
+    echo "           If no IP is given, DHCP will be used."
+    echo "  gw:      Gateway IP address (default: 192.168.1.1)."
+    # The gateway is the router that the bridge uses to access the
+    # internet.
+    echo "           The gateway is the router that the bridge uses to"
+    echo "           access the internet."
+    echo "  dns:     DNS server IP address (default: 192.168.1.1)."
+    # The DNS server translates domain names (like google.com) into
+    # IP addresses.
+    echo "           The DNS server translates domain names (like"
+    echo "           google.com) into IP addresses."
+    # Exit the script with a non-zero status to indicate an error.
+    exit 1
+}
 
-_ETH0=$(ip -o link show | awk -F': ' '{print $2}' | grep ^e)
+# --- Configuration ---
+# Set DEBUG to true to enable verbose output (set -x).
+DEBUG=${DEBUG:-false}
+# _ipv4: The IP address to assign to the bridge interface. If not
+# provided, DHCP will be used.
+_ipv4="${1:-}"
+# _gwip: The gateway IP address for the bridge. Defaults to
+# 192.168.1.1 if provided and static IP is configured.
+_gwip="${2:-192.168.1.1}"
+# _dns1: The primary DNS server IP address for the bridge. Defaults
+# to 192.168.1.1 if provided and static IP is configured.
+_dns1="${3:-192.168.1.1}"
+# The name of the bridge interface. This can be customized if needed.
+BRIDGE_NAME="bridge-br0"
+BRIDGE_SLAVE="bridge-slave"
 
-if [[ $1 == remove ]]; then
-    $SUDO nmcli connection down bridge-br0
-    $SUDO nmcli connection down bridge-slave-$_ETH0
-    $SUDO nmcli connection del bridge-br0
-    $SUDO nmcli connection del bridge-slave-$_ETH0
+# --- Debugging ---
+if $DEBUG; then
+    # If DEBUG is true, enable verbose output (set -x) to show each
+    # command being executed.
+    set -x
+fi
+
+# --- Helper Functions ---
+apply_nmcli_command() {
+    # This function takes a command string as input and executes it
+    # using nmcli with sudo if needed.
+    # Store the command string in a local variable.
+    local cmd="$1"
+    # Display the command that is about to be executed. This is helpful
+    # for debugging.
+    echo "Executing: $cmd"
+    # Execute the command using sudo (if SUDO is defined) and nmcli.
+    eval "$SUDO $cmd"
+}
+
+# --- Main Script ---
+
+# Find the ethernet interface
+# This command finds the primary ethernet interface on the system
+_eth0=$(
+    # List network interfaces in a concise format
+    # Find the first interface name starting with 'e' (e.g., eth0, enp0s3)
+    ip -o link show | awk -F': ' '$2 ~ /^e/{print $2; exit}'
+)
+if [[ -z "$_eth0" ]]; then
+    # If no ethernet interface is found, display an error message and exit
+    # the script.
+    echo "Error: No ethernet interface found (starting with 'e')."
+    # Exit the script with a non-zero status to indicate an error.
+    exit 1
+fi
+
+# The connection to slave into
+SLAVE_CONNECTION=$BRIDGE_SLAVE-$_eth0
+
+# Get the original system connection name for the ethernet interface
+# Looking for a connection that is not a bridge-slave
+ORIG_ETH0_CONN=$(nmcli -t -f NAME,DEVICE,TYPE connection show | grep ":$_eth0:" | grep -v bridge-slave | head -1 | cut -d: -f1)
+
+# If no original connection exists, create one
+if [[ -z "$ORIG_ETH0_CONN" ]]; then
+    # Create a default connection for the interface
+    apply_nmcli_command "nmcli connection add type ethernet ifname $_eth0 con-name $_eth0-default"
+    ORIG_ETH0_CONN="$_eth0-default"
+fi
+
+# For current operation, determine if bridge exists and set appropriate connection names
+BRIDGE_EXISTS=$(ip link show "$BRIDGE_NAME" 2>/dev/null || echo "")
+
+# Find all NetworkManager connections associated with this interface
+ALL_ETH_CONNS=$(nmcli -t -f NAME,DEVICE connection show | grep ":$_eth0$" | cut -d: -f1 || echo "")
+
+# For current operation, check if we're in bridge-slave mode
+if [[ "$_ipv4" == "remove" ]]; then
+    # When removing, we need to identify the actual bridge slave connection (if any)
+    ETH0_CONN=$(nmcli -t -f NAME,DEVICE,TYPE connection show | grep ":$_eth0:" | grep bridge-slave | head -1 | cut -d: -f1 || echo "")
+    if [[ -z "$ETH0_CONN" ]]; then
+        ETH0_CONN="$ORIG_ETH0_CONN"
+    fi
 else
-    $SUDO nmcli connection add type bridge ifname br0 stp no
-    $SUDO nmcli connection add type bridge-slave ifname $_ETH0 master br0
-    $SUDO nmcli connection mod bridge-br0 ipv4.ignore-auto-dns yes
-    $SUDO nmcli connection up bridge-br0
+    # For regular operation, use the original connection
+    ETH0_CONN="$ORIG_ETH0_CONN"
+fi
+
+if [[ "$_ipv4" == "-h" ]]; then
+    # If the first argument is '-h', display the usage instructions and exit.
+    usage
+fi
+
+if [[ "$_ipv4" == "remove" ]]; then
+    # If the first argument is 'remove', remove the bridge configuration completely
+    
+    # First bring down the original interface to make sure it's not in use
+    apply_nmcli_command "nmcli device disconnect $_eth0 || true"
+    
+    # Deactivate and delete all bridge-related connections
+    # Check which connections exist and remove them
+    while IFS=: read -r name uuid; do
+        if [[ "$name" == "$BRIDGE_NAME" || "$name" == "$SLAVE_CONNECTION" || "$name" =~ bridge-* ]]; then
+            echo "Removing connection: $name ($uuid)"
+            apply_nmcli_command "nmcli connection down '$name' || true"
+            apply_nmcli_command "nmcli connection delete '$name' || true"
+        fi
+    done < <(nmcli -t -f NAME,UUID connection show)
+    
+    # Delete the bridge interface directly if it still exists
+    if ip link show "$BRIDGE_NAME" &>/dev/null; then
+        echo "Removing bridge interface $BRIDGE_NAME directly"
+        apply_nmcli_command "ip link set $BRIDGE_NAME down || true"
+        apply_nmcli_command "ip link delete $BRIDGE_NAME type bridge || true"
+    fi
+    
+    # Ensure the slave interface is down
+    apply_nmcli_command "ip link set $_eth0 down || true"
+    
+    # Wait a moment for the system to recognize the changes
+    sleep 2
+    
+    # Re-enable the original system connection with auto config
+    echo "Restoring original connection: $ORIG_ETH0_CONN"
+    apply_nmcli_command "nmcli connection modify '$ORIG_ETH0_CONN' ipv4.method auto ipv6.method auto || true"
+    apply_nmcli_command "nmcli connection up '$ORIG_ETH0_CONN' || true"
+    
+    # If the original connection failed to come up, create a new one
+    if ! nmcli -t -f DEVICE,STATE device | grep -q "$_eth0:connected"; then
+        echo "Creating new connection for $_eth0"
+        new_conn="$_eth0-auto"
+        apply_nmcli_command "nmcli connection add type ethernet ifname $_eth0 con-name '$new_conn' ipv4.method auto ipv6.method auto"
+        apply_nmcli_command "nmcli connection up '$new_conn'"
+    fi
+    
+    # Force restart NetworkManager to ensure clean state
+    apply_nmcli_command "systemctl restart NetworkManager || true"
+    
+    echo "Bridge completely removed. Network configuration reset."
+    echo "Current network status:"
+    ip -br addr show $_eth0
+else
+    # First, take down the existing connection completely
+    apply_nmcli_command "nmcli connection down $ETH0_CONN"
+    
+    # Disable both IPv4 and IPv6 on the original connection
+    apply_nmcli_command "nmcli connection modify $ETH0_CONN ipv4.method disabled"
+    apply_nmcli_command "nmcli connection modify $ETH0_CONN ipv6.method disabled"
+
+    # Clear connection if already there: If a bridge is already assigned
+    # then remove it as any existing connections must be deleted or they
+    # take priority
+    apply_nmcli_command "nmcli connection delete $BRIDGE_NAME 2>/dev/null || true"
+    apply_nmcli_command "nmcli connection delete $SLAVE_CONNECTION 2>/dev/null || true"
+
+    # add the bridge interface
+    apply_nmcli_command "nmcli connection add type bridge ifname $BRIDGE_NAME stp no con-name $BRIDGE_NAME"
+
+    # create bridge slave
+    apply_nmcli_command "nmcli connection add type bridge-slave ifname $_eth0 master $BRIDGE_NAME con-name $SLAVE_CONNECTION"
+
+    # apply the IP configuration to bridge
+    if [[ -n "$_ipv4" ]]; then
+      # Set IPv4 and related settings.
+      apply_nmcli_command "nmcli connection modify $BRIDGE_NAME ipv4.addresses $_ipv4/24 ipv4.method manual ipv4.dns $_dns1 ipv4.gateway $_gwip ipv4.ignore-auto-dns yes"
+    else
+      # Use DHCP for IP
+      apply_nmcli_command "nmcli connection modify $BRIDGE_NAME ipv4.method auto ipv4.ignore-auto-dns yes"
+    fi
+    
+    # Configure IPv6 on the bridge as needed
+    # Either disable IPv6 or set it to auto
+    apply_nmcli_command "nmcli connection modify $BRIDGE_NAME ipv6.method auto"
+    
+    # Set specific bridge parameters to ensure proper operation
+    apply_nmcli_command "nmcli connection modify $BRIDGE_NAME bridge.stp no"
+    apply_nmcli_command "nmcli connection modify $BRIDGE_NAME bridge.forward-delay 0"
+    apply_nmcli_command "nmcli connection modify $BRIDGE_NAME bridge.hello-time 0"
+    
+    # Ensure priority settings are correct to make bridge work properly
+    apply_nmcli_command "nmcli connection modify $SLAVE_CONNECTION 802-3-ethernet.mac-address-blacklist ''"
+    apply_nmcli_command "nmcli connection modify $SLAVE_CONNECTION connection.autoconnect yes"
+    apply_nmcli_command "nmcli connection modify $BRIDGE_NAME connection.autoconnect yes"
+
+    # Force interfaces down first to ensure clean activation
+    apply_nmcli_command "ip link set $_eth0 down || true"
+    apply_nmcli_command "ip link set $BRIDGE_NAME down || true"
+    
+    # Explicitly connect the interface to the bridge at the link level
+    apply_nmcli_command "ip link set $_eth0 up"
+    
+    # First bring up the bridge interface
+    apply_nmcli_command "nmcli connection up $BRIDGE_NAME"
+    
+    # Then activate the slave connection
+    apply_nmcli_command "nmcli connection up $SLAVE_CONNECTION"
+    
+    # Wait a moment for the bridge to stabilize
+    sleep 3
+    
+    # Check if bridge is properly linked and force it up if needed
+    if ip link show $BRIDGE_NAME | grep -q "state DOWN"; then
+        echo "Bridge is down, forcing interface up..."
+        apply_nmcli_command "ip link set $BRIDGE_NAME up"
+    fi
+    
+    # Display bridge status
+    echo "Bridge setup complete. Current status:"
+    ip link show $BRIDGE_NAME
+    ip -4 addr show $BRIDGE_NAME
 fi
