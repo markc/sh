@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# .sh/bin/shm 20130210 - 20221229
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20130210 - Updated: 20250325
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ -z $REPO ]] && REPO=~/.sh
 
@@ -16,7 +16,7 @@ shm [install|pull|push|remove|removeall|perms]"
 sh_perms() {
     chmod 700 $REPO $REPO/{bin,etc,lib}
     chmod 700 $REPO/bin/*
-    chmod 600 $REPO/{LICENSE.md,README.md,_help,_menu,_myrc,_shrc,etc/*,lib/*}
+    chmod 600 $REPO/{LICENSE.md,README.md,_help,_myrc,_shrc,etc/*,lib/*}
 }
 
 sh_install() {
@@ -56,31 +56,41 @@ sh_remove_all() {
     rm -rf $REPO
     echo "
 ### To reinstall this repo use...
-cd && git clone https://github.com/netserva/sh .sh
+cd && git clone https://github.com/markc/sh .sh
 $REPO/bin/shm install
 . ~/.shrc
 "
 }
 
 case "$1" in
-install) sh_install ;;
+install)
+    sh_install
+    ;;
 diff)
-    cd $REPO
+    cd "$REPO"
     git diff HEAD@{1}
     ;;
 pull)
-    cd $REPO
+    cd "$REPO"
     git pull
     ;;
 push)
-    cd $REPO
+    cd "$REPO"
     git commit -a
     git push
     ;;
-remove) sh_remove ;;
-removeall) sh_remove_all ;;
-perms) sh_perms ;;
-*) usage ;;
+remove)
+    sh_remove
+    ;;
+removeall)
+    sh_remove_all
+    ;;
+perms)
+    sh_perms
+    ;;
+*)
+    usage
+    ;;
 esac
 
 [[ $DEBUG ]] && set +x

@@ -1,8 +1,0 @@
-# .sh/_menu 20130212 - 20240511
-# Copyright (C) 1995-2024 Mark Constable <markc@renta.net> (AGPL-3.0)
-
-cat <<EOS
-Menu System
-===========
-TODO: this is a placeholder to set up and interactive menu system.
-EOS
