@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# .sh/bin/chperms 20151231 - 20230528
-# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20151231 - Updated: 20250325
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ -z $1 || $1 =~ -h ]] && echo "Usage: chperms vhost|all" && exit 1
 
@@ -14,7 +14,61 @@ fi
 
 [[ ! -d $VPATH ]] && echo "ERROR: $VPATH does not exist" && exit 4
 
-. ~/.sh/lib/_chperms
+_chperms() {
+    local UUSER=$(grepuser ":$1")
+    [[ -z $UUSER ]] && echo "ERROR: $1 does not exist" && return 10
+
+    local P_UID=$(echo $UUSER | cut -d: -f3) # /etc/passwd UID
+    local P_GID=$(echo $UUSER | cut -d: -f4) # /etc/passwd GID
+    [[ $P_UID < 1000 ]] && echo "ERROR: $P_UID is less than 1000" && return 10
+
+    local UPATH=$(echo $UUSER | cut -d: -f6)
+    [[ ! -d $UPATH ]] && echo "ERROR: $UPATH does not exist" && return 10
+
+    chown $P_UID:$P_GID -R $UPATH
+    find $UPATH -type d -exec chmod 00750 {} +
+    find $UPATH -type f -exec chmod 00640 {} +
+    [[ $P_UID > 1000 ]] && chown 0:0 $UPATH # exception for sysadm or uid 1000
+    chmod 755 $UPATH
+    chmod 755 $UPATH/var
+    chmod 700 $UPATH/.ssh
+    chmod 600 $UPATH/.ssh/*
+    if [[ -d $UPATH/.gnupg ]]; then
+        find $UPATH/.gnupg -type d -exec chmod 00700 {} +
+        find $UPATH/.gnupg -type f -exec chmod 00600 {} +
+    fi
+    chmod 750 $UPATH/bin/busybox
+    [[ -f $UPATH/bin/nano ]] && chmod 750 $UPATH/bin/nano
+    [[ -f $UPATH/bin/rsync ]] && chmod 750 $UPATH/bin/rsync
+
+    [[ -d $UPATH/.sh/bin ]] && chmod 700 $UPATH/.sh/bin/*
+    [[ -d $UPATH/.sh/www ]] && chmod 700 $UPATH/.sh/www/*
+
+    [[ ! -f $UPATH/var/log/access.log ]] && touch $UPATH/var/log/access.log
+    [[ ! -f $UPATH/var/log/cache.log ]] && touch $UPATH/var/log/cache.log
+
+    chown $P_UID:$WUGID -R $UPATH/var/*
+    chmod 660 $UPATH/var/log/access.log
+    chmod 660 $UPATH/var/log/cache.log
+    chmod 02770 $UPATH/var/log
+    chmod 02750 $UPATH/var/{run,tmp,www}
+
+    find $UPATH/var/www -type d -exec chmod 02750 {} +
+
+    # WHMCS
+    [[ -f $UPATH/var/www/configuration.php ]] && chmod 400 $UPATH/var/www/configuration.php
+    [[ -f $UPATH/var/www/whmcs/configuration.php ]] && chmod 400 $UPATH/var/www/whmcs/configuration.php
+    [[ -f $UPATH/var/www/billing/configuration.php ]] && chmod 400 $UPATH/var/www/billing/configuration.php
+
+    [[ -d $UPATH/var/www/lib/sh ]] && {
+        chown 0:0 -R $UPATH/var/www/lib/sh/*
+        chmod 700 -R $UPATH/var/www/lib/sh/*
+    }
+    [[ -f $UPATH/var/www/lib/sh/index.html ]] && {
+        chown :$WUGID $UPATH/var/www/lib/sh/index.html
+        chmod 640 $UPATH/var/www/lib/sh/index.html
+    }
+}
 
 [[ $DEBUG ]] && set -x
 

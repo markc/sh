@@ -23,7 +23,7 @@ else
     f() { find . -type f -iname '*'$*'*' -ls; }
     sc() {
         if [[ -z $1 ]]; then
-            systemctl list-units --type=service --all | awk '{sub(".service", "", $1); print $1}'
+            $SUDO systemctl list-units --type=service | awk 'NR>1 {sub(".service", "", $1); print $1}' | head -n -7
         else
             $SUDO systemctl $1 $2;
         fi
