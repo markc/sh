@@ -1,8 +1,6 @@
 # Created: 20250325 - Updated: 20250325
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
-echo "Inside lib/openwrt.sh"
-
 function getent {
     if [[ $1 == passwd ]]; then
         cat /etc/passwd
