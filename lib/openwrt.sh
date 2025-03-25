@@ -20,7 +20,7 @@ hostname ()
     else
         if [[ $1 == -f ]]; then
             echo "$_host.$($SUDO uci get dhcp.@dnsmasq[0].domain)"
-        if [[ $1 == -i ]]; then
+        elif [[ $1 == -i ]]; then
             echo "$_wan"
         else
             if [[ $1 == -d ]]; then
