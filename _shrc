@@ -8,14 +8,13 @@ PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/snap/bin:~/.sh/bin
 SUDO=$([[ $(id -u) -gt 0 ]] && echo 'sudo ')
 EDITOR=nano
 COLOR=31
-REPO="~/.sh"
 
 # Set the OS type
 [[ -f /etc/os-release ]] && OSTYP=$(awk -F= '/^ID=/ {print $2}' /etc/os-release | sed 's/"//g')
 
 # This needs to be before the first use of hostname for OpenWrt
 if [[ $OSTYP == openwrt ]]; then
-    source $REPO/lib/openwrt.sh
+    source ~/.sh/lib/openwrt.sh
 fi
 
 LABEL=$(hostname)
