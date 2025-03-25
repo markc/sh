@@ -1,4 +1,4 @@
-# Created: 20130315 - Updated: 20250324
+# Created: 20130315 - Updated: 20250325
 # Copyright (C) 2015-2024 Mark Constable <markc@renta.net> (AGPL-3.0)
 #shopt -s expand_aliases
 
@@ -8,29 +8,14 @@ PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/snap/bin:~/.sh/bin
 SUDO=$([[ $(id -u) -gt 0 ]] && echo 'sudo ')
 EDITOR=nano
 COLOR=31
+REPO="~/.sh"
 
 # Set the OS type
 [[ -f /etc/os-release ]] && OSTYP=$(awk -F= '/^ID=/ {print $2}' /etc/os-release | sed 's/"//g')
 
 # This needs to be before the first use of hostname for OpenWrt
 if [[ $OSTYP == openwrt ]]; then
-    function getent {
-        if [[ $1 == passwd ]]; then
-            cat /etc/passwd
-        elif [[ $1 == group ]]; then
-            cat /etc/group
-        fi
-    }
-    function hostname {
-        local _host=$($SUDO uci get system.@system[0].hostname)
-        if [[ -z $1 ]]; then
-            echo $_host
-        elif [[ $1 == -f ]]; then
-            echo $_host.$($SUDO uci get dhcp.@dnsmasq[0].domain)
-        elif [[ $1 == -d ]]; then
-            $SUDO uci get dhcp.@dnsmasq[0].domain
-        fi
-    }
+    source $REPO/lib/openwrt.sh
 fi
 
 LABEL=$(hostname)
