@@ -1,20 +1,22 @@
 #!/usr/bin/env bash
-# .sh/bin/shdu 20190216 - 20230730
-# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20190216 - Updated: 20250325
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ -z $1 || $1 =~ '-h' ]] && echo "Usage: shdu domain|email" && exit 1
 
 [[ $DEBUG ]] && set -x
 
 if [[ $1 =~ @ ]]; then
-    if [[ -d /home/u/${1#*@}/home/${1%@*} ]]; then
-        du -sh /home/u/${1#*@}/home/${1%@*}
+    dir="/home/u/${1#*@}/home/${1%@*}"
+    if [[ -d "$dir" ]]; then
+        du -sh "$dir"
     else
         echo "No such user: $1"
     fi
 else
-    if [[ -d /home/u/$1 ]]; then
-        du -sh /home/u/$1
+    dir="/home/u/$1"
+    if [[ -d "$dir" ]]; then
+        du -sh "$dir"
     else
         echo "No such domain: $1"
     fi
