@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Created: 20250329 - Updated: 20250329
+# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+# Check for required parameters
+if [ "$#" -lt 3 ]; then
+    echo "Usage: addncuser domain username password [display_name] [email] [group]"
+    exit 1
+fi
+
+[[ $DEBUG ]] && set -x
+
+DOMAIN=$1
+USERNAME=$2
+PASSWORD=$3
+DISPLAY_NAME=${4:-"$USERNAME"}
+EMAIL=${5:-""}
+GROUP=${6:-""}
+NCUSER=u1002
+
+# Path to Nextcloud installation
+NC_PATH="/home/u/$DOMAIN/var/www/html"
+
+# Create command options
+CMD_OPTIONS=""
+[ ! -z "$DISPLAY_NAME" ] && CMD_OPTIONS="$CMD_OPTIONS --display-name=\"$DISPLAY_NAME\""
+[ ! -z "$EMAIL" ] && CMD_OPTIONS="$CMD_OPTIONS --email=\"$EMAIL\""
+[ ! -z "$GROUP" ] && CMD_OPTIONS="$CMD_OPTIONS --group=\"$GROUP\""
+
+# Create user with password
+export OC_PASS="$PASSWORD"
+sudo -u $NCUSER php $NC_PATH/occ user:add $CMD_OPTIONS --password-from-env $USERNAME
+RESULT=$?
+unset OC_PASS
+
+if [ $RESULT -eq 0 ]; then
+    echo "User $USERNAME created successfully"
+else
+    echo "Failed to create user $USERNAME"
+    exit 1
+fi
+
+[[ $DEBUG ]] && set +x
