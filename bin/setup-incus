@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# Created: 20250324 - Updated: 20250324
+# Created: 20250324 - Updated: 20250325
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ $1 =~ '-h' ]] &&
-    echo "Usage: setup-incus [pool size (25) GB] [passwd] [IP]" && exit 1
+    echo "Usage: setup-incus [pool size (8) GB] [passwd] [IP]" && exit 1
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
 LSTOR=zfs # btrfs, zfs, lvm, dir
 
-PSIZE=${1:-'3'}
-APASS=${2:-$(openssl rand -base64 12)} # Generate a random password
-IP4_0=${3:-$(hostname -I | awk '{print $1}')} # Use hostname -I for multiple IPs, grab first
+PSIZE=${1:-'8'}
+APASS=${2:-$(openssl rand -base64 12 | sed 's/[O@#$%^&*+\/]/0/g')} # Generate password
+IP4_0=${3:-$(hostname -i | awk '{print $1}')} # Use hostname -i for IPs, grab first
 
 [[ $DEBUG ]] && set -x
 
@@ -61,14 +61,14 @@ else
     # Determine the package manager and install Incus
     if [[ -f /etc/pacman.conf ]]; then
         echo "Detected Arch-based system. Installing Incus"
-        sudo pacman -S --noconfirm incus # Install incus
+        sudo pacman -S --noconfirm incus incus-tools incus-ui # Install incus
     elif [[ -f /etc/debian_version ]]; then
         echo "Detected Debian-based system."
         # For Debian-based systems, you might need to add the Incus repository first
         # and follow the official installation instructions
-        echo "Please follow the official Incus installation instructions for Debian."
-        echo "https://incus.org/docs/main/installation/"
-        exit 3
+        #echo "Please follow the official Incus installation instructions for Debian."
+        #echo "https://incus.org/docs/main/installation/"
+        #exit 3
     else
         echo "Unsupported operating system. Please install Incus manually."
         exit 4
