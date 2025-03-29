@@ -21,15 +21,26 @@ NCUSER=u1002
 # Path to Nextcloud installation
 NC_PATH="/home/u/$DOMAIN/var/www/html"
 
-# Create command options
-CMD_OPTIONS=""
-[ ! -z "$DISPLAY_NAME" ] && CMD_OPTIONS="$CMD_OPTIONS --display-name=\"$DISPLAY_NAME\""
-[ ! -z "$EMAIL" ] && CMD_OPTIONS="$CMD_OPTIONS --email=\"$EMAIL\""
-[ ! -z "$GROUP" ] && CMD_OPTIONS="$CMD_OPTIONS --group=\"$GROUP\""
+# Build the command with proper argument handling
+CMD="sudo -u $NCUSER php $NC_PATH/occ user:add"
+
+if [ ! -z "$DISPLAY_NAME" ]; then
+    CMD="$CMD --display-name '$DISPLAY_NAME'"
+fi
+
+if [ ! -z "$EMAIL" ]; then
+    CMD="$CMD --email '$EMAIL'"
+fi
+
+if [ ! -z "$GROUP" ]; then
+    CMD="$CMD --group '$GROUP'"
+fi
+
+CMD="$CMD --password-from-env $USERNAME"
 
 # Create user with password
 export OC_PASS="$PASSWORD"
-sudo -u $NCUSER php $NC_PATH/occ user:add $CMD_OPTIONS --password-from-env $USERNAME
+eval $CMD
 RESULT=$?
 unset OC_PASS
 
