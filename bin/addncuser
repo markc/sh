@@ -4,8 +4,8 @@
 
 # Check for required parameters
 if [ "$#" -lt 3 ]; then
-    echo "Usage: addncuser domain username password [display_name] [email] [group]"
-    exit 1
+   echo "Usage: addncuser domain username password [display_name] [email] [group]"
+   exit 1
 fi
 
 [[ $DEBUG ]] && set -x
@@ -26,26 +26,36 @@ export OC_PASS="$PASSWORD"
 
 # Use sudo -E to preserve the environment variable
 if [ ! -z "$EMAIL" ]; then
-    sudo -E -u $NCUSER php $NC_PATH/occ user:add \
-      --display-name "$DISPLAY_NAME" \
-      --email "$EMAIL" \
-      --password-from-env \
-      "$USERNAME"
+   sudo -E -u $NCUSER php $NC_PATH/occ user:add \
+     --display-name "$DISPLAY_NAME" \
+     --email "$EMAIL" \
+     --password-from-env \
+     "$USERNAME"
 else
-    sudo -E -u $NCUSER php $NC_PATH/occ user:add \
-      --display-name "$DISPLAY_NAME" \
-      --password-from-env \
-      "$USERNAME"
+   sudo -E -u $NCUSER php $NC_PATH/occ user:add \
+     --display-name "$DISPLAY_NAME" \
+     --password-from-env \
+     "$USERNAME"
 fi
 
 RESULT=$?
 unset OC_PASS
 
 if [ $RESULT -eq 0 ]; then
-    echo "User $USERNAME created successfully"
+   echo "User $USERNAME created successfully"
+   
+   # Add user to group if specified
+   if [ ! -z "$GROUP" ]; then
+      sudo -u $NCUSER php $NC_PATH/occ group:adduser "$GROUP" "$USERNAME"
+      if [ $? -eq 0 ]; then
+         echo "User $USERNAME added to group $GROUP"
+      else
+         echo "Failed to add user $USERNAME to group $GROUP"
+      fi
+   fi
 else
-    echo "Failed to create user $USERNAME"
-    exit 1
+   echo "Failed to create user $USERNAME"
+   exit 1
 fi
 
 [[ $DEBUG ]] && set +x
