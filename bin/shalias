@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# .sh/bin/shalias 20191003 - 20191003
-# Copyright (C) 1995-2019 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20191003 - Updated: 20250330
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ -z $1 || $1 =~ '-h' ]] && echo "Usage: shalias [%]email" && exit 1
 
 source /root/.vhosts/$(hostname -f) || exit 2 # only needed for SQCMD
+
+[[ $DEBUG ]] && set -x
 
 PWTBL=valias
 
@@ -14,4 +16,4 @@ echo "
   WHERE source LIKE '$1%'
   ORDER BY source" | $SQCMD
 
-systemd-cat -t hlog echo "$(whoami) $(basename $0) $*"
+[[ $DEBUG ]] && set -x

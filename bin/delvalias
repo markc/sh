@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Created: 20250330 - Updated: 20250330
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+[[ -z $1 || $1 =~ '-h' ]] && echo "Usage: delvalias source" && exit 1
+[[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
+
+FMAIL=${1,,}      # lowercase source
+VHOST=${FMAIL#*@} # extract domain from email
+
+source /root/.vhosts/$VHOST || exit 3
+
+[[ $DEBUG ]] && set -x
+
+# Check if the alias exists
+USRID=$(
+    cat <<EOS | $SQCMD
+SELECT id
+  FROM valias
+ WHERE source = '$FMAIL'
+EOS
+)
+
+[[ -z $USRID ]] && echo "ERROR: '$FMAIL' does not exist in $ADMIN.valias" && exit 4
+
+# Delete the alias
+cat <<EOS | $SQCMD
+DELETE FROM valias
+ WHERE source = '$FMAIL'
+EOS
+
+echo "Alias '$FMAIL' has been deleted successfully"
+
+# Update the shaliases if that function exists
+type shalias >/dev/null 2>&1 && shalias $FMAIL
+
+[[ $DEBUG ]] && set +x
