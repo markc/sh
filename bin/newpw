@@ -1,9 +1,54 @@
 #!/usr/bin/env bash
-# .sh/bin/newpw 20170715 - 20250124
-# Copyright (C) 1995-2021 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20170715 - Updated: 20250331
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+# Old simple way of generating these passwords
+#echo $(pwgen -sB ${2:-'16'} ${1:-'1'})
+#echo $(openssl rand -base64 12 | sed 's/[@#$%^&*+\/]/0/g')
 
 [[ $1 =~ -h ]] && echo "Usage: newpw [howmany(1)] [length(16)]" && exit 1
 
-# It's a pain tomake sure pwgen is available everywhere
-#echo $(pwgen -sB ${2:-'16'} ${1:-'1'})
-echo $(openssl rand -base64 12 | sed 's/[@#$%^&*+\/]/0/g')
+[[ $DEBUG ]] && set -x
+
+generate_password() {
+  local length=${1:-16}
+  local count=0
+  local password=""
+  local valid=0
+  
+  while [ $valid -eq 0 ]; do
+    # Generate base password
+    password=$(openssl rand -base64 $(($length * 3/4)) | tr -dc 'a-zA-Z0-9' | head -c $length)
+    
+    # Check password meets requirements
+    [[ "$password" =~ [A-Z] ]] && [[ "$password" =~ [a-z] ]] && [[ "$password" =~ [0-9] ]] && valid=1
+    
+    # If requirements not met, force them
+    if [ $valid -eq 0 ]; then
+      # Base string with guaranteed character types
+      local upper=$(openssl rand -base64 4 | tr -dc 'A-Z' | head -c 1)
+      local lower=$(openssl rand -base64 4 | tr -dc 'a-z' | head -c 1)
+      local digit=$(openssl rand -base64 4 | tr -dc '0-9' | head -c 1)
+      
+      # Generate rest of password
+      local rest=$(openssl rand -base64 $(($length * 3/4)) | tr -dc 'a-zA-Z0-9' | head -c $(($length - 3)))
+      
+      # Combine and shuffle
+      password="${upper}${lower}${digit}${rest}"
+      password=$(echo "$password" | fold -w1 | shuf | tr -d '\n' | head -c $length)
+      valid=1
+    fi
+  done
+  
+  echo "$password"
+}
+
+# Generate requested number of passwords
+howmany=${1:-1}
+length=${2:-16}
+
+for ((i=1; i<=howmany; i++)); do
+  generate_password $length
+done
+
+[[ $DEBUG ]] && set +x
