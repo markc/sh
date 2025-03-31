@@ -1,7 +1,3 @@
-#!/usr/bin/env bash
-# Created: 20170715 - Updated: 20250331
-# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
-
 # Old simple way of generating these passwords
 #echo $(pwgen -sB ${2:-'16'} ${1:-'1'})
 #echo $(openssl rand -base64 12 | sed 's/[@#$%^&*+\/]/0/g')
@@ -15,10 +11,12 @@ generate_password() {
   local count=0
   local password=""
   local valid=0
+  local max_attempts=10
   
-  while [ $valid -eq 0 ]; do
-    # Generate base password
-    password=$(openssl rand -base64 $(($length * 3/4)) | tr -dc 'a-zA-Z0-9' | head -c $length)
+  while [ $valid -eq 0 ] && [ $count -lt $max_attempts ]; do
+    count=$((count + 1))
+    # Generate base password with extra characters to ensure we have enough after filtering
+    password=$(openssl rand -base64 $(($length * 2)) | tr -dc 'a-zA-Z0-9' | head -c $length)
     
     # Check password meets requirements
     [[ "$password" =~ [A-Z] ]] && [[ "$password" =~ [a-z] ]] && [[ "$password" =~ [0-9] ]] && valid=1
@@ -30,12 +28,22 @@ generate_password() {
       local lower=$(openssl rand -base64 4 | tr -dc 'a-z' | head -c 1)
       local digit=$(openssl rand -base64 4 | tr -dc '0-9' | head -c 1)
       
-      # Generate rest of password
-      local rest=$(openssl rand -base64 $(($length * 3/4)) | tr -dc 'a-zA-Z0-9' | head -c $(($length - 3)))
+      # Generate rest of password with extra padding to ensure enough characters
+      local rest=$(openssl rand -base64 $(($length * 2)) | tr -dc 'a-zA-Z0-9' | head -c $(($length - 3)))
       
       # Combine and shuffle
       password="${upper}${lower}${digit}${rest}"
-      password=$(echo "$password" | fold -w1 | shuf | tr -d '\n' | head -c $length)
+      password=$(echo "$password" | fold -w1 | shuf | tr -d '\n')
+      
+      # Ensure exact length
+      if [ ${#password} -lt $length ]; then
+        # If somehow still too short, pad with more random characters
+        local padding=$(openssl rand -base64 $(($length * 2)) | tr -dc 'a-zA-Z0-9' | head -c $(($length - ${#password})))
+        password="${password}${padding}"
+      fi
+      
+      # Final trim to exact length
+      password=$(echo "$password" | head -c $length)
       valid=1
     fi
   done
