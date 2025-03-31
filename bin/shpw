@@ -27,8 +27,7 @@ if [[ ! -f $CONFIG_FILE ]]; then
     echo "ERROR: $CONFIG_FILE does not exist"
 else
     # Extract the password associated with the given email
-    #PASSWORD=$(grep -A1 "Username: $EMAIL" "$CONFIG_FILE" | grep Password: | sed 's/Password: //')
-    PASSWORD=$(awk '/Mail/{f=1; next} f && /Password:/{print $2; exit}' $CONFIG_FILE)
+    PASSWORD=$(grep -A1 "Username: $EMAIL" "$CONFIG_FILE" | grep Password: | sed 's/Password: //')
     echo "$PASSWORD"
 fi
 
