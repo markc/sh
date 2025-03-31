@@ -8,39 +8,39 @@
 
 generate_password() {
   local length=${1:-16}
-  
+
   # Generate more characters than needed
   local charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
   local upper_chars="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
   local lower_chars="abcdefghijklmnopqrstuvwxyz"
   local digit_chars="0123456789"
-  
+
   # Guarantee one of each required type
-  local upper_char=${upper_chars:$(( RANDOM % ${#upper_chars} )):1}
-  local lower_char=${lower_chars:$(( RANDOM % ${#lower_chars} )):1}
-  local digit_char=${digit_chars:$(( RANDOM % ${#digit_chars} )):1}
-  
+  local upper_char=${upper_chars:$((RANDOM % ${#upper_chars})):1}
+  local lower_char=${lower_chars:$((RANDOM % ${#lower_chars})):1}
+  local digit_char=${digit_chars:$((RANDOM % ${#digit_chars})):1}
+
   # Fill the rest with random characters
-  local remaining_length=$(( length - 3 ))
+  local remaining_length=$((length - 3))
   local rest=""
-  
+
   # Use /dev/urandom for generating the rest of the characters
-  for (( i=0; i<remaining_length; i++ )); do
-    rest="${rest}${charset:$(( RANDOM % ${#charset} )):1}"
+  for ((i = 0; i < remaining_length; i++)); do
+    rest="${rest}${charset:$((RANDOM % ${#charset})):1}"
   done
-  
+
   # Combine all parts
   local combined="${upper_char}${lower_char}${digit_char}${rest}"
-  
+
   # Shuffle the characters
   local password=$(echo "$combined" | fold -w1 | shuf | tr -d '\n')
-  
+
   # Double-check the length
   if [ ${#password} -ne $length ]; then
     echo "ERROR: Generated password length (${#password}) does not match requested length ($length)" >&2
     return 1
   fi
-  
+
   echo "$password"
 }
 
@@ -48,15 +48,20 @@ generate_password() {
 howmany=${1:-1}
 length=${2:-16}
 
-for ((i=1; i<=howmany; i++)); do
+for ((i = 1; i <= howmany; i++)); do
   pw=$(generate_password $length)
   if [ ${#pw} -eq $length ]; then
+    pw="${pw//O/0}"  # Replace O with 0
     echo "$pw"
   else
     # Fallback method if the first one fails
-    openssl rand -base64 48 | tr -dc 'a-zA-Z0-9' | head -c $(( length - 3 )) | 
-      (echo -n "$(cat)$(openssl rand -base64 12 | tr -dc 'A-Z' | head -c 1)$(openssl rand -base64 12 | tr -dc 'a-z' | head -c 1)$(openssl rand -base64 12 | tr -dc '0-9' | head -c 1)" | 
-       fold -w1 | shuf | tr -d '\n' | head -c $length)
+    openssl rand -base64 48 | tr -dc 'a-zA-Z0-9' | head -c $((length - 3)) |
+      (
+        echo -n "$(cat)$(openssl rand -base64 12 | tr -dc 'A-Z' | head -c 1)$(
+          openssl rand -base64 12 | tr -dc 'a-z' | head -c 1
+        )$(openssl rand -base64 12 | tr -dc '0-9' | head -c 1)" |
+          fold -w1 | shuf | tr -d '\n' | head -c $length
+      )
   fi
 done
 
