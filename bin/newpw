@@ -1,6 +1,6 @@
-# Old simple way of generating these passwords
-#echo $(pwgen -sB ${2:-'16'} ${1:-'1'})
-#echo $(openssl rand -base64 12 | sed 's/[@#$%^&*+\/]/0/g')
+#!/usr/bin/env bash
+# Created: 20170715 - Updated: 20250331
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ $1 =~ -h ]] && echo "Usage: newpw [howmany(1)] [length(16)]" && exit 1
 
@@ -8,45 +8,38 @@
 
 generate_password() {
   local length=${1:-16}
-  local count=0
-  local password=""
-  local valid=0
-  local max_attempts=10
   
-  while [ $valid -eq 0 ] && [ $count -lt $max_attempts ]; do
-    count=$((count + 1))
-    # Generate base password with extra characters to ensure we have enough after filtering
-    password=$(openssl rand -base64 $(($length * 2)) | tr -dc 'a-zA-Z0-9' | head -c $length)
-    
-    # Check password meets requirements
-    [[ "$password" =~ [A-Z] ]] && [[ "$password" =~ [a-z] ]] && [[ "$password" =~ [0-9] ]] && valid=1
-    
-    # If requirements not met, force them
-    if [ $valid -eq 0 ]; then
-      # Base string with guaranteed character types
-      local upper=$(openssl rand -base64 4 | tr -dc 'A-Z' | head -c 1)
-      local lower=$(openssl rand -base64 4 | tr -dc 'a-z' | head -c 1)
-      local digit=$(openssl rand -base64 4 | tr -dc '0-9' | head -c 1)
-      
-      # Generate rest of password with extra padding to ensure enough characters
-      local rest=$(openssl rand -base64 $(($length * 2)) | tr -dc 'a-zA-Z0-9' | head -c $(($length - 3)))
-      
-      # Combine and shuffle
-      password="${upper}${lower}${digit}${rest}"
-      password=$(echo "$password" | fold -w1 | shuf | tr -d '\n')
-      
-      # Ensure exact length
-      if [ ${#password} -lt $length ]; then
-        # If somehow still too short, pad with more random characters
-        local padding=$(openssl rand -base64 $(($length * 2)) | tr -dc 'a-zA-Z0-9' | head -c $(($length - ${#password})))
-        password="${password}${padding}"
-      fi
-      
-      # Final trim to exact length
-      password=$(echo "$password" | head -c $length)
-      valid=1
-    fi
+  # Generate more characters than needed
+  local charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+  local upper_chars="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  local lower_chars="abcdefghijklmnopqrstuvwxyz"
+  local digit_chars="0123456789"
+  
+  # Guarantee one of each required type
+  local upper_char=${upper_chars:$(( RANDOM % ${#upper_chars} )):1}
+  local lower_char=${lower_chars:$(( RANDOM % ${#lower_chars} )):1}
+  local digit_char=${digit_chars:$(( RANDOM % ${#digit_chars} )):1}
+  
+  # Fill the rest with random characters
+  local remaining_length=$(( length - 3 ))
+  local rest=""
+  
+  # Use /dev/urandom for generating the rest of the characters
+  for (( i=0; i<remaining_length; i++ )); do
+    rest="${rest}${charset:$(( RANDOM % ${#charset} )):1}"
   done
+  
+  # Combine all parts
+  local combined="${upper_char}${lower_char}${digit_char}${rest}"
+  
+  # Shuffle the characters
+  local password=$(echo "$combined" | fold -w1 | shuf | tr -d '\n')
+  
+  # Double-check the length
+  if [ ${#password} -ne $length ]; then
+    echo "ERROR: Generated password length (${#password}) does not match requested length ($length)" >&2
+    return 1
+  fi
   
   echo "$password"
 }
@@ -56,7 +49,15 @@ howmany=${1:-1}
 length=${2:-16}
 
 for ((i=1; i<=howmany; i++)); do
-  generate_password $length
+  pw=$(generate_password $length)
+  if [ ${#pw} -eq $length ]; then
+    echo "$pw"
+  else
+    # Fallback method if the first one fails
+    openssl rand -base64 48 | tr -dc 'a-zA-Z0-9' | head -c $(( length - 3 )) | 
+      (echo -n "$(cat)$(openssl rand -base64 12 | tr -dc 'A-Z' | head -c 1)$(openssl rand -base64 12 | tr -dc 'a-z' | head -c 1)$(openssl rand -base64 12 | tr -dc '0-9' | head -c 1)" | 
+       fold -w1 | shuf | tr -d '\n' | head -c $length)
+  fi
 done
 
 [[ $DEBUG ]] && set +x
