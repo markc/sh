@@ -10,8 +10,9 @@ generate_password() {
   local length=${1:-16}
 
   # Generate more characters than needed
-  local charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-  local upper_chars="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  # Exclude 'O' from the charset
+  local charset="ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+  local upper_chars="ABCDEFGHIJKLMNPQRSTUVWXYZ"
   local lower_chars="abcdefghijklmnopqrstuvwxyz"
   local digit_chars="0123456789"
 
@@ -41,6 +42,7 @@ generate_password() {
     return 1
   fi
 
+  password="${password//O/0}" # Replace O with 0 - Backup
   echo "$password"
 }
 
@@ -51,7 +53,6 @@ length=${2:-16}
 for ((i = 1; i <= howmany; i++)); do
   pw=$(generate_password $length)
   if [ ${#pw} -eq $length ]; then
-    pw="${pw//O/0}"  # Replace O with 0
     echo "$pw"
   else
     # Fallback method if the first one fails
