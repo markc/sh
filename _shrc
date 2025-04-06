@@ -1,5 +1,5 @@
-# Created: 20130315 - Updated: 20250325
-# Copyright (C) 2015-2024 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20130315 - Updated: 20250406
+# Copyright (C) 2015-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 #shopt -s expand_aliases
 
 [[ $DEBUG ]] && set -x
@@ -12,10 +12,8 @@ COLOR=31
 # Set the OS type
 [[ -f /etc/os-release ]] && OSTYP=$(awk -F= '/^ID=/ {print $2}' /etc/os-release | sed 's/"//g')
 
-# This needs to be before the first use of hostname for OpenWrt
-if [[ $OSTYP == openwrt ]]; then
-    source ~/.sh/lib/openwrt.sh
-fi
+# Import hostname alternative for resolved and openwrt
+[[ -f ~/.sh/lib/hostname.sh ]] && . ~/.sh/lib/hostname.sh
 
 LABEL=$(hostname)
 
@@ -29,6 +27,7 @@ LABEL=$(hostname)
 [[ -f ~/.sh/lib/functions ]] && . ~/.sh/lib/functions
 
 _HOST=$(hostname -f | tr 'A-Z' 'a-z')
+
 if [[ -f ~/.vhosts/$_HOST ]]; then
     . ~/.vhosts/$_HOST
 else

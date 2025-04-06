@@ -32,7 +32,7 @@ _gwip="${2:-192.168.1.1}"
 # to 192.168.1.1 if provided and static IP is configured.
 _dns1="${3:-192.168.1.1}"
 # The name of the bridge interface. This can be customized if needed.
-BRIDGE_NAME="bridge-br0"
+BRIDGE_NAME="br0"
 BRIDGE_SLAVE="bridge-slave"
 
 [[ $DEBUG ]] && set +x

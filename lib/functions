@@ -1,4 +1,4 @@
-# Created: 20151231 - Updated: 20250324
+# Created: 20151231 - Updated: 20250406
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 [[ $DEBUG ]] && set -x
@@ -143,6 +143,16 @@ sethost() {
     [[ $1 =~ -h ]] && echo "Usage: sethost [domain]" && return 1
 
     local _FQDN=$(hostname -f | tr 'A-Z' 'a-z')
+
+    [[ $DEBUG ]] && echo "local _FQDN=$_FQDN" >&2
+
+    # Unset all the gethost() ENV VARS. The only way is to unset them
+
+    unset ADMIN AHOST AMAIL ANAME APASS A_GID A_UID BPATH CIMAP CSMTP C_DNS
+    unset C_FPM C_SQL C_SSL C_WEB DBMYS DBSQL DHOST DNAME DPASS DPATH DPORT
+    unset DTYPE DUSER EPASS EXMYS EXSQL HNAME HDOMN IP4_0 LROOT MHOST MPATH
+    unset OSMIR OSREL OSTYP SQCMD SQDNS TAREA TCITY UPASS UPATH UUSER U_GID
+    unset U_SHL U_UID VHOST VPATH VUSER V_PHP WPASS WPATH WPUSR WUGID
 
     # Static env vars, can be set in ~/.myrc via "es"
 
