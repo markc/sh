@@ -5,7 +5,15 @@
 [[ $DEBUG ]] && set -x
 
 PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:~/.sh/bin
-SUDO=$([[ $(id -u) -gt 0 ]] && echo 'sudo ')
+# Set sudo as the path to the sudo executable only if the user ID is
+# greater than 0 (not root).  This ensures that non-root users can
+# easily run commands with elevated privileges, but prevents the need
+# for explicit sudo calls when already root.
+# Unset alias if user defined a sudo alias.
+unalias sudo 2>/dev/null
+SUDO=$([[ $(id -u) -gt 0 ]] && echo '/usr/bin/sudo ')
+export SUDO
+
 EDITOR=nano
 COLOR=31
 
@@ -36,6 +44,6 @@ fi
 
 PS1="\[\033[1;${COLOR}m\]${LABEL} \w\[\033[0m\] "
 
-export PATH SUDO MAILTO EDITOR COLOR LABEL PS1 # DEBUG?
+export PATH MAILTO EDITOR COLOR LABEL PS1 # DEBUG?
 
 [[ $DEBUG ]] && set +x
