@@ -1,27 +1,17 @@
 # Created: 20130315 - Updated: 20250604
 # Copyright (C) 2015-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
-# Set the PATH to include system directories and NetServa bin
 PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:~/.sh/bin
-
-# Default editor for the environment
 EDITOR=nano
-
-# Terminal color setting for the PS1 prompt
 COLOR=31
 
 # Check if we called from a Netserva bin/script
-if [[ -n "$NSENV" ]]; then
-  [[ -f ~/.sh/lib/netserva.sh ]] && . ~/.sh/lib/netserva.sh
-  # Unset the marker
-  unset NSENV
-fi
+#if [[ -n "$NSENV" ]]; then
+#  [[ -f ~/.sh/lib/netserva.sh ]] && . ~/.sh/lib/netserva.sh
+#  # Unset the marker
+#  unset NSENV
+#fi
 
-# Set sudo as the path to the sudo executable only if the user ID is
-# greater than 0 (not root).  This ensures that non-root users can
-# easily run commands with elevated privileges, but prevents the need
-# for explicit sudo calls when already root.
-# Unset alias if user defined a sudo alias.
 unalias sudo 2>/dev/null
 SUDO=$([[ $(id -u) -gt 0 ]] && echo '/usr/bin/sudo ')
 export SUDO
