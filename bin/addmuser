@@ -1,19 +1,6 @@
 #!/usr/bin/env bash
 # Created: 20221121 - Updated: 20250407
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
-
-# Mark this as a Netserva script
-export NSENV=1
-
-# Source the main shell configuration
-. ~/.shrc
-
-# Mark this as a Netserva script
-export NSENV=1
-
-# Source the main shell configuration
-. ~/.shrc
-
 [[ $1 =~ '-h' || -z $3 ]] && echo "Usage: addmuser mysqldb user password" && exit 1
 
 [[ $DTYPE != mysql ]] && echo "Error: only works with mysql" && exit 4

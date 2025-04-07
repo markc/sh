@@ -1,19 +1,6 @@
 #!/usr/bin/env bash
 # Created: 20170417 - Updated: 20250407
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
-
-# Mark this as a Netserva script
-export NSENV=1
-
-# Source the main shell configuration
-. ~/.shrc
-
-# Mark this as a Netserva script
-export NSENV=1
-
-# Source the main shell configuration
-. ~/.shrc
-
 # Check if at least two arguments are passed
 if [[ $# -lt 2 || $1 == '-h' ]]; then
     echo "Usage: $0 start|stop|enable|disable|restart|reload <service_name|all>"

@@ -5,13 +5,6 @@ PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:~/.sh/bin
 EDITOR=nano
 COLOR=31
 
-# Check if we called from a Netserva bin/script
-#if [[ -n "$NSENV" ]]; then
-#  [[ -f ~/.sh/lib/netserva.sh ]] && . ~/.sh/lib/netserva.sh
-#  # Unset the marker
-#  unset NSENV
-#fi
-
 unalias sudo 2>/dev/null
 SUDO=$([[ $(id -u) -gt 0 ]] && echo '/usr/bin/sudo ')
 export SUDO

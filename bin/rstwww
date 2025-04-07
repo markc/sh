@@ -1,13 +1,6 @@
 #!/usr/bin/env bash
 # Created: 20180205 - Updated: 20250407
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
-
-# Mark this as a Netserva script
-export NSENV=1
-
-# Source the main shell configuration
-. ~/.shrc
-
 ### TODO WIP this has hardly been tested
 
 [[ -z $1 || $1 =~ -h ]] && echo "Usage: rstwww domain [dbname] [oldomain]" && exit 1

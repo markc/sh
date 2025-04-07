@@ -1,13 +1,6 @@
 #!/usr/bin/env bash
 # Created: 20210609 - Updated: 20250407
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
-
-# Mark this as a Netserva script
-export NSENV=1
-
-# Source the main shell configuration
-. ~/.shrc
-
 # Add you custom post removal tweak here
 _FIX1='author/twccei/index.html'
 _FIX2=''

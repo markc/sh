@@ -1,13 +1,6 @@
 #!/usr/bin/env bash
 # Created: 20170201 - Updated: 20250407
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
-
-# Mark this as a Netserva script
-export NSENV=1
-
-# Source the main shell configuration
-. ~/.shrc
-
 [[ $1 == '-h' || $1 =~ -h ]] &&
     echo "Usage: newautoconfig [domain] [smtpdomain] [imapdomain]" && exit 1
 

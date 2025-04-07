@@ -1,13 +1,6 @@
 #!/usr/bin/env bash
 # Created: 20191209 - Updated: 20250407
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
-
-# Mark this as a Netserva script
-export NSENV=1
-
-# Source the main shell configuration
-. ~/.shrc
-
 [[ -z $1 || $1 =~ -h ]] && echo "Usage: cfp_zone_list domain" && exit 1
 
 curl -s https://api.cloudflare.com/host-gw.html \

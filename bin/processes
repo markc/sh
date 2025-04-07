@@ -1,13 +1,6 @@
 #!/usr/bin/env bash
 # Created: 20170515 - Updated: 20250407
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
-
-# Mark this as a Netserva script
-export NSENV=1
-
-# Source the main shell configuration
-. ~/.shrc
-
 /bin/ps -eo pcpu:4,rss:8,vsz:8,cmd --sort=-pcpu,-rss | grep -v ' 0 \['
 
 systemd-cat -t hlog echo "$(whoami) $(basename $0) $*"

@@ -1,13 +1,6 @@
 #!/usr/bin/env bash
 # Created: 20200807 - Updated: 20250407
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
-
-# Mark this as a Netserva script
-export NSENV=1
-
-# Source the main shell configuration
-. ~/.shrc
-
 # Manually copy to /usr/bin/lsb_release to partly satisfy missing lsb-release package
 
 [[ ! -f /etc/os-release ]] && echo "ERROR: /etc/os-release does not exist" && exit 1

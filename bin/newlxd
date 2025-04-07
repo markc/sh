@@ -1,13 +1,6 @@
 #!/usr/bin/env bash
 # Created: 20171013 - Updated: 20250407
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
-
-# Mark this as a Netserva script
-export NSENV=1
-
-# Source the main shell configuration
-. ~/.shrc
-
 # No need to be run as root
 
 [[ -z $1 || $1 =~ -h ]] && echo "Usage: newlxd FQDN [(tiny)|small|medium|large] [(mysql)|sqlite] [distro($OSREL)] [static IP/24] [gateway IP]" && exit 1

@@ -1,13 +1,6 @@
 #!/usr/bin/env bash
 # Created: 20170304 - Updated: 20250407
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
-
-# Mark this as a Netserva script
-export NSENV=1
-
-# Source the main shell configuration
-. ~/.shrc
-
 # Depends on nginx and DNS already resolving to requested domains
 
 # TODO: change to acme.sh as a foundation instead of dehydrated

@@ -1,12 +1,6 @@
 #!/usr/bin/env bash
 # Created: 20180623 - Updated: 20250407
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
-
-# Mark this as a Netserva script
-export NSENV=1
-
-# Source the main shell configuration
-. ~/.shrc
 #
 # This is just an example of calling the SynergyWholesale SOAP API from a
 # shell script. Depends on xmllint from the libxml2-utils package. Add these
