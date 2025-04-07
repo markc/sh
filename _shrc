@@ -44,10 +44,10 @@ LABEL=$(hostname)
 [[ $DEBUG ]] && set -x || export DEBUG=
 
 # Import global aliases
-[[ -f ~/.sh/lib/aliases ]] && . ~/.sh/lib/aliases.sh
+[[ -f ~/.sh/lib/aliases.sh ]] && . ~/.sh/lib/aliases.sh
 
 # Import managed env vars
-[[ -f ~/.sh/lib/functions ]] && . ~/.sh/lib/functions.sh
+[[ -f ~/.sh/lib/functions.sh ]] && . ~/.sh/lib/functions.sh
 
 _HOST=$(hostname -f | tr 'A-Z' 'a-z')
 
