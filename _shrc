@@ -29,9 +29,6 @@ unalias sudo 2>/dev/null
 SUDO=$([[ $(id -u) -gt 0 ]] && echo '/usr/bin/sudo ')
 export SUDO
 
-# Local custom aliases and env vars
-[[ -f ~/.myrc ]] && . ~/.myrc
-
 # Set the OS type
 if [[ -f /etc/os-release ]]; then
     OSTYP=$(awk -F= '/^ID=/ {print $2}' /etc/os-release | sed 's/"//g')
@@ -42,6 +39,9 @@ fi
 [[ -f ~/.sh/lib/hostname.sh ]] && . ~/.sh/lib/hostname.sh
 
 LABEL=$(hostname)
+
+# Local custom aliases and env vars
+[[ -f ~/.myrc ]] && . ~/.myrc
 
 # Import global aliases
 [[ -f ~/.sh/lib/aliases ]] && . ~/.sh/lib/aliases.sh
