@@ -6,16 +6,11 @@ export NSENV=1 && . ~/.shrc
 
 [[ -z $1 || $1 =~ '-h' ]] && echo "Usage: shpw user@domain" && exit 1
 
-# Normalize the email to lowercase and extract the domain
 EMAIL=${1,,}      # lowercase user@domain
 VHOST=${EMAIL#*@} # extract domain part of the email
 
-# Check if the vhost configuration file exists
-CONFIG_FILE="/root/.vhosts/$VHOST.conf"
-if [[ ! -f $CONFIG_FILE ]]; then
-    echo "ERROR: $CONFIG_FILE does not exist"
-else
-    # Extract the password associated with the given email
-    PASSWORD=$(grep -A1 "Username: $EMAIL" "$CONFIG_FILE" | grep Password: | sed 's/Password: //')
-    echo "$PASSWORD"
-fi
+$SUDO awk '
+    /Mail/ {flag=1} 
+    flag && /Username: '"$EMAIL"'/ {user=1} 
+    user && /Password/ {print $2; exit}
+' ~/.vhosts/$VHOST.conf

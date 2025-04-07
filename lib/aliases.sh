@@ -1,9 +1,5 @@
-# Created: 20151231 - Updated: 20250325
-# Copyright (C) 1995-2024 Mark Constable <markc@renta.net> (AGPL-3.0)
-
-[[ $DEBUG ]] && set -x
-
-[[ $(type -t sc) == alias ]] && unalias sc
+# Created: 20151231 - Updated: 20250407
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 alias ..='cd ..'
 alias ?='bash ~/.help'
@@ -95,5 +91,3 @@ alias plog='tail -f ../log/php-errors.log'
 
 # Depends on /etc/postfix/header_checks
 alias maillog="journalctl -f -n 10000 | stdbuf -oL grep 'warning: header Subject:' | sed -e 's/mail .*warning: header Subject:\(.*\)/\1/' -e 's/ from .*];//' -e 's/proto=.*$//'"
-
-[[ $DEBUG ]] && set +x

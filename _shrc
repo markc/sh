@@ -10,9 +10,6 @@ EDITOR=nano
 # Terminal color setting for the PS1 prompt
 COLOR=31
 
-# Enable bash tracing if DEBUG=1 in ~/.myrc
-[[ $DEBUG ]] && set -x
-
 # Check if we called from a Netserva bin/script
 if [[ -n "$NSENV" ]]; then
   [[ -f ~/.sh/lib/netserva.sh ]] && . ~/.sh/lib/netserva.sh
@@ -42,6 +39,9 @@ LABEL=$(hostname)
 
 # Local custom aliases and env vars
 [[ -f ~/.myrc ]] && . ~/.myrc
+
+# Enable bash tracing if DEBUG=1 in ~/.myrc
+[[ $DEBUG ]] && set -x || export DEBUG=
 
 # Import global aliases
 [[ -f ~/.sh/lib/aliases ]] && . ~/.sh/lib/aliases.sh
