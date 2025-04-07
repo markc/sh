@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
-# .sh/bin/addredir 20190623 - 20201018
-# Copyright (C) 1995-2020 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20190623 - Updated: 20250407
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
 
 [[ -z $2 || $1 =~ -h ]] && echo "Usage: addredir from.domain to.domain" && exit 1
 

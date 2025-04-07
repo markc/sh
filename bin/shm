@@ -1,10 +1,20 @@
 #!/usr/bin/env bash
-# Created: 20130210 - Updated: 20250325
+# Created: 20130210 - Updated: 20250407
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
-[[ -z $REPO ]] && REPO=~/.sh
+# Mark this as a Netserva script
+export NSENV=1
 
-[[ $DEBUG ]] && set -x
+# Source the main shell configuration
+. ~/.shrc
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
+
+[[ -z $REPO ]] && REPO=~/.sh
 
 usage() {
     echo "\

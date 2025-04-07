@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
-# .sh/bin/tunnel 20181102 - 20181207
-# Copyright (C) 1995-2018 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20181102 - Updated: 20250407
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
 
 [[ -z $1 || $1 =~ '-h' ]] &&
     echo "Usage: tunnel forward|reverse|list|del targethost [lport] [rport] [luser] [ruser] [sport]" && exit 1

@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
-# .sh/bin/delvmail 20170418 - 20210118
-# Copyright (C) 1995-2021 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20170418 - Updated: 20250407
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
 
 [[ -z $1 || $1 =~ -h ]] && echo "Usage: delvmail user@domain" && exit 1
 

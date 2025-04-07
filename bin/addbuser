@@ -1,14 +1,20 @@
 #!/usr/bin/env bash
-# .sh/bin/addbuser 20200804 - 20221122
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20200804 - Updated: 20250407
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
-[[ -z $1 || $1 =~ -h ]] && echo "Usage: addbuser for_vhost [user] [pw]" && exit 1
+# Mark this as a Netserva script
+export NSENV=1
 
-[[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
-
+# Source the main shell configuration
 . ~/.shrc
 
-[[ $DEBUG ]] && set -x
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
+
+[[ -z $1 || $1 =~ -h ]] && echo "Usage: addbuser for_vhost [user] [pw]" && exit 1
 
 BHOST=$(hostname -f)
 _BUID=$(newuid)

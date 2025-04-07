@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
-# .sh/bin/cfp_user_lookup 20191209 - 20191209
-# Copyright (C) 1995-2019 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20191209 - Updated: 20250407
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
 
 [[ -z $1 || $1 =~ -h ]] && echo "Usage: cfp_user_lookup email" && exit 1
 

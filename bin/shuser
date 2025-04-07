@@ -1,14 +1,24 @@
 #!/usr/bin/env bash
-# .sh/bin/shuser 20160130 - 20250323
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20160130 - Updated: 20250407
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
 
 # TODO: if uid == 1000 then uid = sysadm else uid= u####
 
-[[ $DEBUG ]] && set -x
-
 [[ $1 =~ '-h' ]] && echo "Usage: shuser [email*]" && exit 1
 
-. ~/.shrc # only needed for SQCMD
+# SQCMD is already provided by the main shell configuration
 
 PWTBL=vmails
 

@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
-# .sh/bin/cfsettings 20181007 - 20191208
-# Copyright (C) 1995-2019 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20181007 - Updated: 20250407
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
 
 # See setup-cf
 

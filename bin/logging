@@ -1,16 +1,22 @@
 #!/usr/bin/env bash
-# .sh/bin/logging 20170417 - 20221122
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20170417 - Updated: 20250407
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
 
 # TODO add AID (account/admin ID)
 
 [[ $1 =~ '-h' ]] && echo "Usage: logging domain|all [update]" && exit 1
-
-[[ $(id -u) -gt 0 ]] && echo "!!! ERROR: must be root (use sudo -i)" && exit 2
-
-. ~/.shrc
-
-[[ $DEBUG ]] && set -x
 
 [[ $2 == update ]] && UPD=1 || UPD=
 

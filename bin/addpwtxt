@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
-# .sh/bin/addpwtxt 20190114 - 20230527
-# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20190114 - Updated: 20250407
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
 
 [[ $1 =~ -h ]] && echo "Usage: addpwtxt [password] [vhost]" && exit 1
 

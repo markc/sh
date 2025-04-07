@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
-# .sh/bin/cfadddns 20181002 - 20230529
-# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20181002 - Updated: 20250407
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
 
 # See setup-cf
 [[ $DEBUG ]] && set -x

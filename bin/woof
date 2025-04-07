@@ -1,14 +1,22 @@
 #!/usr/bin/env bash
-# .sh/bin/woof 20160121 - 20221122
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20160121 - Updated: 20250407
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
 
 [[ -z $1 || $1 =~ "-h" ]] && echo "Usage: woof user@domain [folder]" && exit 1
 
-[[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
-
-. ~/.shrc # just for VPATH
-
-[[ $DEBUG ]] && set -x
+# VPATH is already provided by the main shell configuration
 
 [[ ! -d $VPATH ]] && echo "ERROR: $VPATH does not exist" && exit 4
 

@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
-# .sh/bin/ddns 20180606 - 20181102
-# Copyright (C) 1995-2018 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20180606 - Updated: 20250407
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
 
 # This script needs to be on a 1 to 5 minute cron job and requires a
 # a companion PHP script (dns script) to insert the values into pdns.

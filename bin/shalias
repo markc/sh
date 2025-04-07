@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
-# Created: 20191003 - Updated: 20250330
+# Created: 20191003 - Updated: 20250407
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
 
 [[ -z $1 || $1 =~ '-h' ]] && echo "Usage: shalias [%]email" && exit 1
 

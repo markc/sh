@@ -1,10 +1,25 @@
-# Created: 20130315 - Updated: 20250406
+# Created: 20130315 - Updated: 20250604
 # Copyright (C) 2015-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
-#shopt -s expand_aliases
 
+# Set the PATH to include system directories and NetServa bin
+PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:~/.sh/bin
+
+# Default editor for the environment
+EDITOR=nano
+
+# Terminal color setting for the PS1 prompt
+COLOR=31
+
+# Enable bash tracing if DEBUG=1 in ~/.myrc
 [[ $DEBUG ]] && set -x
 
-PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:~/.sh/bin
+# Check if we called from a Netserva bin/script
+if [[ -n "$NSENV" ]]; then
+  [[ -f ~/.sh/lib/netserva.sh ]] && . ~/.sh/lib/netserva.sh
+  # Unset the marker
+  unset NSENV
+fi
+
 # Set sudo as the path to the sudo executable only if the user ID is
 # greater than 0 (not root).  This ensures that non-root users can
 # easily run commands with elevated privileges, but prevents the need
@@ -14,25 +29,25 @@ unalias sudo 2>/dev/null
 SUDO=$([[ $(id -u) -gt 0 ]] && echo '/usr/bin/sudo ')
 export SUDO
 
-EDITOR=nano
-COLOR=31
+# Local custom aliases and env vars
+[[ -f ~/.myrc ]] && . ~/.myrc
 
 # Set the OS type
-[[ -f /etc/os-release ]] && OSTYP=$(awk -F= '/^ID=/ {print $2}' /etc/os-release | sed 's/"//g')
+if [[ -f /etc/os-release ]]; then
+    OSTYP=$(awk -F= '/^ID=/ {print $2}' /etc/os-release | sed 's/"//g')
+    export OSTYP
+fi
 
-# Import hostname alternative for resolved and openwrt
+# Import hostname alternative for resolved and openwrt hosts
 [[ -f ~/.sh/lib/hostname.sh ]] && . ~/.sh/lib/hostname.sh
 
 LABEL=$(hostname)
 
 # Import global aliases
-[[ -f ~/.sh/lib/aliases ]] && . ~/.sh/lib/aliases
-
-# Local custom aliases and env var overrides
-[[ -f ~/.myrc ]] && . ~/.myrc
+[[ -f ~/.sh/lib/aliases ]] && . ~/.sh/lib/aliases.sh
 
 # Import managed env vars
-[[ -f ~/.sh/lib/functions ]] && . ~/.sh/lib/functions
+[[ -f ~/.sh/lib/functions ]] && . ~/.sh/lib/functions.sh
 
 _HOST=$(hostname -f | tr 'A-Z' 'a-z')
 
@@ -44,6 +59,7 @@ fi
 
 PS1="\[\033[1;${COLOR}m\]${LABEL} \w\[\033[0m\] "
 
-export PATH MAILTO EDITOR COLOR LABEL PS1 # DEBUG?
+export EDITOR PATH PS1
 
+# Disable bash tracing if DEBUG=1 in ~/.myrc
 [[ $DEBUG ]] && set +x

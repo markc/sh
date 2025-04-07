@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
-# .sh/bin/cfzone 20181002 - 20191209
-# Copyright (C) 1995-2018 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20181002 - Updated: 20250407
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
 
 [[ -z $1 || $1 =~ -h ]] && echo "Usage: cfzone domain [cloudflare_email] [cloudflare_key]" && exit 1
 

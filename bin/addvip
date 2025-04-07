@@ -1,14 +1,20 @@
 #!/usr/bin/env bash
-# .sh/bin/addvip 20190602 - 20221122
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20190602 - Updated: 20250407
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
-[[ -z $2 || $1 =~ -h ]] && echo "Usage: addvip domain ip" && exit 1
+# Mark this as a Netserva script
+export NSENV=1
 
-[[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
-
+# Source the main shell configuration
 . ~/.shrc
 
-[[ $DEBUG ]] && set -x
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
+
+[[ -z $2 || $1 =~ -h ]] && echo "Usage: addvip domain ip" && exit 1
 
 VHOST=$1
 IP4_0=${2:-'0.0.0.0'}

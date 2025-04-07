@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
-# swbalance 20180623 - 20180624
-# Copyright (C) 1995-2018 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20180623 - Updated: 20250407
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
 #
 # This is just an example of calling the SynergyWholesale SOAP API from a
 # shell script. Depends on xmllint from the libxml2-utils package. Add these

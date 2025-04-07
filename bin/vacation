@@ -1,15 +1,23 @@
 #!/usr/bin/env bash
-# .sh/bin/vacation 20201224 - 20221122
-# Copyright (C) 1995-2022 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20201224 - Updated: 20250407
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
 
 # Vacation file format is plain text with the Suject on the first line
 # followed by the message content with no empty lines.
 
 [[ -z $2 || $1 =~ -h ]] && echo "Usage: vacation email vacation_file" && exit 1
-
-[[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
-
-. ~/.shrc
 
 EMAIL=${1}
 

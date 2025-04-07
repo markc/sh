@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
-# .sh/bin/setup-vultr 20180619 - 20220515
-# Copyright (C) 1995-2020 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20180619 - Updated: 20250407
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
 
 # First obtain your API key from your account section at https://my.vultr.common
 # Add "export VULTR_API_KEY=YOUR_API_KEY" to ~/.myrc (use the es alias)

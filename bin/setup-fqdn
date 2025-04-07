@@ -1,10 +1,20 @@
 #!/usr/bin/env bash
-# .sh/bin/setup-fqdn 20210327 - 20231116
-# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20210327 - Updated: 20250407
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
 
 [[ $1 =~ '-h' ]] && echo "Usage: setup-fqdn [domain]" && exit 1
-
-[[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
 # Temporary self-signed SSL certificate defaults
 C="AU"
@@ -12,8 +22,6 @@ ST="QLD"
 L="GoldCoast"
 O="NetServa"
 OU="IT Department"
-
-. ~/.shrc
 
 gethost
 

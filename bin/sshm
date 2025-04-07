@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
-# .sh/bin/sshm 20230702 - 20240830
-# Copyright (C) 1995-2024 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20230702 - Updated: 20250407
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
 
 # Exit strategies for triggering Bootstrap5 alerts
 # exit 0    - success, no alert and continue

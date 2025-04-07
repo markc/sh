@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
-# .sh/bin/addwp 20160231 - 20231114
-# Copyright (C) 1995-2023 Mark Constable <markc@renta.net> (AGPL-3.0)
+# Created: 20160231 - Updated: 20250407
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+# Mark this as a Netserva script
+export NSENV=1
+
+# Source the main shell configuration
+. ~/.shrc
 
 [[ -z $1 || $1 =~ -h ]] && echo "Usage: addwp domain [path] [email]" && exit 1
 
