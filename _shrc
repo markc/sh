@@ -4,7 +4,7 @@
 
 [[ $DEBUG ]] && set -x
 
-PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/snap/bin:~/.sh/bin
+PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:~/.sh/bin
 SUDO=$([[ $(id -u) -gt 0 ]] && echo 'sudo ')
 EDITOR=nano
 COLOR=31
