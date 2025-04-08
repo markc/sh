@@ -8,8 +8,12 @@ export NSENV=1 && . ~/.shrc
 EMAIL=${1,,}      # lowercase user@domain
 VHOST=${EMAIL#*@} # extract domain part of the email
 
-$SUDO awk '
+if [[ -f /root/.vhosts/$VHOST.conf ]]; then
+    $SUDO awk '
     /Mail/ {flag=1} 
     flag && /Username: '"$EMAIL"'/ {user=1} 
     user && /Password/ {print $2; exit}
-' ~/.vhosts/$VHOST.conf
+' /root/.vhosts/$VHOST.conf
+else
+    echo "ERROR: /root/.vhosts/$VHOST.conf does not exist or is not accessible"
+fi
