@@ -8,7 +8,7 @@ export NSENV=1 && . ~/.shrc
 EMAIL=${1,,}      # lowercase user@domain
 VHOST=${EMAIL#*@} # extract domain part of the email
 
-if [[ -f /root/.vhosts/$VHOST.conf ]]; then
+if $SUDO test -f /root/.vhosts/$VHOST.conf; then
     $SUDO awk '
     /Mail/ {flag=1} 
     flag && /Username: '"$EMAIL"'/ {user=1} 

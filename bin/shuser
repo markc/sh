@@ -13,7 +13,7 @@ PWTBL=vmails
 RESULT=$(echo "
  SELECT count(*)
    FROM $PWTBL
-  WHERE user LIKE '$QRY'" | $SQCMD)
+  WHERE user LIKE '$QRY'" | $SUDO $SQCMD)
 
 if [[ $RESULT -gt 1 ]]; then
 
@@ -21,7 +21,7 @@ if [[ $RESULT -gt 1 ]]; then
  SELECT uid, user, home
    FROM $PWTBL
   WHERE user LIKE '$QRY'
-  ORDER BY uid" | $SQCMD |
+  ORDER BY uid" | $SUDO $SQCMD |
         awk -F '[|\t]' '{printf "u%d  %-42s %s\n", $1, $2, $3}'
 
 elif [[ $RESULT -eq 1 ]]; then
@@ -29,17 +29,15 @@ elif [[ $RESULT -eq 1 ]]; then
     EMAIL=$(echo "
  SELECT user
    FROM $PWTBL
-  WHERE user LIKE '$QRY' LIMIT 1" | $SQCMD)
+  WHERE user LIKE '$QRY' LIMIT 1" | $SUDO $SQCMD)
 
     echo "
  SELECT uid, user, home
    FROM $PWTBL
-  WHERE user = '$EMAIL'" | $SQCMD |
+  WHERE user = '$EMAIL'" | $SUDO $SQCMD |
         awk -F '[|\t]' '{printf " user: %s\n uuid: u%s\n home: %s\n", $2, $1, $3}'
 
     echo "   pw: $(shpw $EMAIL)"
 else
     echo "No matching users"
 fi
-
-[[ $DEBUG ]] && set +x
