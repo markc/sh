@@ -4,8 +4,6 @@
 #export NSENV=1 && . ~/.shrc
 
 set -x
-. ~/.shrc
-
 gethost
 set +x
 exit
