@@ -3,6 +3,13 @@
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 #export NSENV=1 && . ~/.shrc
 
+set -x
+. ~/.shrc
+
+gethost
+set +x
+exit
+
 [[ $1 =~ '-h' ]] && echo "Usage: shuser [email*]" && exit 1
 
 # SQCMD is already provided by the main shell configuration
