@@ -57,7 +57,7 @@ EOS
     echo "### Create symlink to /usr/bin/php"
     cd /usr/bin && ln -s php$V_PHP php
 
-elif [[ $OSTYP == manjaro ]]; then
+elif [[ $OSTYP == manjaro || $OSTYP == cachyos ]]; then
 
     # Patch for Manjaro adding this system group as a user group (bad!)
     grep -q '^autologin:x:1000' /etc/group
@@ -207,7 +207,7 @@ else
     mv /etc/ssh/sshd_config /etc/ssh/sshd_config.orig
     cp ~/.sh/etc/_etc_ssh_sshd__config /etc/ssh/sshd_config
 
-    if [[ -d "/run/systemd/system" ]]; then
+    if [[ $OSTYP == ubuntu ]]; then
         # The easy way to revert the Ubuntu 22.10+ socket activation disaster
         systemctl disable --now ssh.socket
         systemctl enable --now ssh.service
