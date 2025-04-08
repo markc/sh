@@ -5,7 +5,6 @@
 
 source ~/.shrc
 
-[[ $DEBUG ]] && set -x
 
 VHOST=${1:-$VHOST}
 DTYPE=${2:-$DTYPE}
@@ -265,4 +264,3 @@ EOS
     sysctl -p >/dev/null
 fi
 
-[[ $DEBUG ]] && set +x

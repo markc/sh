@@ -9,7 +9,6 @@
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
-[[ $DEBUG ]] && set -x
 
 VHOST=$1
 RHOST=$2
@@ -69,4 +68,3 @@ else
     echo "Warning: $WPATH/wp-config.php does not exist"
 fi
 
-[[ $DEBUG ]] && set -x

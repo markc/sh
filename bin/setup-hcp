@@ -9,7 +9,6 @@ MHOST=${1:-$(hostname -f | tr 'A-Z' 'a-z')} # install into primary vhost
 
 [[ -f ~/.vhosts/$MHOST ]] && . ~/.vhosts/$MHOST || exit 3
 
-[[ $DEBUG ]] && set -x
 
 if [[ -d $WPATH/hcp ]]; then
     echo "### Exists $WPATH/hcp"
@@ -125,4 +124,3 @@ serva restart web
 serva restart mail
 sleep 2
 
-[[ $DEBUG ]] && set +x

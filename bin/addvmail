@@ -11,7 +11,6 @@ VHOST=${EMAIL#*@} # userid @ $VHOST
 
 . ~/.vhosts/$VHOST || exit 3 # for VPATH and SQCMD
 
-[[ $DEBUG ]] && set -x
 
 [[ -n $1 ]] && EPASS=$@ || EPASS=$(newpw)
 
@@ -130,4 +129,3 @@ Password: $EPASS
 
 EOS
 
-[[ $DEBUG ]] && set +x

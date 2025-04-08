@@ -5,7 +5,6 @@
 
 source /root/.vhosts/$(hostname -f) || exit 2 # only needed for SQCMD
 
-[[ $DEBUG ]] && set -x
 
 PWTBL=valias
 
@@ -15,4 +14,3 @@ echo "
   WHERE source LIKE '$1%'
   ORDER BY source" | $SQCMD
 
-[[ $DEBUG ]] && set -x

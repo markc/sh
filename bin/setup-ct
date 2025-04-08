@@ -8,7 +8,6 @@ _TMPL=${_TMPL:-'/mnt/pve/ceph-fs/template/cache/ubuntu-22.04-standard_22.04-1_am
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 [[ ! -d /etc/pve ]] && echo "ERROR: $0 only works on a Proxmox host" && exit 3
 
-[[ $DEBUG ]] && set -x
 
 _NAME=$1
 _STOR=${2:-'local-zfs'}
@@ -51,4 +50,3 @@ pct config $_CTID
 echo
 echo "To enter the container type: pct exec $_CTID -- bash"
 
-[[ $DEBUG ]] && set +x

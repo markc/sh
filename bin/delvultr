@@ -3,7 +3,6 @@
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 [[ -z $1 || $1 =~ -h ]] && echo "Usage: delete-vultr host.domain" && exit 1
 
-[[ $DEBUG ]] && set -x
 
 [[ -z $VULTR_API_KEY ]] && echo "ERROR: missing or empty VULTR_API_KEY" && exit 2
 
@@ -18,4 +17,3 @@ vultr dns domain delete -d ${1#*.*}
 vultr server reverse-dns default-ipv4 $SUBID $IP4_0
 vultr server delete $SUBID
 
-[[ $DEBUG ]] && set +x

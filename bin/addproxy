@@ -4,7 +4,6 @@
 [[ -z $2 || $1 =~ ' -h' ]] &&
     echo "Usage: addproxy domain proxy[:port] [ip]" && exit 1
 
-[[ $DEBUG ]] && set -x
 
 VHOST=$1
 PROXY=$2
@@ -62,4 +61,3 @@ EOS
     [[ -d /etc/nginx ]] && serva reload nginx
 fi
 
-[[ $DEBUG ]] && set +x

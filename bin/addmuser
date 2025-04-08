@@ -5,7 +5,6 @@
 
 [[ $DTYPE != mysql ]] && echo "Error: only works with mysql" && exit 4
 
-[[ $DEBUG ]] && set -x
 
 echo "### Create MySQL privileges for $2 on $1"
 cat <<EOS | mysql
@@ -13,4 +12,3 @@ GRANT ALL ON $1 . * TO '$2'@'localhost' IDENTIFIED BY '$3';
 FLUSH PRIVILEGES;
 EOS
 
-[[ $DEBUG ]] && set +x

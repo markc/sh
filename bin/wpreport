@@ -7,7 +7,6 @@
 
 [[ ! -d $VPATH ]] && echo "!!! ERROR: '$VPATH' does NOT exist" && exit 3
 
-[[ $DEBUG ]] && set -x
 
 if [[ $1 == all ]]; then
     WPS=$(find $VPATH -maxdepth 5 -type d -name "wp-admin")
@@ -32,4 +31,3 @@ wp user list 2> /dev/null
 "
 fi
 
-[[ $DEBUG ]] && set +x

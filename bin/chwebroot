@@ -7,7 +7,6 @@
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
-[[ $DEBUG ]] && set -x
 
 _OSREL=${1:-'lunar'}
 _OSTYP=${2:-'ubuntu'}
@@ -60,4 +59,3 @@ ls -d /home/u/*/var/www | while read i; do
     fi
 done
 
-[[ $DEBUG ]] && set +x

@@ -3,7 +3,6 @@
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 [[ $1 =~ -h ]] && echo "Usage: newpw [howmany(1)] [length(16)]" && exit 1
 
-[[ $DEBUG ]] && set -x
 
 generate_password() {
   local length=${1:-16}
@@ -64,5 +63,3 @@ for ((i = 1; i <= howmany; i++)); do
       )
   fi
 done
-
-[[ $DEBUG ]] && set +x

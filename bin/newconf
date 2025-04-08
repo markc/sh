@@ -7,7 +7,6 @@
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
-[[ $DEBUG ]] && set -x
 
 VHOST=$1
 _ARGS="$2 $3 $4 $5 $6 $7 $8 $9"
@@ -199,4 +198,3 @@ else
     echo "'$WSERV' does not exist"
 fi
 
-[[ $DEBUG ]] && set +x

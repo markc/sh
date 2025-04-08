@@ -2,7 +2,6 @@
 # Created: 20181002 - Updated: 20250407
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 # See setup-cf
-[[ $DEBUG ]] && set -x
 
 [[ -z $4 || $1 =~ -h ]] && echo "Usage: cfadddns domain name type content [priority(0)] [proxied(false|true)]" && exit 1
 
@@ -27,5 +26,3 @@ if [[ $ZONID ]]; then
 else
     echo "!!! Warning: no ZONE_ID for $1"
 fi
-
-[[ $DEBUG ]] && set +x

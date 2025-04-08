@@ -301,4 +301,3 @@ else
     chmod 644 /usr/share/nginx/html/50x.html
 fi
 
-[[ $DEBUG ]] && set +x

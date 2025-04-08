@@ -144,7 +144,6 @@ h|help          - Show help/usage for a|all commands"
 
 [[ -z $1 || $1 =~ -h ]] && help && exit 1
 
-[[ $DEBUG ]] && set -x
 
 # SSH Host files
 
@@ -363,6 +362,5 @@ h | help)
     ;;
 esac
 
-[[ $DEBUG ]] && set +x
 
 exit 0

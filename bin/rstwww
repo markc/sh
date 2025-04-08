@@ -9,7 +9,6 @@
 
 [[ ! -d $VPATH ]] && echo "!!! ERROR: setup server first" && exit 3
 
-[[ $DEBUG ]] && set -x
 
 VHOST=$1
 DNAME=${2:-${VHOST//[.-]/_}}
@@ -94,4 +93,3 @@ Password: $WPASS
     echo "!!! Restored $VHOST - $(du -sbh www)"
 fi
 
-[[ $DEBUG ]] && set +x

@@ -7,7 +7,6 @@
 
 . ~/.vhosts/$(hostname -f) || exit 3 # only needed for SQCMD
 
-[[ $DEBUG ]] && set -x
 
 EMAIL=${1,,} # lowercase user@domain
 
@@ -57,4 +56,3 @@ else
     echo "ERROR: $VCONF does not exist"
 fi
 
-[[ $DEBUG ]] && set +x

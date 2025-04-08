@@ -7,7 +7,6 @@
 
 [[ ! -d $VPATH ]] && echo "!!! ERROR: '$VPATH' does NOT exist" && exit 3
 
-[[ $DEBUG ]] && set -x
 
 export WP_CLI_CACHE_DIR="/var/tmp"
 
@@ -40,5 +39,3 @@ else
     [[ -n $2 ]] && _PATH=$_PATH/$2
     wpupdate $_PATH
 fi
-
-[[ $DEBUG ]] && set +x

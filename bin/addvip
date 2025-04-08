@@ -145,4 +145,3 @@ cat $CSMTP/vhosts/* >$CSMTP/master.cf
 
 serva restart mail
 
-[[ $DEBUG ]] && set +x

@@ -8,7 +8,6 @@
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
-[[ $DEBUG ]] && set -x
 
 _ARG1=${1,,} # lowercase user@domain
 VPATH="/home/u"
@@ -98,4 +97,3 @@ else
     done
 fi
 
-[[ $DEBUG ]] && set +x

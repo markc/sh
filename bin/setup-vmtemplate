@@ -5,7 +5,6 @@
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
-[[ $DEBUG ]] && set -x
 
 if [[ -d /etc/cron.d ]]; then
     if [[ ! -f /etc/cron.d/firstboot ]]; then
@@ -20,4 +19,3 @@ fi
 
 echo "You can now convert this VM/CT into a template"
 
-[[ $DEBUG ]] && set +x

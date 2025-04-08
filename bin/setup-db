@@ -378,4 +378,3 @@ CREATE INDEX virtual_aliases_hid ON valias (hid);
 CREATE INDEX mail_aliases_aid ON valias (aid);
 EOS
 
-[[ $DEBUG ]] && set +x

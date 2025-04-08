@@ -19,7 +19,6 @@ usage() {
 }
 
 # --- Configuration ---
-# Set DEBUG to true to enable verbose output (set -x).
 DEBUG=${DEBUG:-false}
 # _ipv4: The IP address to assign to the bridge interface. If not
 # provided, DHCP will be used.
@@ -34,7 +33,6 @@ _dns1="${3:-192.168.1.1}"
 BRIDGE_NAME="br0"
 BRIDGE_SLAVE="bridge-slave"
 
-[[ $DEBUG ]] && set +x
 
 if [[ "$_ipv4" == "-h" ]]; then
     # If the first argument is '-h', display the usage instructions and exit.
@@ -221,5 +219,3 @@ else
     ip link show $BRIDGE_NAME
     ip -4 addr show $BRIDGE_NAME
 fi
-
-[[ $DEBUG ]] && set +x

@@ -3,7 +3,6 @@
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 [[ -z $1 || $1 =~ ' -h' ]] && echo "Usage: delproxy domain" && exit 1
 
-[[ $DEBUG ]] && set -x
 
 VHOST=$1
 SHOST=ssh.$VHOST
@@ -40,4 +39,3 @@ fi
 
 nginx -t  >/dev/null 2>&1 && nginx -s reload >/dev/null 2>&1
 
-[[ $DEBUG ]] && set +x

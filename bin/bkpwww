@@ -7,7 +7,6 @@
 
 . /root/.vhosts/$1 || exit 3
 
-[[ $DEBUG ]] && set -x
 
 DNAME=${2:-$DNAME}
 TARNM="$(date +'%Y%m%d')-$VHOST.tgz"
@@ -38,4 +37,3 @@ chmod 640 $TARNM
 
 echo "Created $(du -bh $TARNM)"
 
-[[ $DEBUG ]] && set -x

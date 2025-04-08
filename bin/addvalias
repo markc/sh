@@ -11,7 +11,6 @@ VHOST=${TMAIL#*@} # userid @ $VHOST
 
 source /root/.vhosts/$VHOST || exit 3
 
-[[ $DEBUG ]] && set -x
 
 V_CREATED=$(date +"%Y-%m-%d %H:%M:%S")
 
@@ -53,4 +52,3 @@ EOS
 
 shalias $FMAIL
 
-[[ $DEBUG ]] && set +x

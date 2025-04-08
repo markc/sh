@@ -5,7 +5,6 @@
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
-[[ $DEBUG ]] && set -x
 
 if [[ -S /var/run/mysqld/mysqld.sock ]]; then
     [[ ! -d /home/mysql ]] && mkdir /home/mysql
@@ -16,4 +15,3 @@ if [[ -S /var/run/mysqld/mysqld.sock ]]; then
     done
 fi
 
-[[ $DEBUG ]] && set +x

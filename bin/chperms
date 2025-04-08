@@ -68,7 +68,6 @@ _chperms() {
     }
 }
 
-[[ $DEBUG ]] && set -x
 
 if [[ $1 == all ]]; then
     cd $VPATH
@@ -87,4 +86,3 @@ else
     echo "ERROR: Unknown argument $1"
 fi
 
-[[ $DEBUG ]] && set +x

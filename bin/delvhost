@@ -5,7 +5,6 @@
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
-[[ $DEBUG ]] && set -x
 
 VHOST=$1
 
@@ -121,4 +120,3 @@ if [[ -d $UPATH ]]; then
     rm -rf $UPATH
 fi
 
-[[ $DEBUG ]] && set +x

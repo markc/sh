@@ -9,7 +9,6 @@
 
 [[ ! -d $VPATH ]] && echo "!!! ERROR: setup server first" && exit 4
 
-[[ $DEBUG ]] && set -x
 
 APASS=${2:-$APASS}
 EMAIL=${3:-"webmaster@$VHOST"}
@@ -58,4 +57,3 @@ wp user create webmaster $EMAIL \
 echo
 echo "Added $EMAIL / $APASS to $WPURL/wp-admin/"
 
-[[ $DEBUG ]] && set -x

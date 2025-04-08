@@ -7,7 +7,6 @@ export PATH=/bin:/usr/bin:/sbin:/usr/sbin:/root/.sh/bin
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
-[[ $DEBUG ]] && set -x
 
 VHOST=${1:-${VHOST:-$(hostname -f | tr 'A-Z' 'a-z')}}
 DTYPE=${2:-${DTYPE:-'mysql'}}
@@ -49,4 +48,3 @@ fi
 cat /root/netserva.txt |
     mail -s "Setup $VHOST - $IP4_0" -r admin@$HDOMN $MAILTO
 
-[[ $DEBUG ]] && set +x

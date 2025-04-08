@@ -5,7 +5,6 @@
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
-[[ $DEBUG ]] && set -x
 
 _DAYS=${2:-'366'}
 
@@ -49,4 +48,3 @@ find $TPATH -type d -name .spamprobe | while read i; do
     sleep 2
 done
 
-[[ $DEBUG ]] && set +x

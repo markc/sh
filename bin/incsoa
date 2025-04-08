@@ -7,7 +7,6 @@
 
 source /root/.vhosts/$(hostname -f)
 
-[[ $DEBUG ]] && set -x
 
 DID=$(echo "
  SELECT id
@@ -47,4 +46,3 @@ echo "
   WHERE type='SOA'
     AND domain_id='$DID'" | $SQDNS
 
-[[ $DEBUG ]] && set +x

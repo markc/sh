@@ -7,7 +7,6 @@
 
 . ~/.vhosts/$1 || exit 3
 
-[[ $DEBUG ]] && set -x
 
 FPATH=${2:-''}
 EMAIL=${3:-"$AMAIL"}
@@ -146,4 +145,3 @@ Password: $WPASS
 EOS
 fi
 
-[[ $DEBUG ]] && set +x

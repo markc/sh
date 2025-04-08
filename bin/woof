@@ -33,4 +33,3 @@ else
     echo "ERROR: mailbox does not exist: $MPATH"
 fi
 
-[[ $DEBUG ]] && set +x

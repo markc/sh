@@ -3,7 +3,6 @@
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 [[ -z $1 || $1 =~ '-h' ]] && echo "Usage: shdu domain|email" && exit 1
 
-[[ $DEBUG ]] && set -x
 
 if [[ $1 =~ @ ]]; then
     dir="/home/u/${1#*@}/home/${1%@*}"
@@ -21,4 +20,3 @@ else
     fi
 fi
 
-[[ $DEBUG ]] && set +x

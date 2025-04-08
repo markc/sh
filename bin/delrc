@@ -9,7 +9,6 @@ VHOST=${1:-$(hostname -f | tr 'A-Z' 'a-z')}
 
 . /root/.vhosts/$VHOST || exit 3
 
-[[ $DEBUG ]] && set -x
 
 if [[ ! -d $WPATH/hcp/webmail/vendor/roundcube/ ]]; then
     echo "@@@ $WPATH/hcp/webmail/vendor/roundcube does not exist" && exit 4
@@ -27,4 +26,3 @@ else
     echo "@@@ Remove Roundcube from $WPATH ($DTYPE)"
 fi
 
-[[ $DEBUG ]] && set +x

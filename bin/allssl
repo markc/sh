@@ -8,7 +8,6 @@
 
 [[ $1 =~ -h ]] && echo "Usage: allssl [--force]" && exit 1
 
-[[ $DEBUG ]] && set -x
 
 LECFG=/etc/dehydrated
 C_SSL=/etc/ssl
@@ -48,4 +47,3 @@ done
 [[ -d /etc/nginx ]] && ~/.sh/bin/serva reload web
 [[ -d /etc/postfix ]] && ~/.sh/bin/serva reload mail
 
-[[ $DEBUG ]] && set -x

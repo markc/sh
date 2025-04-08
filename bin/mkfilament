@@ -5,7 +5,6 @@ set -e  # Exit immediately if a command exits with a non-zero status.
 
 [[ $1 =~ '-h' ]] && echo "Usage: mkfilament [myapp] [user] [email] [passwd]" && exit 1
 
-[[ $DEBUG ]] && set -x
 
 DEVEL=${DEVEL:-"$HOME/Dev"}
 
@@ -74,4 +73,3 @@ echo -e "\n!!! 'cd $DEVEL/$MYAPP' and run 'code .' in another shell !!!\n"
 
 composer run dev
 
-[[ $DEBUG ]] && set +x

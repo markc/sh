@@ -1,4 +1,4 @@
-# Created: 20130315 - Updated: 20250604
+# Created: 20130315 - Updated: 20250608
 # Copyright (C) 2015-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:~/.sh/bin
@@ -23,8 +23,15 @@ LABEL=$(hostname)
 # Local custom aliases and env vars
 [[ -f ~/.myrc ]] && . ~/.myrc
 
-# Enable bash tracing if DEBUG=1 in ~/.myrc
-[[ $DEBUG ]] && set -x || export DEBUG=
+# Enable tracing of sourced and standalone scripts
+if [[ -n "$DEBUG" ]]; then
+    set -x
+    if [[ -f ~/.bash_debug_init ]]; then
+        export BASH_ENV=~/.bash_debug_init
+    fi
+else
+    unset BASH_ENV DEBUG
+fi
 
 # Import global aliases
 [[ -f ~/.sh/lib/aliases.sh ]] && . ~/.sh/lib/aliases.sh

@@ -7,7 +7,6 @@
 
 . ~/.vhosts/$1 || exit 3
 
-[[ $DEBUG ]] && set -x
 
 FPATH=${2:-''}
 
@@ -74,4 +73,3 @@ Username: $ADMIN
 Password: $APASS
 EOS
 
-[[ $DEBUG ]] && set +x

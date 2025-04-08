@@ -6,7 +6,6 @@
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
-[[ $DEBUG ]] && set -x
 
 if [[ ! -d /etc/opendkim ]]; then
     mkdir /etc/opendkim
@@ -89,4 +88,3 @@ show)
     ;;
 esac
 
-[[ $DEBUG ]] && set +x

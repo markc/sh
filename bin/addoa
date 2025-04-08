@@ -17,7 +17,6 @@ DTYPE=${2:-${DTYPE:-'mysql'}} # FIXME
 
 COMPR='/usr/local/bin/composer'
 
-[[ $DEBUG ]] && set -x
 
 if [[ ! -e $COMPR ]]; then
     echo "### Install composer as $COMPR"
@@ -69,4 +68,3 @@ composer show open-admin-org/open-admin
     chperms $VHOST
 fi
 
-[[ $DEBUG ]] && set +x

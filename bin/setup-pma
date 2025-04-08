@@ -10,7 +10,6 @@ PHPLA=phpLiteAdmin_v1-9-8-2.zip
 
 [[ -f ~/.vhosts/$VHOST ]] && . ~/.vhosts/$VHOST || exit 3
 
-[[ $DEBUG ]] && set -x
 
 if [[ $DTYPE == mysql ]]; then
     if [[ -d $WPATH/hcp/phpmyadmin ]]; then
@@ -73,4 +72,3 @@ EOS
     fi
 fi
 
-[[ $DEBUG ]] && set +x

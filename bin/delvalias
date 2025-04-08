@@ -9,7 +9,6 @@ VHOST=${FMAIL#*@} # extract domain from email
 
 source /root/.vhosts/$VHOST || exit 3
 
-[[ $DEBUG ]] && set -x
 
 # Check if the alias exists
 USRID=$(
@@ -33,4 +32,3 @@ echo "Alias '$FMAIL' has been deleted successfully"
 # Update the shaliases if that function exists
 type shalias >/dev/null 2>&1 && shalias $FMAIL
 
-[[ $DEBUG ]] && set +x

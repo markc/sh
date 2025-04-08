@@ -7,7 +7,6 @@ if [ "$#" -lt 3 ]; then
    exit 1
 fi
 
-[[ $DEBUG ]] && set -x
 
 DOMAIN=$1
 USERNAME=$2
@@ -56,5 +55,3 @@ else
    echo "Failed to create user $USERNAME"
    exit 1
 fi
-
-[[ $DEBUG ]] && set +x

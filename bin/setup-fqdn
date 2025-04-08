@@ -12,7 +12,6 @@ OU="IT Department"
 
 gethost
 
-[[ $DEBUG ]] && set -x
 
 [[ ! -d ~/.vhosts ]] && mkdir ~/.vhosts
 
@@ -333,4 +332,3 @@ $HDOMN\t300\tIN\tCAA\t0 issue \"letsencrypt.org\"
 "
 fi
 
-[[ $DEBUG ]] && set +x

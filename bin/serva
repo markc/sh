@@ -99,6 +99,3 @@ if [[ $SERVICE == "all" ]]; then
 else
     manage_service "$SERVICE"
 fi
-
-[[ $DEBUG ]] && set +x
-

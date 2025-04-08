@@ -5,7 +5,6 @@
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
-[[ $DEBUG ]] && set -x
 
 VPASS=${1:-$(pwgen -sB 16 1)}
 VHOST=${2:-$(hostname -f)}
@@ -28,4 +27,3 @@ else
     echo "ERROR: ~/.vhosts/$VHOST does not exist"
 fi
 
-[[ $DEBUG ]] && set -x

@@ -138,4 +138,3 @@ else
     log_vmail $1
 fi
 
-[[ $DEBUG ]] && set -x

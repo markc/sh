@@ -1,7 +1,7 @@
 # Created: 20151231 - Updated: 20250406
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
-[[ $DEBUG ]] && set -x
+#[[ $DEBUG ]] && set -x
 
 f() { find . -type f -iname '*'$*'*'; }
 
@@ -261,4 +261,4 @@ sx() {
     ssh $_HOST -q -t "bash -ci '$@'"
 }
 
-[[ $DEBUG ]] && set +x
+#[[ $DEBUG ]] && set +x

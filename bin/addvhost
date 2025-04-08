@@ -10,7 +10,6 @@
 # We need general env vars and bash functions
 . ~/.vhosts/$(hostname -f)
 
-[[ $DEBUG ]] && set -x
 
 VHOST=$1
 DOCMS=${2:-''}
@@ -334,4 +333,3 @@ fi
 chperms $VHOST
 serva restart web
 
-[[ $DEBUG ]] && set +x

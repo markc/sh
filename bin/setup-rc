@@ -13,7 +13,6 @@ _DBID=${3:-'webmail'}
 
 [[ -f ~/.vhosts/$_HOST ]] && . ~/.vhosts/$_HOST || exit 3
 
-[[ $DEBUG ]] && set -x
 
 _PATH="$WPATH/hcp/webmail"
 
@@ -133,4 +132,3 @@ EOS
 
 fi
 
-[[ $DEBUG ]] && set +x

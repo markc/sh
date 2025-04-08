@@ -12,7 +12,6 @@ PSIZE=${1:-'8'}
 APASS=${2:-$(openssl rand -base64 12 | sed 's/[O@#$%^&*+\/]/0/g')} # Generate password
 IP4_0=${3:-$(hostname -i | awk '{print $1}')} # Use hostname -i for IPs, grab first
 
-[[ $DEBUG ]] && set -x
 
 # Function to check if a command exists
 command_exists() {
@@ -106,4 +105,3 @@ fi
 # Start and enable Incus service
 sudo systemctl enable --now incus
 
-[[ $DEBUG ]] && set +x
