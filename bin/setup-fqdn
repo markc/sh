@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Created: 20210327 - Updated: 20250407
+# Created: 20210327 - Updated: 20250410
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
 [[ $1 =~ '-h' ]] && echo "Usage: setup-fqdn [domain]" && exit 1
 
 # Temporary self-signed SSL certificate defaults
@@ -11,7 +12,6 @@ O="NetServa"
 OU="IT Department"
 
 gethost
-
 
 [[ ! -d ~/.vhosts ]] && mkdir ~/.vhosts
 
@@ -40,15 +40,24 @@ else
     echo "### Update /etc/hosts"
     sed -i "s/^127.0.1.1.*$/127.0.1.1\tresolved/" /etc/hosts
 
-    grep -q "$IP4_0\t$MHOST $HNAME" /etc/hosts
-    if [[ $? -gt 0 ]]; then
-        echo -e "\n$IP4_0\t$MHOST $HNAME" >>/etc/hosts
-    fi
+    # Rely on local or remote DNS lookup instead
+    #grep -q "$IP4_0\t$MHOST $HNAME" /etc/hosts
+    #if [[ $? -gt 0 ]]; then
+    #    echo -e "\n$IP4_0\t$MHOST $HNAME" >>/etc/hosts
+    #fi
 
     echo "### Append domain search to /etc/resolv.conf"
     if [[ -f /etc/systemd/resolved.conf ]]; then
+        if [[ ${IP4_0} == 192.168.1* ]]; then
+            # Special case for typical LAN
+            local _dns = 192.168.1.1
+        else
+            # General case which should always work
+            local _dns = 1.1.1.1
+        fi
         sed -i /etc/systemd/resolved.conf \
-            -e "s/^#Domains=/Domains=$VHOST/"
+            -e "s/^#Domains=/Domains=$VHOST/" \
+            -e "s/^#DNS=/DNS=$_dns/"
         sc restart systemd-resolved
     else
         cat <<EOS >>/etc/resolv.conf
@@ -285,10 +294,6 @@ if [[ -e /usr/bin/spamprobe ]]; then
         chmod 644 *.svbin
     fi
 fi
-
-# Add these manually
-#addvhost $HDOMN
-#[[ $DTYPE == mysql ]] && addwp $HDOMN
 
 if [[ -e /usr/bin/drill ]]; then
     DIGIP=$(drill $MHOST | awk "/^$MHOST/ {print \$5}")
