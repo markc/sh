@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
-# Created: 20170524 - Updated: 20250407
+# Created: 20170524 - Updated: 20250410
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
-[[ $1 =~ '-h' ]] && echo "Usage: setup-host [fqdn] [(mysql)|sqlite] [lxdbr]" && exit 1
 
-source ~/.shrc
-
+[[ $1 =~ '-h' ]] && echo "Usage: setup-host [fqdn] [(mysql)|sqlite]" && exit 1
 
 VHOST=${1:-$VHOST}
 DTYPE=${2:-$DTYPE}
@@ -230,27 +228,10 @@ EOS
     fi
 fi
 
-# Only create a network bridge if requested
-if [[ $LXDBR ]]; then
-    [[ ! -d /etc/systemd/network ]] && mkdir /etc/systemd/network
-
-    ls /etc/systemd/network/*.network >/dev/null 2>&1
-    if [[ $? -eq 0 ]]; then
-        echo "### Exists /etc/systemd/network/*.network"
-    else
-        echo "### Create /etc/systemd/network/lxdbr config}"
-        cp ~/.sh/etc/_etc_systemd_network_lxdbr.network /etc/systemd/network/lxdbr.network
-        cp ~/.sh/etc/_etc_systemd_network_lxdbr.netdev /etc/systemd/network/lxdbr.netdev
-        cp ~/.sh/etc/_etc_systemd_network_eth0.network /etc/systemd/network/eth0.network
-        chmod 640 /etc/systemd/network/*
-        systemctl restart systemd-networkd >/dev/null 2>&1
-        systemctl enable systemd-networkd >/dev/null 2>&1
-    fi
-    # TODO: might have to disable ifupdown or netplan
-fi
-
 if [[ -f /etc/sysctl.d/50-nginx-tweaks.conf ]]; then
     echo "### Exists /etc/sysctl.d/50-nginx-tweaks.conf"
+elif [[ ! -d /etc/sysctl.d ]]; then
+    echo "### /etc/sysctl.d does not exist"
 else
     echo "### Create /etc/sysctl.d/50-nginx-tweaks.conf"
     cat <<EOS >/etc/sysctl.d/50-nginx-tweaks.conf
