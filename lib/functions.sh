@@ -5,6 +5,14 @@ f() { find . -type f -iname '*'$*'*'; }
 
 if [[ $OSTYP == openwrt ]]; then
     sc() { $SUDO /etc/init.d/$2 $1; }
+    function getent
+    {
+        if [[ $1 == passwd ]]; then
+            cat /etc/passwd
+        elif [[ $1 == group ]]; then
+            cat /etc/group
+        fi
+    }
 elif [[ $OSTYP == alpine ]]; then
     sc() {
         if [[ $1 == enable ]]; then

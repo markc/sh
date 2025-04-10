@@ -29,16 +29,6 @@ get_fqdn() {
     echo "$fqdn"
 }
 
-# Function to simulate getent calls on OpenWrt
-function getent
-{
-    if [[ $1 == passwd ]]; then
-        cat /etc/passwd
-    elif [[ $1 == group ]]; then
-        cat /etc/group
-    fi
-}
-
 # Overwrite the hostname command to have a consistent response!
 hostname () {
 
