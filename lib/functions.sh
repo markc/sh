@@ -12,6 +12,7 @@ if [[ $OSTYP == openwrt ]]; then
         elif [[ $1 == group ]]; then
             cat /etc/group
         fi
+        export -f getent
     }
 elif [[ $OSTYP == alpine ]]; then
     sc() {

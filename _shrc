@@ -58,6 +58,6 @@ export LROOT MHOST MPATH OSMIR OSREL OSTYP SQCMD SQDNS TAREA TCITY
 export UPASS UPATH UUSER U_GID U_SHL U_UID VHOST VPATH VUSER V_PHP
 export WPASS WPATH WPUSR WUGID
 export -f chktime f getdb gethost getuser getusers go2 grepuser
-export -f newuid sethost setuser sc sx get_fqdn getent hostname
+export -f newuid sethost setuser sc sx get_fqdn hostname
 
 [[ $DEBUG ]] && set +x
