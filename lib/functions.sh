@@ -64,7 +64,6 @@ EXSQL='$EXSQL'
 HDOMN='$HDOMN'
 HNAME='$HNAME'
 IP4_0='$IP4_0'
-LROOT='$LROOT'
 MHOST='$MHOST'
 MPATH='$MPATH'
 OSMIR='$OSMIR'
@@ -144,18 +143,6 @@ sethost() {
 
     [[ $DEBUG ]] && echo "local _FQDN=$_FQDN" >&2
 
-    # Unset all the gethost() ENV VARS
-
-    unset ADMIN AHOST AMAIL ANAME APASS A_GID A_UID BPATH CIMAP CSMTP C_DNS
-    unset C_FPM C_SQL C_SSL C_WEB DBMYS DBSQL DHOST DNAME DPASS DPATH DPORT
-    unset DTYPE DUSER EPASS EXMYS EXSQL HNAME HDOMN IP4_0 LROOT MHOST MPATH
-    unset OSMIR OSREL OSTYP SQCMD SQDNS TAREA TCITY UPASS UPATH UUSER U_GID
-    unset U_SHL U_UID VHOST VPATH VUSER V_PHP WPASS WPATH WPUSR WUGID
-
-    # Only needed if functions in lib/* files are changed
-    #unset -f chktime f getdb gethost getuser getusers go2 grepuser
-    #unset -f newuid sethost setuser sc sx get_fqdn getent hostname
-
     # Static env var defaults, can also be set in ~/.myrc via "es"
 
     ADMIN=${ADMIN:-'sysadm'}
@@ -202,7 +189,6 @@ sethost() {
     HDOMN=${VHOST#*.}
     HNAME=${VHOST%%.*}
     IP4_0=$(ip -4 route get 1.1.1.1 | awk '/src/ {print $7}')
-    LROOT=${LROOT:-'/usr/local/lsws'}
     MHOST=$([[ $HNAME == mail ]] && echo "$HNAME.$HDOMN" || echo "$VHOST")
     SQCMD=$([[ $DTYPE == mysql ]] && echo "$EXMYS" || echo "$EXSQL")
     SQDNS=$([[ $DTYPE == mysql ]] && echo "mariadb -BN pdns" || echo "sqlite3 $DBSQL/$ADMIN/pdns.db")
@@ -240,9 +226,10 @@ sethost() {
         C_FPM='/etc/php'
         C_SQL='/etc/my.cnf.d'
         OSMIR='manjaro.moson.eu'
-        OSREL=${OSREL:-'stable'}
+        OSREL='stable'
         if [[ $OSTYP == cachyos ]]; then
             OSMIR='archlinux.cachyos.org'
+            OSREL='n/a'
         fi
         WUGID='http'
 #    elif [[ $OSTYP == openwrt ]]; then
