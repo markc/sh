@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-# Created: 20170319 - Updated: 20250407
+# Created: 20170319 - Updated: 20250410
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
 [[ $1 =~ '-h' ]] &&
     echo "Usage: setup-db [(mysql)|sqlite] [sqlite path]" && exit 1
+
 DTYPE=${1:-'mysql'}
 
 if [[ -n $2 ]]; then
@@ -138,17 +140,6 @@ CREATE TABLE IF NOT EXISTS vmail_log_bkp (
   num_spam int(11) NOT NULL DEFAULT '0',
   num_total int(11) NOT NULL DEFAULT '0'
 );
-
-
-CREATE TABLE IF NOT EXISTS news (
-  id $SQLPK,
-  title varchar(63) NOT NULL,
-  content text NOT NULL,
-  media varchar(255) NOT NULL DEFAULT 'lib/uploads/Blank-300x150.png',
-  author int(11) NOT NULL,
-  updated datetime NOT NULL DEFAULT '2018-01-01 00:00:01',
-  created datetime NOT NULL DEFAULT '2018-01-01 00:00:01'
-);
 CREATE TABLE IF NOT EXISTS valias (
   id $SQLPK,
   aid int(11) NOT NULL DEFAULT '1',
@@ -166,10 +157,6 @@ CREATE TABLE IF NOT EXISTS vhosts (
   uname varchar(63) NOT NULL DEFAULT 'sysadm',
   uid int(11) NOT NULL DEFAULT '1000',
   gid int(11) NOT NULL DEFAULT '1000',
-  aliases int(11) NOT NULL DEFAULT '0',
-  mailboxes int(11) NOT NULL DEFAULT '0',
-  mailquota bigint(20) NOT NULL DEFAULT '0',
-  diskquota bigint(20) NOT NULL DEFAULT '0',
   active tinyint(1) NOT NULL DEFAULT '1',
   updated datetime NOT NULL DEFAULT '2018-01-01 00:00:01',
   created datetime NOT NULL DEFAULT '2018-01-01 00:00:01'
@@ -180,7 +167,6 @@ CREATE TABLE IF NOT EXISTS vmails (
   hid int(11) NOT NULL DEFAULT '1',
   gid int(11) NOT NULL DEFAULT '1000',
   uid int(11) NOT NULL DEFAULT '1000',
-  spamf tinyint(1) NOT NULL DEFAULT '1',
   active tinyint(1) NOT NULL DEFAULT '1',
   quota bigint(20) NOT NULL DEFAULT '500000000',
   user varchar(63) NOT NULL DEFAULT '',
@@ -217,10 +203,6 @@ CREATE VIEW IF NOT EXISTS vmails_view AS
 CREATE VIEW IF NOT EXISTS vhosts_view AS
  SELECT vh.id,
         vh.domain,
-        vh.aliases,
-        vh.mailboxes,
-        vh.mailquota,
-        vh.diskquota,
         vh.active,
         vh.updated,
         hl.size_mpath,
@@ -232,12 +214,6 @@ CREATE VIEW IF NOT EXISTS vhosts_view AS
             LEFT JOIN vmails vm ON vh.id = vm.hid
                 LEFT JOIN valias va ON vh.id = va.hid
   GROUP BY vh.id, hl.size_mpath, hl.size_upath;
-
-CREATE VIEW IF NOT EXISTS news_view AS
- SELECT n.*, u.id as uid, u.login, u.fname, u.lname
-   FROM news n
-        JOIN accounts u
-            ON n.author = u.id;
 
 EOS
 

@@ -1,23 +1,12 @@
 #!/usr/bin/env bash
-# Created: 20170217 - Updated: 20250407
+# Created: 20170217 - Updated: 20250410
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
-# TODO: move anything to do with hosting plans into another script
 
-[[ -z $1 || $1 =~ -h ]] && echo "Usage: addvhost [uuser@]domain [cms(none|wp)] [ssl(none|le|wild|self)] [wp email] [ip]" && exit 1
+# Let's strip this right back to only adding the bare vhost essentials
 
-[[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
-
-# We need general env vars and bash functions
-. ~/.vhosts/$(hostname -f)
-
+[[ -z $1 || $1 =~ -h ]] && echo "Usage: addvhost [uuser@]domain" && exit 1
 
 VHOST=$1
-DOCMS=${2:-''}
-DOSSL=${3:-''}
-EMAIL=${4:-''}
-USEIP=${5:-''}
-
-[[ $USEIP ]] && USEIP="$USEIP:"
 
 Y_M_D=$(date +"%Y-%m-%d")
 _UTMP=""
@@ -37,17 +26,11 @@ else
     echo "### Create /root/.vhosts/$VHOST config file"
     sethost $VHOST
     gethost >/root/.vhosts/$VHOST
-    touch /root/.vhosts/$VHOST.conf
-    chmod 600 /root/.vhosts/*
+    $SUDO touch /root/.vhosts/$VHOST.conf
+    $SUDO chmod 600 /root/.vhosts/*
 fi
 
 . /root/.vhosts/$VHOST
-
-# Set some default minimal hosting plan settings
-V_ALIASES="10"
-V_DISKQUOTA="1000000000"
-V_MAILBOXES="1"
-V_MAILQUOTA="500000000"
 
 V_CREATED=$(date +"%Y-%m-%d %H:%M:%S")
 V_UPDATED=$V_CREATED
@@ -68,7 +51,7 @@ else
     echo "### Create $UUSER user"
     [[ $(getent group sudo) ]] || groupadd -r sudo
     U_GRP=$([[ $U_UID = 1000 ]] && echo "-G sudo,adm")
-    TMPIP=$([[ -n $USEIP ]] && echo ",$USEIP")
+    #TMPIP=$([[ -n $USEIP ]] && echo ",$USEIP")
     useradd -M -U -s $U_SHL -u $U_UID -d $UPATH -c "$VHOST$TMPIP" $U_GRP $UUSER
     [[ -n $UPASS && $UPASS != $APASS ]] && { echo $UUSER:$UPASS | chpasswd; }
 fi
@@ -78,25 +61,17 @@ DO_VHOST=$(
     cat <<EOS | $SQCMD
  INSERT INTO vhosts (
         active,
-        aliases,
         created,
-        diskquota,
         domain,
         gid,
-        mailboxes,
-        mailquota,
         uid,
         uname,
         updated
 ) VALUES (
         1,
-        $V_ALIASES,
         '$V_CREATED',
-        $V_DISKQUOTA,
         '$VHOST',
         $U_GID,
-        $V_MAILBOXES,
-        $V_MAILQUOTA,
         $U_UID,
         '$UUSER',
         '$V_CREATED'
@@ -161,6 +136,8 @@ fi
 
 if [[ -f $UPATH/bin/busybox ]]; then
     echo "### $UPATH/bin/busybox already exists"
+elif [[ ! -e /bin/busybox ]]; then
+    echo "### /bin/busybox does not exist"
 else
     echo "### Setup busybox with sh, hostname, tail symlinks"
     cp /bin/busybox $UPATH/bin
@@ -224,112 +201,54 @@ else
     echo "<?php error_log(__FILE__.' '.\$_SERVER['REMOTE_ADDR']); phpinfo();" >$WPATH/phpinfo.php
 fi
 
-#LOCIP=$(ip -4 route get 1.1.1.1 | awk '/src/ {print $7}')
-#DNSIP=$(host -t a $VHOST|cut -d' ' -f4)
-#if [[ $LOCIP =~ ^192.168 || $LOCIP =~ ^10 ]]; then
-
-if [[ $DOSSL == self ]]; then
-    echo "### Note: if this server has outside net access with DNS"
-    echo "###       pointing a public IP to it's FQDN then use"
-    echo "###           newssl $VHOST mail www [IP]"
-    echo "###       to provide a real LetsEncrypt SSL certificate."
-
-    if [[ ! -d $C_SSL/$VHOST ]]; then
-        # Temporary self-signed SSL certificate defaults
-        C="AU"
-        ST="QLD"
-        L="GoldCoast"
-        O="NetServa"
-        OU="IT Department"
-
-        echo "### Create temporary self-signed certificate for $VHOST"
-        [[ ! -d $C_SSL/$VHOST ]] && mkdir $C_SSL/$VHOST
-        openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-            -subj "/C=$C/ST=$ST/L=$L/O=$O/OU=$OU/CN=$VHOST" \
-            -keyout /etc/ssl/$VHOST/privkey.pem \
-            -out /etc/ssl/$VHOST/fullchain.pem >/dev/null 2>&1
-    fi
-
-    if [[ ! -f $C_WEB/sites-enabled/$VHOST.selfsigned ]]; then
-        echo "### Create $C_WEB/sites-enabled/$VHOST.selfsigned"
-        cat <<EOS | tee $C_WEB/sites-enabled/$VHOST.selfsigned >/dev/null
-server {
-    listen                      ${USEIP}443 ssl http2;
-    server_name                 $VHOST;
-    include                     /etc/nginx/common.conf;
-    ssl_certificate             $C_SSL/$VHOST/fullchain.pem;
-    ssl_certificate_key         $C_SSL/$VHOST/privkey.pem;
-    ssl_stapling                off;
-    ssl_stapling_verify         off;
-}
-EOS
-    fi
-
-elif [[ $DOSSL == le ]]; then
-
-    [[ -f $C_WEB/sites-enabled/*.selfsigned ]] &&
-        rm $C_WEB/sites-enabled/*.selfsigned
-
-    newssl $VHOST mail www autoconfig autodiscover $USEIP
-
-elif [[ $DOSSL == wild ]]; then
-
-    # "wild" assumes there is a wilcard DNS record and a wildcard SSL
-    # certificate in /root/.acme.sh/ for the parent domain (HDOMN)
-
-    [[ -f $C_WEB/sites-enabled/*.selfsigned ]] &&
-        rm $C_WEB/sites-enabled/*.selfsigned
-
-    cat <<EOS >>$C_WEB/sites-enabled/$VHOST
-server {
-    listen                      ${IPARG}443 ssl http2;
-    server_name                 $VHOST;
-    include                     $C_WEB/common.conf;
-    ssl_certificate             /root/.acme.sh/$HDOMN/fullchain.cer;
-    ssl_certificate_key         /root/.acme.sh/$HDOMN/$HDOMN.key;
-    ssl_trusted_certificate     /root/.acme.sh/$HDOMN/ca.cer;
-    # Wildcard SSL certificates are not available via http-01 lookups
-    #ssl_certificate             $C_SSL/$HDOMN/fullchain.pem;
-    #ssl_certificate_key         $C_SSL/$HDOMN/privkey.pem;
-    #ssl_trusted_certificate     $C_SSL/$HDOMN/chain.pem;
-}
-EOS
-else
-    echo "### Warning: no SSL certificate has been added"
-fi
-
-if [[ -d $WPATH && $DOCMS == wp ]]; then
-    if [[ $DTYPE == mysql ]]; then
-        addwp $VHOST "" $EMAIL
-    else
-        echo "### ERROR: WordPress requires MySQL"
-    fi
-fi
-
-if [[ $DOSSL != wild ]]; then
-    addvmail $VUSER@$VHOST
-    chshpw $UUSER $UPASS
-
-    MID=$(
+MID=$(
         cat <<EOS | $SQCMD
- SELECT id FROM vmails
-  WHERE user = '$VUSER@$VHOST'
+    SELECT id FROM vmails
+    WHERE user = '$VUSER@$VHOST'
 EOS
-    )
-    echo "### Create $VUSER@$VHOST entry in $ADMIN.vmail_log ($DTYPE)"
+)
 
-    cat <<EOS | $SQCMD
+echo "### Create $VUSER@$VHOST entry in $ADMIN.vmail_log ($DTYPE)"
+
+cat <<EOS | $SQCMD
  INSERT INTO vmail_log (
-        mid,
-        ymd
+    mid,
+    ymd
 ) VALUES (
-        $MID,
-        '$Y_M_D'
+    $MID,
+    '$Y_M_D'
 )
 EOS
-    logging $VHOST update >/dev/null
-fi
 
+echo "Optional: newssl $VHOST mail www [IP]"
+echo "Optional: addvmail $VUSER@$VHOST"
+echo "Optional: addwp $VHOST"
+
+logging $VHOST update >/dev/null
+chshpw $UUSER $UPASS
 chperms $VHOST
 serva restart web
 
+
+# This might still be needed
+#
+#    echo "### Note: if this server has outside net access with DNS"
+#    echo "###       pointing a public IP to it's FQDN then use"
+#    echo "###           newssl $VHOST mail www [IP]"
+#    echo "###       to provide a real LetsEncrypt SSL certificate."
+#
+#    if [[ ! -d $C_SSL/$VHOST ]]; then
+#        # Temporary self-signed SSL certificate defaults
+#        C="AU"
+#        ST="QLD"
+#        L="GoldCoast"
+#        O="NetServa"
+#        OU="IT Department"
+#
+#        echo "### Create temporary self-signed certificate for $VHOST"
+#        [[ ! -d $C_SSL/$VHOST ]] && mkdir $C_SSL/$VHOST
+#        openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+#            -subj "/C=$C/ST=$ST/L=$L/O=$O/OU=$OU/CN=$VHOST" \
+#            -keyout /etc/ssl/$VHOST/privkey.pem \
+#            -out /etc/ssl/$VHOST/fullchain.pem >/dev/null 2>&1
+#    fi
