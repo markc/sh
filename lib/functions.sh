@@ -1,4 +1,4 @@
-# Created: 20151231 - Updated: 20250408
+# Created: 20151231 - Updated: 20250410
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 f() { find . -type f -iname '*'$*'*'; }
@@ -144,15 +144,19 @@ sethost() {
 
     [[ $DEBUG ]] && echo "local _FQDN=$_FQDN" >&2
 
-    # Unset all the gethost() ENV VARS. The only way is to unset them
+    # Unset all the gethost() ENV VARS
 
-#    unset ADMIN AHOST AMAIL ANAME APASS A_GID A_UID BPATH CIMAP CSMTP C_DNS
-#    unset C_FPM C_SQL C_SSL C_WEB DBMYS DBSQL DHOST DNAME DPASS DPATH DPORT
-#    unset DTYPE DUSER EPASS EXMYS EXSQL HNAME HDOMN IP4_0 LROOT MHOST MPATH
-#    unset OSMIR OSREL OSTYP SQCMD SQDNS TAREA TCITY UPASS UPATH UUSER U_GID
-#    unset U_SHL U_UID VHOST VPATH VUSER V_PHP WPASS WPATH WPUSR WUGID
+    unset ADMIN AHOST AMAIL ANAME APASS A_GID A_UID BPATH CIMAP CSMTP C_DNS
+    unset C_FPM C_SQL C_SSL C_WEB DBMYS DBSQL DHOST DNAME DPASS DPATH DPORT
+    unset DTYPE DUSER EPASS EXMYS EXSQL HNAME HDOMN IP4_0 LROOT MHOST MPATH
+    unset OSMIR OSREL OSTYP SQCMD SQDNS TAREA TCITY UPASS UPATH UUSER U_GID
+    unset U_SHL U_UID VHOST VPATH VUSER V_PHP WPASS WPATH WPUSR WUGID
 
-    # Static env vars, can be set in ~/.myrc via "es"
+    # Only needed if functions in lib/* files are changed
+    #unset -f chktime f getdb gethost getuser getusers go2 grepuser
+    #unset -f newuid sethost setuser sc sx get_fqdn getent hostname
+
+    # Static env var defaults, can also be set in ~/.myrc via "es"
 
     ADMIN=${ADMIN:-'sysadm'}
     A_GID=${A_GID:-'1000'}
@@ -171,11 +175,11 @@ sethost() {
     DPORT=${DPORT:-'3306'}
     DTYPE=${DTYPE:-'mysql'}
     OSMIR=${OSMIR:-'archive.ubuntu.com'}
-    OSREL=${OSREL:-'mantic'}
+    OSREL=${OSREL:-'noble'}
     OSTYP=${OSTYP:-'ubuntu'}
     TAREA=${TAREA:-'Australia'}
     TCITY=${TCITY:-'Sydney'}
-    V_PHP=${V_PHP:-'8.4'}
+    V_PHP=${V_PHP:-'8.3'}
     VPATH=${VPATH:-'/home/u'}
     VUSER=${VUSER:-'admin'}
     WUGID=${WUGID:-'www-data'}
@@ -227,17 +231,18 @@ sethost() {
         OSREL='latest-stable'
         WUGID='nginx'
     elif [[ $OSTYP == debian ]]; then
+        V_PHP='8.2'
         OSMIR='deb.debian.org'
         OSREL='bookworm'
     elif [[ $OSTYP == manjaro || $OSTYP == cachyos ]]; then
+        V_PHP='8.4'
         C_DNS='/etc/powerdns'
         C_FPM='/etc/php'
         C_SQL='/etc/my.cnf.d'
         OSMIR='manjaro.moson.eu'
         OSREL=${OSREL:-'stable'}
         if [[ $OSTYP == cachyos ]]; then
-            OSMIR='mirror.jingk.ai'
-            OSREL='extra-testing'
+            OSMIR='archlinux.cachyos.org'
         fi
         WUGID='http'
 #    elif [[ $OSTYP == openwrt ]]; then
@@ -246,10 +251,7 @@ sethost() {
 }
 
 #-T' Disable pseudo-tty allocation.
-#-t' Force pseudo-tty allocation. This can be used to execute arbitrary
-#    screen-based programs on a remote machine, which can be very useful,
-#    e.g. when implementing menu services. Multiple -t options force tty
-#    allocation, even if ssh has no local tty. 
+#-t' Force pseudo-tty allocation. This can be used to execute arbitrary screen-based programs on a remote machine, which can be very useful, e.g. when implementing menu services. Multiple -t options force tty allocation, even if ssh has no local tty. 
 
 sx() {
     [[ -z $2 || $1 =~ -h ]] &&
@@ -258,3 +260,4 @@ sx() {
     shift
     ssh $_HOST -q -t "bash -ci '$@'"
 }
+
