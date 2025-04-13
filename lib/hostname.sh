@@ -34,14 +34,13 @@ hostname () {
 
     [[ $DEBUG ]] && echo "inside hostname()" >&2
 
+    OSTYP=$(awk -F= '/^ID=/ {print $2}' /etc/os-release | sed 's/"//g')
+
     # Use standard function if Proxmox machine (Detect if running on Proxmox hypervisor by looking for /etc/pve)
 
-    if [ -d /etc/pve ]; then
+    if [[ -d /etc/pve ]]; then
        /usr/bin/hostname "$@"
-    elif [[ -f /etc/os-release ]] && [[ $(awk -F= '/^ID=/ {print $2}' /etc/os-release | sed 's/"//g') == openwrt ]]; then
-
-        # OpenWrt implementation uses uci to get to host and domain values.
-
+    elif [[ $OSTYP == openwrt ]]; then
         local _host=$($SUDO uci get system.@system[0].hostname)
         local _wan=$(ip route | grep default | awk '{print $9}')
 
@@ -58,14 +57,15 @@ hostname () {
                 fi
             fi
         fi
+    elif [[ $OSTYP == alpine ]]; then
+        /bin/hostname "$@"
     else
-        # SystemD implementation using systemd-resolved.
         if [[ -z $1 ]]; then
             uname -n
         elif [[ $1 == "-f" ]]; then
             get_fqdn
         else
-            /usr/bin/hostname "$@" # Pass other arguments to the system hostname command
+            /usr/bin/hostname "$@"
         fi
     fi
 }
