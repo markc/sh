@@ -36,7 +36,7 @@ if [[ -n "$_myip" ]]; then
   if [[ -n "$_mygw" ]]; then
     _mygw_opt=",gw=$_mygw"
   fi
-  _net0="--net0 name=eth0,bridge=vmbr0,ip=$_myip${_mygw_opt},firewall=1"
+  _net0="--net0 name=eth0,bridge=vmbr0,ip=${_myip}/24${_mygw_opt},firewall=1"
 else
   _net0="--net0 name=eth0,bridge=vmbr0,ip=dhcp,firewall=1"
 fi
