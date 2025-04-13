@@ -14,17 +14,19 @@ get_fqdn() {
             # Extract the domain using awk
             domain=$(grep "^Domains=" /etc/systemd/resolved.conf | awk -F= '{print $2}')
         fi
-    fi
 
-    # Construct the FQDN
-    if [ -n "$domain" ]; then
-        fqdn="${hostname}.${domain}"
+        # Construct the FQDN
+        if [ -n "$domain" ]; then
+            fqdn="${hostname}.${domain}"
+        else
+            fqdn="$hostname"  # Default to just the hostname if no domain is set
+        fi
+
+        # Convert to lowercase (as you did with tr 'A-Z' 'a-z')
+        fqdn=$(echo "$fqdn" | tr 'A-Z' 'a-z')
     else
-        fqdn="$hostname"  # Default to just the hostname if no domain is set
+        fqdn=$(/usr/bin/hostname "$@")
     fi
-
-    # Convert to lowercase (as you did with tr 'A-Z' 'a-z')
-    fqdn=$(echo "$fqdn" | tr 'A-Z' 'a-z')
 
     echo "$fqdn"
 }
