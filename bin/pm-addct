@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+# Created: 20250414 - Updated: 20250414
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
+# Script options
+set -e # Exit immediately if a command exits with a non-zero status.
+#set -x # Uncomment for debugging, but remove for production.
+
+# Check for help flag
+[[ $1 =~ -h ]] &&
+  echo "Usage: pm-addct [host(.domain)] [(alpine)|debian|ubuntu] [ip] [gw] [ram] [storage] [cpus] [resolv]" &&
+  exit 0 # Use exit 0 for help messages
+
+# Template names
+alpine=alpine-3.21-default_20241217_amd64.tar.xz
+debian=debian-12-standard_12.7-1_amd64.tar.zst
+ubuntu=ubuntu-24.04-standard_24.04-2_amd64.tar.zst
+
+# Default values
+_name=${1:-'mail'}
+_myos=${2:-'alpine'}
+_myip=${3:-''}
+_mygw=${4:-''}
+_ram1=${5:-'1024'}
+_stor=${6:-'4'}
+_cpus=${7:-'1'}
+_dns1=${8:-'1.1.1.1'}
+
+# Determine the next available container ID
+_next=$(pvesh get /cluster/nextid)
+
+# Determine the network configuration
+_net0=""
+if [[ -n "$_myip" ]]; then
+  _mygw_opt=""
+  if [[ -n "$_mygw" ]]; then
+    _mygw_opt=",gw=$_mygw"
+  fi
+  _net0="--net0 name=eth0,bridge=vmbr0,ip=$_myip${_mygw_opt},firewall=1"
+else
+  _net0="--net0 name=eth0,bridge=vmbr0,ip=dhcp,firewall=1"
+fi
+
+# Extract domain name (if present)
+_domn=""
+if [[ "$_name" =~ "." ]]; then
+  _domn="${_name#*.}"  # Corrected line
+  _name="${_name%%.*}"
+fi
+
+# Determine the template filename based on the OS type
+case $_myos in
+  alpine)
+    _tmpl="$alpine"
+    ;;
+  debian)
+    _tmpl="$debian"
+    ;;
+  ubuntu)
+    _tmpl="$ubuntu"
+    ;;
+  *)
+    echo "Error: Invalid OS specified.  Must be alpine, debian, or ubuntu." >&2 # Redirect error message to stderr
+    exit 1
+    ;;
+esac
+
+# Print the pct create command
+pct create $_next local:vztmpl/$_tmpl \
+  --hostname $_name \
+  --cores $_cpus \
+  --memory $_ram1 \
+  --rootfs local-zfs:$_stor \
+  --unprivileged 1 \
+  $_net0
+
+if [[ $_myos == alpine ]]; then
+    # For Alpine package installation
+    _pkg1="apk"
+    _pkg2="add"
+    _shel="ash"
+    _pkgs="bash openssh shadow procps"
+else
+    # For Debian/Ubuntu package installation
+    _pkg1="DEBIAN_FRONTEND=noninteractive apt"
+    _pkg2="install -y"
+    _shel="bash"
+    _pkgs="openssh-server sudo locales"
+fi
+
+pct start $_next
+pct exec $_next -- $_shel -c "sleep 5; $_pkg1 update && $_pkg1 $_pkg2 git nano rsync $_pkgs"
+pct exec $_next -- $_shel -c 'chsh -s /bin/bash root'
+pct exec $_next -- $_shel -c 'git clone https://github.com/markc/sh .sh'
+pct exec $_next -- $_shel -c '.sh/bin/shm install'
+
+if [[ -n "$_domn" && -n "$_dns1" ]]; then
+    if [[ $_myos == alpine ]]; then
+        pct exec $_next -- $_shel -c "echo 'nameserver $_dns1' >> /etc/resolv.conf"
+        pct exec $_next -- $_shel -c "echo 'search $_domn' >> /etc/resolv.conf"
+    else
+        pct exec $_next -- $_shel -c 'echo -e "[Resolve]\nDNS=$_dns1\nDomains=$_domn\n" > /etc/systemd/resolved.conf'
+        pct exec $_next -- $_shel -c 'systemctl restart systemd-resolved'
+    fi
+fi
