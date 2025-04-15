@@ -172,6 +172,7 @@ CREATE TABLE IF NOT EXISTS vmails (
   user varchar(63) NOT NULL DEFAULT '',
   home varchar(127) NOT NULL DEFAULT '',
   password varchar(127) NOT NULL DEFAULT '',
+  proxy tinyint(1) NOT NULL DEFAULT '0',
   updated datetime NOT NULL DEFAULT '2018-01-01 00:00:01',
   created datetime NOT NULL DEFAULT '2018-01-01 00:00:01'
 );
@@ -192,6 +193,7 @@ CREATE VIEW IF NOT EXISTS vmails_view AS
         vm.user,
         vm.quota,
         vm.active,
+        vm.proxy,
         vm.updated,
         vh.domain,
         ml.size_mail,
