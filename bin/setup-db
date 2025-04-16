@@ -3,13 +3,62 @@
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 set -x
 [[ $1 =~ '-h' ]] &&
-    echo "Usage: setup-db [(mysql)|sqlite] [sqlite path]" && exit 1
+    echo "Usage: setup-db [remove|(mysql)|sqlite] [sqlite path]" && exit 1
 
-DTYPE=${1:-'mysql'}
+_arg1=${1:-'mysql'}
+
+if [[ $_arg1 != remove ]]; then
+    DTYPE=$_arg1
+fi
 
 if [[ -n $2 ]]; then
     DBSQL=$2
     DPATH=$DBSQL/sysadm/sysadm.db
+fi
+
+if [[ $_arg1 == remove ]]; then
+
+    if [[ $(command -v systemctl) ]]; then # Check if systemd is available
+        echo "### Stopping MariaDB service (systemd)..."
+        sudo systemctl stop mariadb.service
+    elif [[ $(command -v rc-service) ]]; then # Check if OpenRC is available
+        echo "### Stopping MariaDB service (OpenRC)..."
+        sudo rc-service mariadb stop
+    else
+        echo "### ERROR: Neither systemd nor OpenRC found. Cannot stop MariaDB service"
+        exit 1
+    fi
+
+    echo "### Removing MariaDB data directory and configuration..."
+    if [[ $DTYPE == mysql ]]; then
+        # Stop MariaDB service
+        if rc-service mariadb status | grep -q "started"; then
+            echo "### Stopping MariaDB service..."
+            sudo rc-service mariadb stop
+        fi
+
+        # Remove data directory (with confirmation)
+        echo "### Removing data directory: $DBMYS"
+        sudo rm -rf "$DBMYS"/*
+
+        # Remove .my.cnf file (if it exists)
+        if [[ -f ~/.my.cnf ]]; then
+            echo "### Removing .my.cnf file"
+            rm ~/.my.cnf
+        fi
+        echo "### MariaDB data directory and configuration removed"
+
+    elif [[ $DTYPE == sqlite ]]; then
+        if [[ -d $DBSQL ]]; then
+            rm -rf $DBSQL
+        else
+            echo "### Warning: $DBSQL does not exist"
+        fi
+         echo "### SQLite data directory removed"
+   else 
+        echo "Unknown database type"
+    fi
+    exit 0  # Exit script after removal
 fi
 
 if [[ $DTYPE == sqlite ]]; then
@@ -45,20 +94,12 @@ elif [[ $DTYPE == mysql ]]; then
             fi
 
             echo "### Setting up the MySQL database..."
-            sudo /etc/init.d/mariadb setup
+            sudo /etc/init.d/mariadb setup >/dev/null 2>&1
 
             if [[ $? -ne 0 ]]; then
                 echo "### ERROR: Failed to initialize data directory."
                 exit 1
             fi
-
-#            echo "### Setting correct permissions on /var/lib/mysql..."
-#            sudo chown -R mysql:mysql /var/lib/mysql
-#
-#            if [[ $? -ne 0 ]]; then
-#                echo "### ERROR: Failed to change ownership of /var/lib/mysql."
-#                exit 1
-#            fi
 
             echo "### Starting MariaDB service..."
             sudo rc-service mariadb start
@@ -66,24 +107,9 @@ elif [[ $DTYPE == mysql ]]; then
                 echo "### ERROR: Failed to start MariaDB service."
                 exit 1
             fi
-
-#            echo "### Securing MariaDB installation..."
-#            echo -e "\n n" | sudo mysql_secure_installation \
-#                --auth-root-authentication-method=normal \
-#                --set-root-password="$DPASS" \
-#                --remove-anonymous-users=Y \
-#                --disallow-remote-root-login=Y \
-#                --remove-test-database=Y \
-#                --reload-privilege-tables=Y
-#
-#            if [[ $? -ne 0 ]]; then
-#                echo "### ERROR: Failed to secure MariaDB installation."
-#                exit 1
-#            fi
         else
             echo "### MariaDB data directory already initialized."
         fi
-
     fi
 
     if [[ -f ~/.my.cnf ]]; then
@@ -119,7 +145,7 @@ EOS
     SQDNS="mariadb -BN pdns"
 
 else
-    echo "### ERROR: unknown argument '$DTYPE'" && exit 2
+    echo "### ERROR: unknown argument '$_arg1'" && exit 2
 fi
 
 ### FIXME: do not re-run SQL queries, check they exist first
