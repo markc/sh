@@ -62,19 +62,19 @@ elif [[ $DTYPE == mysql ]]; then
                 exit 1
             fi
 
-            echo "### Securing MariaDB installation..."
-            echo -e "\n n" | sudo mysql_secure_installation \
-                --auth-root-authentication-method=normal \
-                --set-root-password="$DPASS" \
-                --remove-anonymous-users=Y \
-                --disallow-remote-root-login=Y \
-                --remove-test-database=Y \
-                --reload-privilege-tables=Y
-
-            if [[ $? -ne 0 ]]; then
-                echo "### ERROR: Failed to secure MariaDB installation."
-                exit 1
-            fi
+#            echo "### Securing MariaDB installation..."
+#            echo -e "\n n" | sudo mysql_secure_installation \
+#                --auth-root-authentication-method=normal \
+#                --set-root-password="$DPASS" \
+#                --remove-anonymous-users=Y \
+#                --disallow-remote-root-login=Y \
+#                --remove-test-database=Y \
+#                --reload-privilege-tables=Y
+#
+#            if [[ $? -ne 0 ]]; then
+#                echo "### ERROR: Failed to secure MariaDB installation."
+#                exit 1
+#            fi
         else
             echo "### MariaDB data directory already initialized."
         fi
