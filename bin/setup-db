@@ -63,7 +63,7 @@ elif [[ $DTYPE == mysql ]]; then
             fi
 
             echo "### Securing MariaDB installation..."
-            echo "" | sudo mysql_secure_installation \
+            echo -e "\n n" | sudo mysql_secure_installation \
                 --auth-root-authentication-method=normal \
                 --set-root-password="$DPASS" \
                 --remove-anonymous-users=Y \
