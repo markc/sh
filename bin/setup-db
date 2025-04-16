@@ -62,6 +62,13 @@ elif [[ $DTYPE == mysql ]]; then
                 exit 1
             fi
 
+            echo "### Starting MariaDB service..."
+            sudo rc-service mariadb start
+            if [[ $? -ne 0 ]]; then
+                echo "### ERROR: Failed to start MariaDB service."
+                exit 1
+            fi
+            
 #            echo "### Securing MariaDB installation..."
 #            echo -e "\n n" | sudo mysql_secure_installation \
 #                --auth-root-authentication-method=normal \
@@ -79,12 +86,6 @@ elif [[ $DTYPE == mysql ]]; then
             echo "### MariaDB data directory already initialized."
         fi
 
-        echo "### Starting MariaDB service..."
-        sudo rc-service mariadb start
-        if [[ $? -ne 0 ]]; then
-             echo "### ERROR: Failed to start MariaDB service."
-             exit 1
-        fi
     fi
 
     if [[ -f ~/.my.cnf ]]; then
