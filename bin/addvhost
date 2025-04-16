@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Created: 20170217 - Updated: 20250410
+# Created: 20170217 - Updated: 20250416
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 # Let's strip this right back to only adding the bare vhost essentials
@@ -7,9 +7,7 @@
 [[ -z $1 || $1 =~ -h ]] && echo "Usage: addvhost [uuser@]domain" && exit 1
 
 VHOST=$1
-
-Y_M_D=$(date +"%Y-%m-%d")
-_UTMP=""
+_UTMP=''
 
 if [[ $1 ]]; then
     if [[ $1 =~ "@" ]]; then

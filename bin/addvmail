@@ -81,6 +81,8 @@ EOS
 
 echo "### Create $VUSER@$VHOST entry in $ADMIN.vmail_log ($DTYPE)"
 
+Y_M_D=$(date +"%Y-%m-%d")
+
 cat <<EOS | $SQCMD
  INSERT INTO vmail_log (
     mid,
