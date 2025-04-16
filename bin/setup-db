@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Created: 20170319 - Updated: 20250416
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
-
+set -x
 [[ $1 =~ '-h' ]] &&
     echo "Usage: setup-db [(mysql)|sqlite] [sqlite path]" && exit 1
 
