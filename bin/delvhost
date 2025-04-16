@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Created: 20170216 - Updated: 20250407
+# Created: 20170216 - Updated: 20250416
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 [[ -z $1 || $1 =~ -h ]] && echo "Usage: delvhost domain" && exit 1
 
@@ -13,7 +13,7 @@ VHOST=$1
 [[ ! -d $VPATH/$VHOST ]] && echo "ERROR: '$VPATH/$VHOST' does not exist" && exit 4
 
 if [[ $DTYPE == mysql ]]; then
-    if [[ $(mysql -BNe "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME='$ADMIN'") ]]; then
+    if [[ $(mariadb -BNe "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME='$ADMIN'") ]]; then
         HID=$(echo "SELECT id FROM vhosts WHERE domain = '$VHOST'" | $SQCMD)
 
         echo "Create backup of (id=$HID) $ADMIN entries"
@@ -29,7 +29,7 @@ if [[ $DTYPE == mysql ]]; then
     fi
 
     echo "Create MySQL backup of $DNAME"
-    if [[ $(mysql -BNe "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME='$DNAME'") ]]; then
+    if [[ $(mariadb -BNe "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME='$DNAME'") ]]; then
         if [[ $DNAME == $ADMIN ]]; then
             echo "Leaving '$DNAME' database"
         else
@@ -38,7 +38,7 @@ if [[ $DTYPE == mysql ]]; then
             chown $(stat -c "%u:%g" $UPATH/etc/) $UPATH/etc/$DNAME.sql
             chmod 640 $UPATH/etc/$DNAME.sql
             echo "Remove '$DNAME' database"
-            mysql -BNe "DROP DATABASE $DNAME"
+            mariadb -BNe "DROP DATABASE $DNAME"
         fi
     else
         echo "Warning: $DNAME database does not exist"
