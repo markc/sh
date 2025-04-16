@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Created: 20170216 - Updated: 20250416
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
 [[ -z $1 || $1 =~ -h ]] && echo "Usage: delvhost domain" && exit 1
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
-
 
 VHOST=$1
 

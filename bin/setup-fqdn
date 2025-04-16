@@ -56,12 +56,12 @@ else
             local _dns = 1.1.1.1
         fi
         sed -i /etc/systemd/resolved.conf \
-            -e "s/^#Domains=/Domains=$VHOST/" \
+            -e "s/^#Domains=/Domains=$HDOMN/" \
             -e "s/^#DNS=/DNS=$_dns/"
         sc restart systemd-resolved
     else
         cat <<EOS >>/etc/resolv.conf
-search $VHOST
+search $HDOMN
 EOS
     fi
     echo $HNAME >/etc/hostname
