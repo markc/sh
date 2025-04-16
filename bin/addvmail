@@ -74,25 +74,46 @@ else
 EOS
     )
 
-    echo "### Create $VUSER.valias entry ($DTYPE)"
-    [[ $VUSER == 'admin' ]] && SOURCE="@$VHOST" || SOURCE="$VUSER@$VHOST"
-    DO_VALIAS=$(
+MID=$(
         cat <<EOS | $SQCMD
- INSERT INTO valias (
-        hid,
-        source,
-        target,
-        updated,
-        created
+    SELECT id FROM vmails
+    WHERE user = '$VUSER@$VHOST'
+EOS
+)
+
+echo "### Create $VUSER@$VHOST entry in $ADMIN.vmail_log ($DTYPE)"
+
+cat <<EOS | $SQCMD
+ INSERT INTO vmail_log (
+    mid,
+    ymd
 ) VALUES (
-        $HID,
-        '$SOURCE',
-        '$VUSER@$VHOST',
-        '$_DATE',
-        '$_DATE'
+    $MID,
+    '$Y_M_D'
 )
 EOS
-    )
+
+# A standard mailbox alias is not needed.
+#
+#    echo "### Create $VUSER.valias entry ($DTYPE)"
+#    [[ $VUSER == 'admin' ]] && SOURCE="@$VHOST" || SOURCE="$VUSER@$VHOST"
+#    DO_VALIAS=$(
+#        cat <<EOS | $SQCMD
+# INSERT INTO valias (
+#        hid,
+#        source,
+#        target,
+#        updated,
+#        created
+#) VALUES (
+#        $HID,
+#        '$SOURCE',
+#        '$VUSER@$VHOST',
+#        '$_DATE',
+#        '$_DATE'
+#)
+#EOS
+#    )
 fi
 
 if [[ ! -d $MPATH/Maildir ]]; then

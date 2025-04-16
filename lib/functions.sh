@@ -1,4 +1,4 @@
-# Created: 20151231 - Updated: 20250410
+# Created: 20151231 - Updated: 20250416
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 f() { find . -type f -iname '*'$*'*'; }
@@ -219,7 +219,7 @@ sethost() {
     if [[ $OSTYP == alpine || $OSTYP == linux-musl ]]; then
         V_PHP='84'
         C_DNS='/etc/pdns'
-        C_FPM="/etc/php$V_PHP/php-fpm.d"
+        C_FPM="/etc/php$V_PHP"
         C_SQL='/etc/my.cnf.d'
         EXMYS="mariadb -BN $ADMIN"
         OSMIR='dl-cdn.alpinelinux.org'

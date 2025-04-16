@@ -201,25 +201,6 @@ else
     echo "<?php error_log(__FILE__.' '.\$_SERVER['REMOTE_ADDR']); phpinfo();" >$WPATH/phpinfo.php
 fi
 
-MID=$(
-        cat <<EOS | $SQCMD
-    SELECT id FROM vmails
-    WHERE user = '$VUSER@$VHOST'
-EOS
-)
-
-echo "### Create $VUSER@$VHOST entry in $ADMIN.vmail_log ($DTYPE)"
-
-cat <<EOS | $SQCMD
- INSERT INTO vmail_log (
-    mid,
-    ymd
-) VALUES (
-    $MID,
-    '$Y_M_D'
-)
-EOS
-
 echo "Optional: newssl $VHOST mail www [IP]"
 echo "Optional: addvmail $VUSER@$VHOST"
 echo "Optional: addwp $VHOST"
