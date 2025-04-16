@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Created: 20170417 - Updated: 20250407
+# Created: 20170417 - Updated: 20250416
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
-# Check if at least two arguments are passed
+
 if [[ $# -lt 2 || $1 == '-h' ]]; then
     echo "Usage: $0 start|stop|enable|disable|restart|reload <service_name|all>"
     exit 1

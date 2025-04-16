@@ -280,8 +280,16 @@ if [[ ! $HDOMN =~ local ]]; then
     fi
 fi
 
-serva restart web
-#serva restart mail
+if [[ $OSTYP == alpine ]]; then
+    _fpm="php-fpm$V_PHP"
+else
+    _fpm="php$V_PHP-fpm"
+fi
+
+sc restart nginx
+sc restart $_fpm
+sc restart postfix
+sc restart dovecot
 
 # TODO: replace spamprobe with bogofilter (at least on Alpine)
 if [[ -e /usr/bin/spamprobe ]]; then
