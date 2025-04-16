@@ -43,25 +43,22 @@ elif [[ $DTYPE == mysql ]]; then
                 echo "### Stopping MariaDB service..."
                 sudo rc-service mariadb stop
             fi
-echo "DPASS=$DPASS"
-            echo "### Initializing MariaDB data directory..."
-            sudo mariadb-install-db \
-                --datadir=/var/lib/mysql \
-                --auth-root-authentication-method=normal \
-                --auth-root-password="$DPASS"
+
+            echo "### Setting up the MySQL database..."
+            sudo /etc/init.d/mariadb setup
 
             if [[ $? -ne 0 ]]; then
                 echo "### ERROR: Failed to initialize data directory."
                 exit 1
             fi
 
-            echo "### Setting correct permissions on /var/lib/mysql..."
-            sudo chown -R mysql:mysql /var/lib/mysql
-
-            if [[ $? -ne 0 ]]; then
-                echo "### ERROR: Failed to change ownership of /var/lib/mysql."
-                exit 1
-            fi
+#            echo "### Setting correct permissions on /var/lib/mysql..."
+#            sudo chown -R mysql:mysql /var/lib/mysql
+#
+#            if [[ $? -ne 0 ]]; then
+#                echo "### ERROR: Failed to change ownership of /var/lib/mysql."
+#                exit 1
+#            fi
 
             echo "### Starting MariaDB service..."
             sudo rc-service mariadb start
