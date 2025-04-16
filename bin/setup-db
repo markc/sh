@@ -43,7 +43,7 @@ elif [[ $DTYPE == mysql ]]; then
 [client]
 host = $DHOST
 port = $DPORT
-user = $ADMIN
+user = root
 password = $DPASS
 EOS
         chmod 600 ~/.my.cnf
