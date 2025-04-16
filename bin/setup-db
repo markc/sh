@@ -78,6 +78,13 @@ elif [[ $DTYPE == mysql ]]; then
         else
             echo "### MariaDB data directory already initialized."
         fi
+
+        echo "### Starting MariaDB service..."
+        sudo rc-service mariadb start
+        if [[ $? -ne 0 ]]; then
+             echo "### ERROR: Failed to start MariaDB service."
+             exit 1
+        fi
     fi
 
     if [[ -f ~/.my.cnf ]]; then
