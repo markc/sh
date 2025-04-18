@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Created: 20190630 - Updated: 20250407
+# Created: 20190630 - Updated: 20250418
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+set -x
 [[ $1 =~ '-h' ]] && echo "Usage: setup-pma [domain]" && exit 1
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
