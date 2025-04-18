@@ -1,8 +1,9 @@
-# Created: 20250406
+# Created: 20250406 - Updated: 20250418
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 # Function to get the Fully Qualified Domain Name
 get_fqdn() {
+set -x
     local hostname=$(uname -n)
     local domain=""
     local fqdn=""
@@ -33,7 +34,7 @@ get_fqdn() {
 
 # Overwrite the hostname command to have a consistent response!
 hostname () {
-
+set -x
     [[ $DEBUG ]] && echo "inside hostname()" >&2
 
     OSTYP=$(awk -F= '/^ID=/ {print $2}' /etc/os-release | sed 's/"//g')
