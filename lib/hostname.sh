@@ -66,7 +66,7 @@ set -x
         if [[ -z $1 ]]; then
             uname -n
         elif [[ $1 == "-f" ]]; then
-            get_fqdn
+            get_fqdn "$@"
         else
             /usr/bin/hostname "$@"
         fi
