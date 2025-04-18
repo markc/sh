@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
-# Created: 20190630 - Updated: 20250407
+# Created: 20190630 - Updated: 20250418
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
-# NOTE: breaking change, setup Roundcube inside hcp/webmail/ folder
+
+# NOTE: breaking change, setup Roundcube inside hcp/ as hcp/webmail/
 
 [[ $1 =~ '-h' ]] && echo "Usage: setup-rc [domain] [rc version|remove] [db name]" && exit 1
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
 
 _HOST=${1:-$(hostname -f | tr 'A-Z' 'a-z')}
-_RC_V=${2:-'1.6.2'}
+_RC_V=${2:-'1.6.10'}
 _DBID=${3:-'webmail'}
 
 [[ -f ~/.vhosts/$_HOST ]] && . ~/.vhosts/$_HOST || exit 3
-
 
 _PATH="$WPATH/hcp/webmail"
 
@@ -68,7 +68,7 @@ else
 \$config['smtp_pass'] = '%p';
 \$config['support_url'] = 'https://$MHOST';
 \$config['product_name'] = 'Webmail for $MHOST';
-\$config['des_key'] = '$(pwgen -sB 24 1)';
+\$config['des_key'] = '$(newpw 1 24)';
 //\$config['managesieve_host'] = 'tls://$MHOST';
 \$config['skin'] = 'elastic';
 \$config['plugins'] = [
