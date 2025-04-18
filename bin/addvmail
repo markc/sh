@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Created: 20170418 - Updated: 20250407
+# Created: 20170418 - Updated: 20250418
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
 [[ -z $1 || $1 =~ '-h' ]] && echo "Usage: addvmail user@domain [pw]" && exit 1
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
@@ -10,7 +11,6 @@ shift
 VHOST=${EMAIL#*@} # userid @ $VHOST
 
 . ~/.vhosts/$VHOST || exit 3 # for VPATH and SQCMD
-
 
 [[ -n $1 ]] && EPASS=$@ || EPASS=$(newpw)
 
@@ -72,48 +72,48 @@ else
 EOS
     )
 
-MID=$(
+    MID=$(
         cat <<EOS | $SQCMD
-    SELECT id FROM vmails
-    WHERE user = '$VUSER@$VHOST'
+ SELECT id FROM vmails
+  WHERE user = '$VUSER@$VHOST'
 EOS
-)
+    )
 
-echo "### Create $VUSER@$VHOST entry in $ADMIN.vmail_log ($DTYPE)"
+    echo "### Create $VUSER@$VHOST entry in $ADMIN.vmail_log ($DTYPE)"
 
-Y_M_D=$(date +"%Y-%m-%d")
+    Y_M_D=$(date +"%Y-%m-%d")
 
-cat <<EOS | $SQCMD
+    cat <<EOS | $SQCMD
  INSERT INTO vmail_log (
-    mid,
-    ymd
+        mid,
+        ymd
 ) VALUES (
-    $MID,
-    '$Y_M_D'
+        $MID,
+        '$Y_M_D'
 )
 EOS
 
-# A standard mailbox alias is not needed.
-#
-#    echo "### Create $VUSER.valias entry ($DTYPE)"
-#    [[ $VUSER == 'admin' ]] && SOURCE="@$VHOST" || SOURCE="$VUSER@$VHOST"
-#    DO_VALIAS=$(
-#        cat <<EOS | $SQCMD
-# INSERT INTO valias (
-#        hid,
-#        source,
-#        target,
-#        updated,
-#        created
-#) VALUES (
-#        $HID,
-#        '$SOURCE',
-#        '$VUSER@$VHOST',
-#        '$_DATE',
-#        '$_DATE'
-#)
-#EOS
-#    )
+    echo "### Create $VUSER.valias entry ($DTYPE)"
+
+    [[ $VUSER == 'admin' ]] && SOURCE="@$VHOST" || SOURCE="$VUSER@$VHOST"
+
+    DO_VALIAS=$(
+        cat <<EOS | $SQCMD
+ INSERT INTO valias (
+        hid,
+        source,
+        target,
+        updated,
+        created
+) VALUES (
+        $HID,
+        '$SOURCE',
+        '$VUSER@$VHOST',
+        '$_DATE',
+        '$_DATE'
+)
+EOS
+   )
 fi
 
 if [[ ! -d $MPATH/Maildir ]]; then
