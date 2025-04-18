@@ -38,15 +38,15 @@ else
     tar xf roundcubemail-$_RC_V-complete.tar.gz
 
     if [[ $DTYPE == mysql ]]; then
-        if [[ $(mysql -BNe "SHOW DATABASES LIKE '$_DBID'") ]]; then
+        if [[ $(mariadb -BNe "SHOW DATABASES LIKE '$_DBID'") ]]; then
             echo "### '$_DBID' database already exists"
         else
             echo "### Create $_DBID database"
-            mysql -e "CREATE DATABASE IF NOT EXISTS $_DBID"
-            mysql -e "GRANT ALL PRIVILEGES ON $_DBID.* TO '$DUSER'@'localhost' IDENTIFIED BY '$DPASS'"
-            mysql -e "FLUSH PRIVILEGES"
+            mariadb -e "CREATE DATABASE IF NOT EXISTS $_DBID"
+            mariadb -e "GRANT ALL PRIVILEGES ON $_DBID.* TO '$DUSER'@'localhost' IDENTIFIED BY '$DPASS'"
+            mariadb -e "FLUSH PRIVILEGES"
         fi
-        cat roundcubemail-$_RC_V/SQL/$DTYPE.initial.sql | mysql $_DBID
+        cat roundcubemail-$_RC_V/SQL/$DTYPE.initial.sql | mariadb $_DBID
         _DNSW="mysql://$DUSER:$DPASS@127.0.0.1/$_DBID"
     else
         cat roundcubemail-$_RC_V/SQL/$DTYPE.initial.sql | sqlite3 $_DBID.db
