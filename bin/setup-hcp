@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Created: 20170519 - Updated: 20250407
+# Created: 20170519 - Updated: 20250418
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
 [[ $1 =~ '-h' ]] && echo "Usage: setup-hcp [domain]" && exit 1
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
@@ -26,8 +27,8 @@ EOS
     if [[ -f $WPATH/hcp/.htpasswd ]]; then
         echo "### Exists $WPATH/hcp/.htpasswd"
     else
-        HUSER=$(pwgen -sB 8 1)
-        HPASS=$(pwgen -sB 8 1)
+        HUSER=$(newpw 1 8)
+        HPASS=$(newpw 1 8)
         echo "### Create $WPATH/hcp/.htpasswd $HUSER/$HPASS"
         htpasswd -b -c $WPATH/hcp/.htpasswd $HUSER $HPASS >/dev/null 2>&1
         echo "# HTTP auth for https://$MHOST/html/hcp -> $HUSER / $HPASS" >>~/.my.cnf
