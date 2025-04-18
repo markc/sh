@@ -15,14 +15,11 @@ if [[ -d $WPATH/hcp ]]; then
     echo "### Exists $WPATH/hcp"
 else
     echo "### Clone Netserva HCP to $WPATH/hcp"
-    git clone https://github.com/netserva/hcp $WPATH/hcp >/dev/null 2>&1
+    git clone https://github.com/markc/hcp $WPATH/hcp >/dev/null 2>&1
     APASS_HASH=$(php -r "echo password_hash('$APASS', PASSWORD_DEFAULT);")
     cat <<EOS | $SQCMD
-    INSERT INTO news VALUES
-    (null, 'News Item 1', 'Lorem ipsum etc...', 'lib/uploads/Blank-300x150.png', 1, '2018-01-01 00:00:01', '2018-01-01 00:00:01'),
-    (null, 'News Item 2', 'Lorem ipsum etc...', 'lib/uploads/Blank-300x150.png', 1, '2018-01-01 00:00:01', '2018-01-01 00:00:01');
-    INSERT INTO accounts VALUES
-    (null,1,0,1,'$AMAIL','System','Administrator','','',0,'','$APASS_HASH','2018-01-01 00:00:01','2018-01-01 00:00:01');
+ INSERT INTO accounts VALUES
+        (null,1,0,1,'$AMAIL','System','Administrator','','',0,'','$APASS_HASH','2018-01-01 00:00:01','2018-01-01 00:00:01');
 EOS
     if [[ -f $WPATH/hcp/.htpasswd ]]; then
         echo "### Exists $WPATH/hcp/.htpasswd"
