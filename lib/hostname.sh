@@ -3,7 +3,7 @@
 
 # Function to get the Fully Qualified Domain Name
 get_fqdn() {
-set -x
+
     local hostname=$(uname -n)
     local domain=""
     local fqdn=""
@@ -34,7 +34,7 @@ set -x
 
 # Overwrite the hostname command to have a consistent response!
 hostname () {
-set -x
+
     [[ $DEBUG ]] && echo "inside hostname()" >&2
 
     OSTYP=$(awk -F= '/^ID=/ {print $2}' /etc/os-release | sed 's/"//g')
