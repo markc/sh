@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Created: 20220205 - Updated: 20250407
+# Created: 20220205 - Updated: 20250419
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
+
 [[ $1 =~ "-h" ]] && echo "Usage: firstboot" && exit 1
 
 [[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
-
 
 if [[ -f /etc/cron.d/firstboot ]]; then
     echo -n '' > /etc/machine-id
