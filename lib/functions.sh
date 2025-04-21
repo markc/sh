@@ -1,4 +1,4 @@
-# Created: 20151231 - Updated: 20250416
+# Created: 20151231 - Updated: 20250421
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 f() { find . -type f -iname '*'$*'*'; }
@@ -16,12 +16,15 @@ if [[ $OSTYP == openwrt ]]; then
     }
 elif [[ $OSTYP == alpine ]]; then
     sc() {
-        if [[ $1 == enable ]]; then
+        if [[ $1 == restart ]]; then
+            $SUDO rc-update stop $2
+            $SUDO rc-update start $2
+        elif [[ $1 == start || $1 == stop || $1 == status ]]; then
+            $SUDO rc-service $2 $1
+        elif [[ $1 == enable ]]; then
             $SUDO rc-update add $2
         elif [[ $1 == disable ]]; then
             $SUDO rc-update del $2
-        elif [[ $1 == start || $1 == status || $1 == stop ]]; then
-            $SUDO rc-service $2 $1
         else
             $SUDO rc-status --all | awk '/\[.*\]/ {print $1}'
         fi
