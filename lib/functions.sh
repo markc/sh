@@ -17,8 +17,8 @@ if [[ $OSTYP == openwrt ]]; then
 elif [[ $OSTYP == alpine ]]; then
     sc() {
         if [[ $1 == restart ]]; then
-            $SUDO rc-update stop $2
-            $SUDO rc-update start $2
+            $SUDO rc-update $2 stop
+            $SUDO rc-update $2 start
         elif [[ $1 == start || $1 == stop || $1 == status ]]; then
             $SUDO rc-service $2 $1
         elif [[ $1 == enable ]]; then
