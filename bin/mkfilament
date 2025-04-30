@@ -38,7 +38,7 @@ rm -rf $DEVEL/$MYAPP
 
 cd $DEVEL
 
-laravel new --git --dark --pest --database=sqlite -n $MYAPP || { echo "Laravel project creation failed"; exit 1; }
+laravel new --git --pest --database=sqlite -n $MYAPP || { echo "Laravel project creation failed"; exit 1; }
 
 cd $MYAPP
 
