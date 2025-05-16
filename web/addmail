@@ -49,20 +49,26 @@ fi
 
 if [[ ! -d $MPATH/Maildir ]]; then
     echo "### Create $MPATH/{Maildir,sieve}"
-    mkdir -p $MPATH/{Maildir,sieve}
+
+# temporary just for testing
+echo    mkdir -p $MPATH/{Maildir,sieve}
 fi
 
-chown $(stat -c "%u:%g" $HPATH) -R $MPATH
-find $MPATH -type d -exec chmod 00750 {} +
-find $MPATH -type f -exec chmod 00640 {} +
+# temporary just for testing
+echo chown $(stat -c "%u:%g" $HPATH) -R $MPATH
+echo find $MPATH -type d -exec chmod 00750 {} +
+echo find $MPATH -type f -exec chmod 00640 {} +
 
+# temporary just for testing
 #cat <<EOS | tee -a /root/.vhosts/$VHOST.conf >/dev/null
-#Mail
-#=========
-#
-#Username: $EMAIL
-#Password: $EPASS
-#
-#EOS
+
+cat <<EOS
+Mail
+=========
+
+Username: $EMAIL
+Password: $EPASS
+
+EOS
 
 set +x
