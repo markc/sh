@@ -11,14 +11,14 @@ set -x
 EMAIL=${1,,} # lowercase user@domain
 shift
 VHOST=${EMAIL#*@} # userid @ $VHOST
-VPATH=home/u
+VPATH=/home/u
 
 VUSER=${EMAIL%@*} # $VUSER @ domain
 HPATH="$VPATH/$VHOST/home"
 MPATH="$HPATH/$VUSER"
 
 # SQCMD="mariadb laravel_portal" 
-SQCMD="sqlite3 "$VPATH/$VHOST/var/www/public/filament/database/database.sqlite"
+SQCMD="sqlite3 $VPATH/$VHOST/var/www/public/filament/database/database.sqlite"
 
 _DATE=$(date "+%Y-%m-%d %H:%M:%S")
 
@@ -52,6 +52,7 @@ if [[ ! -d $MPATH/Maildir ]]; then
 
 # temporary just for testing
 echo    mkdir -p $MPATH/{Maildir,sieve}
+
 fi
 
 # temporary just for testing
