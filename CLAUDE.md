@@ -28,3 +28,4 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Source environment variables from host configuration file
 - Use DEBUG flag for execution tracing (set -x/+x)
 - Use clear, consistent naming conventions
+

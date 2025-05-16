@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# Created: 20250516 - Updated: 20250516
+# Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (MIT License)
+
+set -x
+
+[[ -z $1 || $1 =~ '-h' ]] && echo "Usage: addmail user@domain [pw]" && exit 1
+
+[[ $(id -u) -gt 0 ]] && echo "ERROR: must be root (use sudo -i)" && exit 2
+
+EMAIL=${1,,} # lowercase user@domain
+shift
+VHOST=${EMAIL#*@} # userid @ $VHOST
+VPATH=home/u
+
+VUSER=${EMAIL%@*} # $VUSER @ domain
+HPATH="$VPATH/$VHOST/home"
+MPATH="$HPATH/$VUSER"
+
+# SQCMD="mariadb laravel_portal" 
+SQCMD="sqlite3 "$VPATH/$VHOST/var/www/public/filament/database/database.sqlite"
+
+_DATE=$(date "+%Y-%m-%d %H:%M:%S")
+
+[[ ! -d $HPATH ]] && echo "### ERROR: $HPATH does not exist" && exit 4
+
+[[ -d $MPATH/Maildir ]] && echo "### Warning: $MPATH/Maildir already exists"
+
+HID=$(
+    cat <<EOS | $SQCMD
+ SELECT id FROM vhosts
+  WHERE domain = '$VHOST'
+EOS
+)
+
+[[ -z $HID ]] && echo "### ERROR: $VHOST does not exist" && exit 5
+
+USRID=$(
+    cat <<EOS | $SQCMD
+ SELECT id FROM vmails
+  WHERE user = '$EMAIL'
+EOS
+)
+
+if [[ -n $USRID ]]; then
+    echo "### Warning: '$EMAIL' already exists in $DTYPE"
+    exit 1
+fi
+
+if [[ ! -d $MPATH/Maildir ]]; then
+    echo "### Create $MPATH/{Maildir,sieve}"
+    mkdir -p $MPATH/{Maildir,sieve}
+fi
+
+chown $(stat -c "%u:%g" $HPATH) -R $MPATH
+find $MPATH -type d -exec chmod 00750 {} +
+find $MPATH -type f -exec chmod 00640 {} +
+
+#cat <<EOS | tee -a /root/.vhosts/$VHOST.conf >/dev/null
+#Mail
+#=========
+#
+#Username: $EMAIL
+#Password: $EPASS
+#
+#EOS
+
+set +x
