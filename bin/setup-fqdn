@@ -50,10 +50,10 @@ else
     if [[ -f /etc/systemd/resolved.conf ]]; then
         if [[ ${IP4_0} == 192.168.1* ]]; then
             # Special case for typical LAN
-            local _dns = 192.168.1.1
+            _dns = 192.168.1.1
         else
             # General case which should always work
-            local _dns = 1.1.1.1
+            _dns = 1.1.1.1
         fi
         sed -i /etc/systemd/resolved.conf \
             -e "s/^#Domains=/Domains=$HDOMN/" \
