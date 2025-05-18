@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Created: 20190630 - Updated: 20250418
+# Created: 20190630 - Updated: 20250518
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 # NOTE: breaking change, setup Roundcube inside hcp/ as hcp/webmail/
@@ -62,8 +62,10 @@ else
 // Auto created by NetServa HCP/SH on $(date +%Y%m%d)
 \$config = [];
 \$config['db_dsnw'] = '$_DNSW';
-\$config['imap_host'] = 'ssl://$MHOST:993';
-\$config['smtp_host'] = 'ssl://$MHOST:465';
+\$config['default_host'] = 'ssl://$MHOST';
+\$config['default_port'] = 993;
+\$config['smtp_server'] = 'ssl://$MHOST';
+\$config['smtp_port'] = 465;
 \$config['smtp_user'] = '%u';
 \$config['smtp_pass'] = '%p';
 \$config['support_url'] = 'https://$MHOST';
