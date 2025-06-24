@@ -56,12 +56,13 @@ touch database/database.sqlite
 
 npm install || { echo "npm install failed"; exit 1; }
 
-composer require filament/filament:"^3.2" -W || { echo "Filament installation failed"; exit 1; }
+composer config minimum-stability beta
+composer require filament/filament:"^4.0" -W || { echo "Filament v4 installation failed"; exit 1; }
 php artisan filament:install --no-interaction --panels || { echo "Filament panel installation failed"; exit 1; }
 php artisan make:filament-user --no-interaction --name="$USERN" --email="$EMAIL" --password="$PASSW" || { echo "Filament user creation failed"; exit 1; }
 
 # Enable Filament dark mode
-sed -i "s/->colors(/->darkMode(true)->colors(/" app/Providers/Filament/AdminPanelProvider.php || { echo "Failed to enable Filament dark mode"; exit 1; }
+#sed -i "s/->colors(/->darkMode(true)->colors(/" app/Providers/Filament/AdminPanelProvider.php || { echo "Failed to enable Filament dark mode"; exit 1; }
 
 npm run build || { echo "npm build failed"; exit 1; }
 
@@ -69,7 +70,7 @@ npm run build || { echo "npm build failed"; exit 1; }
 git add .
 git commit -m "Initial commit with Laravel and Filament setup"
 
+echo
 echo -e "\n!!! 'cd $DEVEL/$MYAPP' and run 'code .' in another shell !!!\n"
-
-composer run dev
-
+echo
+echo "composer run dev"
