@@ -22,41 +22,44 @@ elif [[ $OSTYP == alpine ]]; then
             local service_name="$2"
         fi
 
-        # Special handling for wg-quick services
-        if [[ "$service_name" == wg-quick.* ]]; then
+        # Helper function for WireGuard cleanup
+        wg_cleanup() {
             local wg_interface="${service_name#wg-quick.}"
+            wg-quick down "$wg_interface" 2>/dev/null || true
+        }
 
-            if [[ $1 == restart ]]; then
-                # Force down manual interface first, then use service
-                wg-quick down "$wg_interface" 2>/dev/null || true
+        # Handle common actions first
+        case "$1" in
+        enable)
+            $SUDO rc-update add "$service_name"
+            ;;
+        disable)
+            $SUDO rc-update del "$service_name"
+            ;;
+        status)
+            $SUDO rc-service "$service_name" status
+            ;;
+        restart)
+            if [[ "$service_name" == wg-quick.* ]]; then
+                wg_cleanup
                 $SUDO rc-service "$service_name" stop 2>/dev/null || true
-                $SUDO rc-service "$service_name" start
-            elif [[ $1 == start ]]; then
-                # Force down manual interface first
-                wg-quick down "$wg_interface" 2>/dev/null || true
-                $SUDO rc-service "$service_name" start
-            elif [[ $1 == stop ]]; then
-                $SUDO rc-service "$service_name" stop
-                # Also force down manual interface as backup
-                wg-quick down "$wg_interface" 2>/dev/null || true
             else
-                $SUDO rc-service "$service_name" "$1"
-            fi
-        else
-            # Regular service handling
-            if [[ $1 == restart ]]; then
                 $SUDO rc-service "$service_name" stop
-                $SUDO rc-service "$service_name" start
-            elif [[ $1 == start || $1 == stop || $1 == status ]]; then
-                $SUDO rc-service "$service_name" "$1"
-            elif [[ $1 == enable ]]; then
-                $SUDO rc-update add "$service_name"
-            elif [[ $1 == disable ]]; then
-                $SUDO rc-update del "$service_name"
-            else
-                $SUDO rc-status --all | awk '/\[.*\]/ {print $1}'
             fi
-        fi
+            $SUDO rc-service "$service_name" start
+            ;;
+        start)
+            [[ "$service_name" == wg-quick.* ]] && wg_cleanup
+            $SUDO rc-service "$service_name" start
+            ;;
+        stop)
+            $SUDO rc-service "$service_name" stop
+            [[ "$service_name" == wg-quick.* ]] && wg_cleanup
+            ;;
+        *)
+            $SUDO rc-status --all | awk '/\[.*\]/ {print $1}'
+            ;;
+        esac
     }
 else
     f() { find . -type f -iname '*'$*'*' -ls; }
