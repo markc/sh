@@ -113,3 +113,18 @@ Common variables sourced from host configs:
 - Test both mysql and sqlite database backends
 - Ensure proper permissions are set (use `shm perms`)
 
+## TODO
+
+- Create comprehensive list of scripts to remove with justification for each                                                   
+- Remove legacy CloudFlare Partner API scripts (setup-cf, cfaddall, cfdelall, cfadddns, cfdeldns, cfzone, cfzones, cfns, cfsettings, cfp_* scripts) - marked as incorrect/deprecated
+- Remove deprecated Vultr API v1 scripts (setup-vultr, delvultr) - API version no longer supported
+- Remove insecure password management scripts (addpwtxt, delpwtxt, shpwtxt) - plain text password storage is unsafe
+- Ensure all removed scripts are preserved in stable-7.4compat branch before deletion
+- Remove legacy Siteworx API scripts (swbalance, swchangens, swdsadd, swdsdel, swreghost* scripts) - old domain registrar integration
+- Remove redundant user management scripts (addbuser, delbuser, addmuser, addncuser) - functionality covered by addvhost/delvhost
+- Remove legacy email tools (cleanspam, spamf, pflogs, chknewmail) - better integrated solutions exist
+- Evaluate replacing newlxd with incus-based equivalent or remove if setup-incus covers functionality
+- Remove simple wrapper scripts (shdu, shalias, shconf, shmail, shvip, shhost, shuser, shwho, shhome, edconf) - basic functionality available elsewhere
+- Investigate unclear scripts (newmaster, ddns, newautoconfig, addoa, addvip, delvip) - determine if still needed or can be removed
+- Remove redundant monitoring scripts (mysqlog) - functionality covered by main logging script
+

@@ -1,12 +1,11 @@
-# Created: 20151231 - Updated: 20250421
+# Created: 20151231 - Updated: 20250716
 # Copyright (C) 1995-2025 Mark Constable <markc@renta.net> (AGPL-3.0)
 
 f() { find . -type f -iname '*'$*'*'; }
 
 if [[ $OSTYP == openwrt ]]; then
     sc() { $SUDO /etc/init.d/$2 $1; }
-    function getent
-    {
+    function getent {
         if [[ $1 == passwd ]]; then
             cat /etc/passwd
         elif [[ $1 == group ]]; then
@@ -16,17 +15,30 @@ if [[ $OSTYP == openwrt ]]; then
     }
 elif [[ $OSTYP == alpine ]]; then
     sc() {
-        if [[ $1 == restart ]]; then
-            $SUDO rc-service $2 stop
-            $SUDO rc-service $2 start
-        elif [[ $1 == start || $1 == stop || $1 == status ]]; then
-            $SUDO rc-service $2 $1
-        elif [[ $1 == enable ]]; then
-            $SUDO rc-update add $2
-        elif [[ $1 == disable ]]; then
-            $SUDO rc-update del $2
+        # Convert systemd-style service@instance to OpenRC service.instance
+        if [[ "$2" == *"@"* ]]; then
+            local service_name="${2/@/.}"
         else
-            $SUDO rc-status --all | awk '/\[.*\]/ {print $1}'
+            local service_name="$2"
+        fi
+
+        if [[ $1 == restart ]]; then
+            $SUDO rc-service "$service_name" stop
+            $SUDO rc-service "$service_name" start
+        else
+            if [[ $1 == start || $1 == stop || $1 == status ]]; then
+                $SUDO rc-service "$service_name" "$1"
+            else
+                if [[ $1 == enable ]]; then
+                    $SUDO rc-update add "$service_name"
+                else
+                    if [[ $1 == disable ]]; then
+                        $SUDO rc-update del "$service_name"
+                    else
+                        $SUDO rc-status --all | awk '/\[.*\]/ {print $1}'
+                    fi
+                fi
+            fi
         fi
     }
 else
@@ -35,7 +47,7 @@ else
         if [[ -z $1 ]]; then
             $SUDO systemctl list-units --type=service | awk 'NR>1 {sub(".service", "", $1); print $1}' | head -n -7
         else
-            $SUDO systemctl $1 $2;
+            $SUDO systemctl $1 $2
         fi
     }
 fi
@@ -244,13 +256,13 @@ sethost() {
             OSREL='n/a'
         fi
         WUGID='http'
-#    elif [[ $OSTYP == openwrt ]]; then
-#        echo "TODO: add settings for OpenWrt"
+        #    elif [[ $OSTYP == openwrt ]]; then
+        #        echo "TODO: add settings for OpenWrt"
     fi
 }
 
 #-T' Disable pseudo-tty allocation.
-#-t' Force pseudo-tty allocation. This can be used to execute arbitrary screen-based programs on a remote machine, which can be very useful, e.g. when implementing menu services. Multiple -t options force tty allocation, even if ssh has no local tty. 
+#-t' Force pseudo-tty allocation. This can be used to execute arbitrary screen-based programs on a remote machine, which can be very useful, e.g. when implementing menu services. Multiple -t options force tty allocation, even if ssh has no local tty.
 
 sx() {
     [[ -z $2 || $1 =~ -h ]] &&
@@ -259,4 +271,3 @@ sx() {
     shift
     ssh $_HOST -q -t "bash -ci '$@'"
 }
-
