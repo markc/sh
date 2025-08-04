@@ -276,7 +276,7 @@ sx() {
         echo "Usage: sx host command (host must be in ~/.ssh/config)" && return 1
     local _HOST=$1
     shift
-    ssh $_HOST -q -t "bash -ci '$@'"
+    ssh $_HOST -q -t "bash -ci '$@'" 2> >(grep -v "cannot set terminal process group\|no job control" >&2)
 }
 
 # Reload function for es alias
