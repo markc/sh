@@ -7,9 +7,6 @@
 # the NetServa management system. Source this in your ~/.bashrc:
 # [[ -f ~/.sh/shrc.sh ]] && . ~/.sh/shrc.sh
 
-# Prevent multiple sourcing
-[[ -n "${SHRC_LOADED:-}" ]] && { [[ "${BASH_SOURCE[0]}" == "${0}" ]] && exit 0 || return 0; }
-export SHRC_LOADED=1
 
 # Detect OS type
 detect_os() {
@@ -293,16 +290,17 @@ shrc_reload() {
     echo "Shell environment reloaded"
 }
 
+# Set default color and label
+COLOR=${COLOR:-31}
+LABEL=$(hostname)
+
+# Load custom user configuration to allow overriding defaults
+[[ -f ~/.sh/myrc.sh ]] && . ~/.sh/myrc.sh
+
 # Export commonly used functions
 export -f chktime f getdb getuser getusers go2 grepuser sc sx
 export -f detect_os shrc_reload
 
-# Set a simple colored prompt if PS1 not already customized
-if [[ "$PS1" == *"@"* ]]; then
-    PS1="\[\033[1;31m\]\h \w\[\033[0m\] "
-    export PS1
-fi
-
-# Load custom user configuration - this should always be last
-# so user settings can override defaults
-[[ -f ~/.sh/myrc.sh ]] && . ~/.sh/myrc.sh
+# Set colored prompt
+PS1="\[\033[1;${COLOR}m\]${LABEL} \w\[\033[0m\] "
+export PS1
