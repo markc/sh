@@ -8,7 +8,7 @@
 # [[ -f ~/.sh/shrc.sh ]] && . ~/.sh/shrc.sh
 
 # Prevent multiple sourcing
-[[ -n "${SHRC_LOADED:-}" ]] && return 0
+[[ -n "${SHRC_LOADED:-}" ]] && { [[ "${BASH_SOURCE[0]}" == "${0}" ]] && exit 0 || return 0; }
 export SHRC_LOADED=1
 
 # Detect OS type
