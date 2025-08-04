@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Created: 20150101 - Updated: 20250804
 # Copyright (C) 1995-2025 Mark Constable <mc@netserva.org> (MIT License)
+#
 # Shell resource configuration - aliases and functions
 # This file contains useful aliases and bash functions extracted from
 # the NetServa management system. Source this in your ~/.bashrc:
@@ -155,7 +156,7 @@ alias hcp='shm pull; su - sysadm -c "cd var/www/html/hcp; git pull"'
 # ========== FUNCTIONS ==========
 
 # Find files by name pattern
-f() { 
+f() {
     if [[ ${OSTYP:-} == openwrt ]]; then
         find . -type f -iname '*'$*'*'
     else
@@ -285,10 +286,10 @@ sx() {
 shrc_reload() {
     # Re-detect OS
     detect_os
-    
+
     # Re-source this file which will reload personal config
     source ~/.sh/shrc.sh
-    
+
     echo "Shell environment reloaded"
 }
 

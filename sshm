@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Created: 20150101 - Updated: 20250804
 # Copyright (C) 1995-2025 Mark Constable <mc@netserva.org> (MIT License)
+#
 # Exit strategies for triggering Bootstrap5 alerts
 # exit 0    - success, no alert and continue
 # exit 1-250- error, 'danger' alert and continue
