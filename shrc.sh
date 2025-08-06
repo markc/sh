@@ -53,6 +53,43 @@ unalias sudo 2>/dev/null || true
 SUDO=$([[ $(id -u) -gt 0 ]] && echo '/usr/bin/sudo ')
 export SUDO
 
+# ========== NETSERVA GLOBAL VARIABLES ==========
+# NetServa management system global environment variables
+# These are workstation-level variables, not VHOST-specific
+
+# Core directory structure (5-char naming convention)
+NSDIR="${NSDIR:-$HOME/.ns}"           # NetServa Directory (root)
+NSBIN="${NSBIN:-$NSDIR/bin}"          # NetServa Binaries
+NSLIB="${NSLIB:-$NSDIR/lib}"          # NetServa Libraries
+NSETC="${NSETC:-$NSDIR/etc}"          # NetServa Configuration templates
+NSDOC="${NSDOC:-$NSDIR/doc}"          # NetServa Documentation
+NSMAN="${NSMAN:-$NSDIR/man}"          # NetServa Manual pages
+NSVAR="${NSVAR:-$NSDIR/var}"          # NetServa Variable data (vhost configs)
+NSRUN="${NSRUN:-$NSDIR/run}"          # NetServa Runtime (OpenTofu/Terraform)
+NSMNT="${NSMNT:-$NSDIR/mnt}"          # NetServa Mount points (SSHFS)
+NSTMP="${NSTMP:-$NSDIR/tmp}"          # NetServa Temporary files
+NSWWW="${NSWWW:-$NSDIR/www}"          # NetServa Web files
+NSLOG="${NSLOG:-$NSDIR/log}"          # NetServa Log files (if needed)
+NSBAK="${NSBAK:-$NSDIR/bak}"          # NetServa Backups (if needed)
+
+# SSH-related paths
+NSKEY="${NSKEY:-$HOME/.ssh/keys}"     # NetServa SSH Keys directory
+NSCFG="${NSCFG:-$HOME/.ssh/config.d}" # NetServa SSH host configs
+
+# Project metadata
+NSPRJ="${NSPRJ:-NetServa}"            # Project name
+NSVER="${NSVER:-0.1.0}"               # NetServa version
+NSBLD="${NSBLD:-2025-08-06}"          # Build date
+
+# Export all NS* variables for child processes
+export NSDIR NSBIN NSLIB NSETC NSDOC NSMAN NSVAR NSRUN NSMNT NSTMP NSWWW
+export NSLOG NSBAK NSKEY NSCFG NSPRJ NSVER NSBLD
+
+# Add NetServa bin to PATH if it exists and not already in PATH
+if [[ -d "$NSBIN" ]] && [[ ":$PATH:" != *":$NSBIN:"* ]]; then
+    export PATH="$NSBIN:$PATH"
+fi
+
 # Note: Custom user configuration is loaded at the end of this file
 
 # ========== ALIASES ==========
@@ -251,18 +288,45 @@ UPATH=$UPATH
 U_SHL=$U_SHL"
 }
 
-# Navigate to user directories
+# Navigate to user directories (temporary old path)
 go2() {
-    if [[ $1 =~ "@" ]]; then
-        cd /var/ns/${1#*@}/mail/${1%@*}
+    if [[ -d /var/ns ]]; then
+        # New path structure
+        if [[ $1 =~ "@" ]]; then
+            cd /var/ns/${1#*@}*/mail/${1%@*}
+        else
+            cd /var/ns/$1*/var/www/public
+        fi
     else
-        cd /var/ns/$1/var/www/public
+        # Old path structure
+        if [[ $1 =~ "@" ]]; then
+            cd /home/u/${1#*@}*/home/*${1%@*}
+        else
+            cd /home/u/$1*/var/www
+        fi
     fi
 }
 
 # Search for user in system
 grepuser() {
     getusers | grep -E "$1[,:]"
+}
+
+# Git shortcuts
+pull() {
+    local REPO="${1:-$HOME/.sh}"
+    cd "$REPO"
+    git pull
+}
+
+push() {
+    cd "$HOME/.sh"
+    if [[ -n "$1" ]]; then
+        git commit -am "$1"
+    else
+        git commit -a
+    fi
+    git push
 }
 
 # Show database command
@@ -276,7 +340,15 @@ sx() {
         echo "Usage: sx host command (host must be in ~/.ssh/config)" && return 1
     local _HOST=$1
     shift
-    ssh $_HOST -q -t "bash -ci '$@'" 2> >(grep -v "cannot set terminal process group\|no job control" >&2)
+    {
+        ssh $_HOST -q -t "bash -ci '$@'" 2>&1
+    } | {
+        while IFS= read -r line; do
+            [[ $line != *"bash: cannot set terminal process group"* ]] && \
+            [[ $line != *"bash: no job control"* ]] && \
+            echo "$line"
+        done
+    }
 }
 
 # Reload function for es alias
@@ -299,7 +371,7 @@ LABEL=$(hostname)
 
 # Export commonly used functions
 export -f chktime f getdb getuser getusers go2 grepuser sc sx
-export -f detect_os shrc_reload
+export -f detect_os shrc_reload pull push
 
 # Set colored prompt
 PS1="\[\033[1;${COLOR}m\]${LABEL} \w\[\033[0m\] "
