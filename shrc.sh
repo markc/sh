@@ -312,17 +312,32 @@ grepuser() {
     getusers | grep -E "$1[,:]"
 }
 
-# Git shortcuts
-pull() {
-    local REPO="${1:-$HOME/.sh}"
-    cd "$REPO"
+# Git shortcuts for .sh repo
+shpull() {
+    cd "$HOME/.sh"
     git pull
 }
 
-push() {
+shpush() {
     cd "$HOME/.sh"
     if [[ -n "$1" ]]; then
-        git commit -am "$1"
+        git commit -am "$*"
+    else
+        git commit -a
+    fi
+    git push
+}
+
+# Git shortcuts for .ns repo
+nspull() {
+    cd "$HOME/.ns"
+    git pull
+}
+
+nspush() {
+    cd "$HOME/.ns"
+    if [[ -n "$1" ]]; then
+        git commit -am "$*"
     else
         git commit -a
     fi
@@ -371,7 +386,7 @@ LABEL=$(hostname)
 
 # Export commonly used functions
 export -f chktime f getdb getuser getusers go2 grepuser sc sx
-export -f detect_os shrc_reload pull push
+export -f detect_os shrc_reload shpull shpush nspull nspush
 
 # Set colored prompt
 PS1="\[\033[1;${COLOR}m\]${LABEL} \w\[\033[0m\] "
