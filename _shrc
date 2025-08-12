@@ -53,41 +53,47 @@ unalias sudo 2>/dev/null || true
 SUDO=$([[ $(id -u) -gt 0 ]] && echo '/usr/bin/sudo ')
 export SUDO
 
-# ========== NETSERVA GLOBAL VARIABLES ==========
-# NetServa management system global environment variables
-# These are workstation-level variables, not VHOST-specific
+# ========== REMOTE SERVER COMPATIBILITY ==========
+# These variables are conditionally set for NetServa compatibility
+# On remote servers, ~/.ns/ may not exist, so these are optional
 
-# Core directory structure (5-char naming convention)
-NSDIR="${NSDIR:-$HOME/.ns}"           # NetServa Directory (root)
-NSBIN="${NSBIN:-$NSDIR/bin}"          # NetServa Binaries
-NSLIB="${NSLIB:-$NSDIR/lib}"          # NetServa Libraries
-NSETC="${NSETC:-$NSDIR/etc}"          # NetServa Configuration templates
-NSDOC="${NSDOC:-$NSDIR/doc}"          # NetServa Documentation
-NSMAN="${NSMAN:-$NSDIR/man}"          # NetServa Manual pages
-NSVAR="${NSVAR:-$NSDIR/var}"          # NetServa Variable data (vhost configs)
-NSRUN="${NSRUN:-$NSDIR/run}"          # NetServa Runtime (OpenTofu/Terraform)
-NSMNT="${NSMNT:-$NSDIR/mnt}"          # NetServa Mount points (SSHFS)
-NSTMP="${NSTMP:-$NSDIR/tmp}"          # NetServa Temporary files
-NSWWW="${NSWWW:-$NSDIR/www}"          # NetServa Web files
-NSLOG="${NSLOG:-$NSDIR/log}"          # NetServa Log files (if needed)
-NSBAK="${NSBAK:-$NSDIR/bak}"          # NetServa Backups (if needed)
+# Only set NetServa variables if ~/.ns exists (central workstation)
+if [[ -d "$HOME/.ns" ]]; then
+    # Core directory structure (5-char naming convention)
+    NSDIR="${NSDIR:-$HOME/.ns}"           # NetServa Directory (root)
+    NSBIN="${NSBIN:-$NSDIR/bin}"          # NetServa Binaries
+    NSLIB="${NSLIB:-$NSDIR/lib}"          # NetServa Libraries
+    NSETC="${NSETC:-$NSDIR/etc}"          # NetServa Configuration templates
+    NSDOC="${NSDOC:-$NSDIR/doc}"          # NetServa Documentation
+    NSMAN="${NSMAN:-$NSDIR/man}"          # NetServa Manual pages
+    NSVAR="${NSVAR:-$NSDIR/var}"          # NetServa Variable data (vhost configs)
+    NSRUN="${NSRUN:-$NSDIR/run}"          # NetServa Runtime (OpenTofu/Terraform)
+    NSMNT="${NSMNT:-$NSDIR/mnt}"          # NetServa Mount points (SSHFS)
+    NSTMP="${NSTMP:-$NSDIR/tmp}"          # NetServa Temporary files
+    NSWWW="${NSWWW:-$NSDIR/www}"          # NetServa Web files
+    NSLOG="${NSLOG:-$NSDIR/log}"          # NetServa Log files (if needed)
+    NSBAK="${NSBAK:-$NSDIR/bak}"          # NetServa Backups (if needed)
 
-# SSH-related paths
-NSKEY="${NSKEY:-$HOME/.ssh/keys}"     # NetServa SSH Keys directory
-NSCFG="${NSCFG:-$HOME/.ssh/config.d}" # NetServa SSH host configs
+    # Additional NSIS directories
+    NSCFG="${NSCFG:-$NSDIR/cfg}"          # NetServa Config templates
+    
+    # SSH-related paths  
+    NSKEY="${NSKEY:-$HOME/.ssh/keys}"     # NetServa SSH Keys directory
+    NSSSH="${NSSSH:-$HOME/.ssh/config.d}" # NetServa SSH host configs
 
-# Project metadata
-NSPRJ="${NSPRJ:-NetServa}"            # Project name
-NSVER="${NSVER:-0.1.0}"               # NetServa version
-NSBLD="${NSBLD:-2025-08-06}"          # Build date
+    # Project metadata
+    NSPRJ="${NSPRJ:-NetServa}"            # Project name
+    NSVER="${NSVER:-0.1.0}"               # NetServa version
+    NSBLD="${NSBLD:-2025-08-12}"          # Build date
 
-# Export all NS* variables for child processes
-export NSDIR NSBIN NSLIB NSETC NSDOC NSMAN NSVAR NSRUN NSMNT NSTMP NSWWW
-export NSLOG NSBAK NSKEY NSCFG NSPRJ NSVER NSBLD
+    # Export all NS* variables for child processes
+    export NSDIR NSBIN NSLIB NSETC NSDOC NSMAN NSVAR NSRUN NSMNT NSTMP NSWWW
+    export NSLOG NSBAK NSCFG NSKEY NSSSH NSPRJ NSVER NSBLD
 
-# Add NetServa bin to PATH if it exists and not already in PATH
-if [[ -d "$NSBIN" ]] && [[ ":$PATH:" != *":$NSBIN:"* ]]; then
-    export PATH="$NSBIN:$PATH"
+    # Add NetServa bin to PATH if it exists and not already in PATH
+    if [[ -d "$NSBIN" ]] && [[ ":$PATH:" != *":$NSBIN:"* ]]; then
+        export PATH="$NSBIN:$PATH"
+    fi
 fi
 
 # Note: Custom user configuration is loaded at the end of this file
@@ -118,7 +124,7 @@ alias sn='[ -f ~/.note ] && cat ~/.note'
 # Help and configuration
 alias ?='bash ~/.help'
 alias eh='e ~/.help'
-alias es='e ~/.sh/myrc.sh; shrc_reload'
+alias es='e ~/.myrc; source ~/.shrc'
 alias m='bash ~/.menu'
 
 # Package management aliases based on OS type
@@ -180,6 +186,32 @@ alias oldunblock='iptables -D INPUT -j DROP -s '
 
 # Mail log processing
 alias maillog="journalctl -f -n 10000 | stdbuf -oL grep 'warning: header Subject:' | sed -e 's/mail .*warning: header Subject:\(.*\)/\1/' -e 's/ from .*];//' -e 's/proto=.*$//'"
+
+# Server management tools
+alias ports='ss -tuln'              # Show listening ports
+alias procs='ps aux --sort=-%cpu | head -20'  # Top CPU processes
+alias disk='df -h'                  # Disk usage human readable
+alias mem='free -h'                 # Memory usage human readable
+alias temp='sensors 2>/dev/null || cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null'
+alias netcon='ss -tuln | grep LISTEN'  # Network connections
+alias sysinfo='uname -a && uptime && free -h && df -h /'
+alias listening='netstat -tuln 2>/dev/null || ss -tuln'
+alias top10='ps aux --sort=-%cpu | head -11'  # Top 10 CPU processes
+
+# Log monitoring (adjust paths for different systems)
+alias logs='journalctl -f'
+alias syslog='tail -f /var/log/syslog 2>/dev/null || tail -f /var/log/messages 2>/dev/null || journalctl -f'
+alias authlog='tail -f /var/log/auth.log 2>/dev/null || journalctl -f -u ssh'
+
+# Service shortcuts
+alias systemd='systemctl'
+alias services='systemctl list-units --type=service --state=running'
+alias failed='systemctl list-units --failed'
+
+# Security monitoring
+alias lastlog='last | head -10'
+alias failedlogins='journalctl -t sshd | grep "Failed password" | tail -10'
+alias connections='ss -tuln | grep :22'  # SSH connections
 
 # Additional tools
 alias a='php artisan'
@@ -328,21 +360,7 @@ shpush() {
     git push
 }
 
-# Git shortcuts for .ns repo
-nspull() {
-    cd "$HOME/.ns"
-    git pull
-}
-
-nspush() {
-    cd "$HOME/.ns"
-    if [[ -n "$1" ]]; then
-        git commit -am "$*"
-    else
-        git commit -a
-    fi
-    git push
-}
+# Note: Git shortcuts for .ns repo (nspull, nspush) provided by ~/.ns/etc/netserva.sh
 
 # Show database command
 getdb() {
@@ -366,27 +384,67 @@ sx() {
     }
 }
 
-# Reload function for es alias
-shrc_reload() {
-    # Re-detect OS
-    detect_os
-
-    # Re-source this file which will reload personal config
-    source ~/.sh/shrc.sh
-
-    echo "Shell environment reloaded"
+# Quick server health check
+health() {
+    echo "=== System Health Check ==="
+    echo "Date: $(date)"
+    echo "Uptime: $(uptime -p 2>/dev/null || uptime)"
+    echo "Load: $(cat /proc/loadavg)"
+    echo
+    echo "=== Memory Usage ==="
+    free -h
+    echo
+    echo "=== Disk Usage ==="
+    df -h / | tail -1
+    echo
+    echo "=== Top Processes (CPU) ==="
+    ps aux --sort=-%cpu | head -6
+    echo
+    echo "=== Network Connections ==="
+    ss -tuln | grep LISTEN | wc -l | xargs echo "Listening ports:"
+    echo
+    echo "=== Recent Failed Logins ==="
+    if command -v journalctl >/dev/null 2>&1; then
+        journalctl -t sshd --since "1 hour ago" 2>/dev/null | grep -c "Failed password" | xargs echo "Failed SSH attempts in last hour:"
+    else
+        echo "journalctl not available"
+    fi
 }
+
+# Show process tree for a service
+pstree_service() {
+    [[ -z $1 ]] && { echo "Usage: pstree_service <service_name>"; return 1; }
+    local service="$1"
+    local pid
+    
+    if command -v systemctl >/dev/null 2>&1; then
+        pid=$(systemctl show --property MainPID --value "$service" 2>/dev/null)
+    else
+        pid=$(pgrep -f "$service" | head -1)
+    fi
+    
+    if [[ -n "$pid" && "$pid" != "0" ]]; then
+        echo "Process tree for $service (PID: $pid):"
+        pstree -p "$pid" 2>/dev/null || ps --forest -o pid,ppid,cmd -p "$pid"
+    else
+        echo "Service $service not running or not found"
+    fi
+}
+
 
 # Set default color and label
 COLOR=${COLOR:-31}
 LABEL=$(hostname)
 
 # Load custom user configuration to allow overriding defaults
-[[ -f ~/.sh/myrc.sh ]] && . ~/.sh/myrc.sh
+[[ -f ~/.myrc ]] && . ~/.myrc
+
+# Load NetServa environment if available (for extended NSCM functionality)
+[[ -f ~/.ns/etc/netserva.sh ]] && source ~/.ns/etc/netserva.sh
 
 # Export commonly used functions
-export -f chktime f getdb getuser getusers go2 grepuser sc sx
-export -f detect_os shrc_reload shpull shpush nspull nspush
+export -f chktime f getdb getuser getusers go2 grepuser sc sx health pstree_service
+export -f detect_os shpull shpush
 
 # Set colored prompt
 PS1="\[\033[1;${COLOR}m\]${LABEL} \w\[\033[0m\] "

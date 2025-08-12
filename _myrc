@@ -1,0 +1,18 @@
+# Created: 20250812 - Updated: 20250812
+# Copyright (C) 1995-2025 Mark Constable <mc@netserva.org> (MIT License)
+#
+# Personal shell configuration template - Custom user aliases and functions
+# This file is a template for ~/.myrc and is intended to be copied to the
+# user's home directory for personal customizations. Modify ~/.myrc instead
+# of this file directly.
+#
+# Usage:
+#   cp ~/.sh/_myrc ~/.myrc  # Copy template to home directory
+#   edit ~/.myrc            # Add your custom configurations
+#
+# Examples:
+# export MYVAR="value"
+# alias myalias='some command'
+# myfunction() { echo "Hello World"; }
+#
+# Your custom configurations should go in ~/.myrc, not here.

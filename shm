@@ -1,0 +1,235 @@
+#!/usr/bin/env bash
+# Created: 20130210 - Updated: 20250812
+# Copyright (C) 1995-2025 Mark Constable <mc@netserva.org> (MIT License)
+
+# Shell Management (shm) - Manages ~/.sh directory and shell enhancements
+[[ -z $REPO ]] && REPO=~/.sh
+
+usage() {
+    echo "\
+Shell Management (shm) - Manages ~/.sh directory and shell enhancements
+
+Usage:
+  shm install     - Install shell enhancements to home directory
+  shm sync        - Sync local ~/.sh to remote server
+  shm pull        - Pull latest changes from git repository
+  shm push        - Commit and push changes to git repository
+  shm status      - Show git status of ~/.sh repository
+  shm remove      - Remove shell enhancement symlinks
+  shm removeall   - Remove entire ~/.sh directory
+  shm perms       - Fix file permissions
+  shm test        - Test if shell enhancements are properly installed
+  shm version     - Show version information
+
+Examples:
+  shm install               # Install on local system
+  shm sync user@server      # Sync to remote server
+  shm pull && shm sync user@server  # Update and sync to remote"
+}
+
+sh_perms() {
+    echo "Setting correct permissions for ~/.sh directory..."
+    chmod 755 $REPO
+    chmod 755 $REPO/shm
+    chmod 644 $REPO/{LICENSE,README.md,_help,_myrc,_shrc}
+    [[ -d $REPO/etc ]] && chmod 644 $REPO/etc/*
+    [[ -d $REPO/lib ]] && chmod 644 $REPO/lib/*
+    echo "Permissions updated successfully"
+}
+
+sh_install() {
+    echo "Installing shell enhancements..."
+    local F FF DF
+    cd "$HOME"
+    
+    # Create symlinks for shell resource files
+    for F in $(ls -1 $REPO/_* 2>/dev/null); do
+        FF=$(basename $F)
+        DF=".${FF#_}"
+        if [[ ! -f $HOME/$DF ]]; then
+            if [[ $DF = ".myrc" ]]; then
+                cp "$F" "$DF"
+                echo "Created personal config: $DF"
+            else
+                ln -s "$(basename $REPO)/$FF" "$DF"
+                echo "Linked: $DF -> $(basename $REPO)/$FF"
+            fi
+        else
+            echo "Exists: $DF (skipped)"
+        fi
+    done
+    
+    # Set correct permissions
+    sh_perms
+    
+    # Disable mesg in profile to avoid SSH warnings
+    [[ -f ~/.profile ]] && sed -i 's/^mesg/#mesg/' ~/.profile
+    
+    # Create hushlogin to reduce login messages
+    touch ~/.hushlogin
+    
+    # Add shell resource loading to ~/.bashrc if not already present
+    if ! grep -q "\.shrc" ~/.bashrc 2>/dev/null; then
+        echo "# Shell enhancements" >> ~/.bashrc
+        echo "[[ -f ~/.shrc ]] && . ~/.shrc" >> ~/.bashrc
+        echo "Added shell loading to ~/.bashrc"
+    fi
+    
+    echo "Shell enhancements installed successfully"
+    echo "Run 'source ~/.bashrc' or restart your shell to activate"
+}
+
+sh_remove() {
+    local F FF DF
+    cd
+    sed -i '/\.shrc/d' ~/.bashrc
+    for F in $(ls -1 $REPO/_*); do
+        FF=$(basename $F)
+        DF=".${FF#_}"
+        if [[ -L $DF ]]; then
+            [[ $DF != ".myrc" ]] && rm -v $DF
+        fi
+    done
+}
+
+sh_remove_all() {
+    sh_remove
+    [[ -f ~/.myrc ]] && cp -v ~/.myrc ~/.myrc.bkp
+    cd
+    rm -rf $REPO
+    echo "
+### To reinstall this repo use...
+cd && git clone https://github.com/markc/sh .sh
+$REPO/bin/shm install
+"
+}
+
+# Sync ~/.sh to remote server
+sh_sync() {
+    local remote_host="$1"
+    [[ -z "$remote_host" ]] && { echo "Error: Remote host required. Usage: shm sync user@server"; return 1; }
+    
+    echo "Syncing ~/.sh to $remote_host..."
+    
+    # Sync the entire ~/.sh directory to remote server (excluding git repository)
+    if rsync -av --delete --exclude='.git' "$REPO/" "$remote_host:~/.sh/"; then
+        echo "Successfully synced ~/.sh to $remote_host"
+        
+        # Install on remote server
+        echo "Installing shell enhancements on remote server..."
+        ssh "$remote_host" "cd ~/.sh && ./shm install"
+    else
+        echo "Error: Failed to sync to $remote_host"
+        return 1
+    fi
+}
+
+# Test if shell enhancements are working
+sh_test() {
+    echo "Testing shell enhancements..."
+    
+    # Check if files exist and are linked correctly
+    local errors=0
+    for file in shrc help; do
+        if [[ ! -f "$HOME/.$file" ]]; then
+            echo "ERROR: ~/.$file not found"
+            ((errors++))
+        elif [[ -L "$HOME/.$file" ]]; then
+            echo "OK: ~/.$file is symlinked"
+        else
+            echo "INFO: ~/.$file exists (not symlinked)"
+        fi
+    done
+    
+    # Check if myrc exists
+    if [[ ! -f "$HOME/.myrc" ]]; then
+        echo "ERROR: ~/.myrc not found"
+        ((errors++))
+    else
+        echo "OK: ~/.myrc exists"
+    fi
+    
+    # Check if .bashrc sources .shrc
+    if grep -q "\.shrc" "$HOME/.bashrc" 2>/dev/null; then
+        echo "OK: ~/.bashrc sources ~/.shrc"
+    else
+        echo "WARNING: ~/.bashrc does not source ~/.shrc"
+        ((errors++))
+    fi
+    
+    if [[ $errors -eq 0 ]]; then
+        echo "All tests passed! Shell enhancements are properly installed."
+    else
+        echo "Found $errors issues. Run 'shm install' to fix."
+        return 1
+    fi
+}
+
+# Show version information
+sh_version() {
+    echo "Shell Management (shm) version 1.0.0"
+    echo "Copyright (C) 1995-2025 Mark Constable <mc@netserva.org> (MIT License)"
+    if [[ -d "$REPO/.git" ]]; then
+        cd "$REPO"
+        echo "Git repository: $(git remote get-url origin 2>/dev/null || echo 'No remote')"
+        echo "Current commit: $(git rev-parse --short HEAD 2>/dev/null || echo 'Unknown')"
+        echo "Last update: $(git log -1 --format=%cd --date=short 2>/dev/null || echo 'Unknown')"
+    fi
+}
+
+# Show git status
+sh_status() {
+    if [[ -d "$REPO/.git" ]]; then
+        cd "$REPO"
+        echo "Git status for ~/.sh:"
+        git status --short
+    else
+        echo "~/.sh is not a git repository"
+    fi
+}
+
+case "$1" in
+install)
+    sh_install
+    ;;
+sync)
+    sh_sync "$2"
+    ;;
+pull)
+    cd "$REPO"
+    echo "Pulling latest changes..."
+    git pull
+    ;;
+push)
+    cd "$REPO"
+    echo "Committing and pushing changes..."
+    git add .
+    if [[ -n "$2" ]]; then
+        git commit -m "$2"
+    else
+        git commit
+    fi
+    git push
+    ;;
+status)
+    sh_status
+    ;;
+test)
+    sh_test
+    ;;
+version)
+    sh_version
+    ;;
+remove)
+    sh_remove
+    ;;
+removeall)
+    sh_remove_all
+    ;;
+perms)
+    sh_perms
+    ;;
+*)
+    usage
+    ;;
+esac

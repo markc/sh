@@ -9,9 +9,12 @@ A comprehensive collection of bash aliases and functions to enhance your command
 
 - **Cross-platform support**: Works on Linux (Debian/Ubuntu, Arch/Manjaro/CachyOS, Alpine), macOS, and OpenWRT
 - **Smart package management**: Unified aliases that adapt to your system's package manager
-- **Useful aliases**: Shortcuts for common tasks, navigation, editing, and system monitoring
-- **Utility functions**: Enhanced file finding, service management, and more
-- **SSH management**: Comprehensive SSH config and key management tool (sshm)
+- **Server management**: Essential aliases and functions for system administration and monitoring
+- **Remote server deployment**: Built-in sync capability to deploy to remote servers
+- **Service management**: Cross-platform service control functions (systemd, OpenRC, OpenWRT)
+- **System monitoring**: Health checks, process monitoring, and security tools
+- **SSH management**: Comprehensive shell management tool (shm)
+- **NetServa compatibility**: Conditional support for NetServa infrastructure management
 - **Customization**: Easy to extend with your own aliases and functions
 
 ## Installation
@@ -54,10 +57,21 @@ Most desktop Linux users should add the source line to `~/.bashrc`. Server users
 
 ## File Structure
 
-- **shrc.sh**: Main shell resource file containing all aliases and functions
-- **myrc.sh**: Your personal customization file (sourced after shrc.sh)
-- **sshm**: SSH management utility script
-- **sshm.md**: Detailed documentation for the SSH manager
+- **_shrc**: Main shell resource file containing all aliases and functions (390+ lines)
+- **_myrc**: Personal customization template (copy to ~/.myrc)  
+- **_help**: Quick reference help file (sourced to ~/.help)
+- **shm**: Shell management utility script (manages ~/.sh directory)
+- **README.md**: This documentation file
+- **LICENSE**: MIT License file
+
+### Remote Server Compatibility
+
+The shell enhancement system is designed to work on remote servers with minimal dependencies:
+
+- **Conditional NetServa Support**: Only loads NetServa variables if ~/.ns exists
+- **Cross-Platform Service Control**: Works with systemd, OpenRC, and OpenWRT
+- **Minimal Dependencies**: Only requires bash and basic Unix tools
+- **Automatic OS Detection**: Adapts package management aliases to the target OS
 
 ## Usage
 
@@ -74,10 +88,20 @@ Most desktop Linux users should add the source line to `~/.bashrc`. Server users
 - `se` - Edit with sudo
 - `es` - Edit your custom shell config (myrc.sh) and reload
 
-#### System Information
+#### System Information & Monitoring
 - `ff` - Fast system info (via fastfetch)
 - `ram` - Show memory usage by process
 - `p <pattern>` - Find processes matching pattern
+- `health` - Quick server health check
+- `sysinfo` - System information summary
+- `ports` - Show listening ports
+- `procs` - Top CPU processes
+- `disk` - Disk usage (human readable)
+- `mem` - Memory usage (human readable)
+- `logs` - Follow system logs
+- `services` - Show running services
+- `failed` - Show failed services
+- `lastlog` - Recent login history
 
 #### Package Management
 The following aliases adapt to your system:
@@ -107,25 +131,52 @@ mybackup() {
 
 Your customizations in `myrc.sh` will override any defaults from `shrc.sh`.
 
-### SSH Manager (sshm)
+### Shell Manager (shm)
 
-The included `sshm` tool helps manage SSH configurations and keys:
+The included `shm` tool manages the ~/.sh directory and shell enhancements:
 
 ```bash
-# Initialize SSH config structure
-sshm init
+# Install shell enhancements locally
+shm install
 
-# Create a new SSH host entry
-sshm create myserver example.com 22 john
+# Sync to a remote server
+shm sync user@server
 
-# List all configured hosts
-sshm list
+# Test if properly installed
+shm test
 
-# Create a new SSH key
-sshm key_create mykey
+# Pull latest changes from git
+shm pull
+
+# Push changes to git
+shm push "commit message"
+
+# Show git status
+shm status
+
+# Show version information
+shm version
+
+# Fix file permissions
+shm perms
 ```
 
-See [sshm.md](sshm.md) for complete documentation.
+#### Remote Server Deployment
+
+Deploy shell enhancements to remote servers easily:
+
+```bash
+# Deploy to single server
+shm sync root@server1
+
+# Update local and deploy to multiple servers
+shm pull
+shm sync root@server1
+shm sync root@server2
+shm sync user@server3
+```
+
+The sync command automatically installs the shell enhancements on the remote server.
 
 ## Supported Platforms
 
@@ -139,11 +190,16 @@ The system automatically detects your OS and configures appropriate aliases:
 
 ## Tips
 
-1. Use `es` to quickly edit your personal configuration
+1. Use `es` to quickly edit your personal configuration and reload
 2. The `f` function is great for finding files: `f "*.txt"`
 3. Package aliases work consistently across platforms: `i nginx` installs nginx on any supported OS
 4. Check `ram` to see memory usage sorted by consumption
 5. Use `sc` for service management: `sc restart nginx`
+6. Run `health` for a quick server status overview
+7. Use `shm sync user@server` to deploy shell enhancements to remote servers
+8. The `sx` function allows interactive remote command execution
+9. Use `pstree_service nginx` to see process trees for services
+10. All server monitoring aliases adapt to your OS (systemd, OpenRC, etc.)
 
 ## Contributing
 
