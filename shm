@@ -31,7 +31,7 @@ sh_perms() {
     echo "Setting correct permissions for ~/.sh directory..."
     chmod 755 $REPO
     chmod 755 $REPO/shm
-    chmod 644 $REPO/{LICENSE,README.md,_help,_myrc,_shrc}
+    chmod 644 $REPO/{LICENSE,README.md,_myrc,_shrc}
     [[ -d $REPO/etc ]] && chmod 644 $REPO/etc/*
     [[ -d $REPO/lib ]] && chmod 644 $REPO/lib/*
     echo "Permissions updated successfully"

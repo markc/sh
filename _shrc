@@ -53,48 +53,6 @@ unalias sudo 2>/dev/null || true
 SUDO=$([[ $(id -u) -gt 0 ]] && echo '/usr/bin/sudo ')
 export SUDO
 
-# ========== REMOTE SERVER COMPATIBILITY ==========
-# These variables are conditionally set for NetServa compatibility
-# On remote servers, ~/.ns/ may not exist, so these are optional
-
-# Only set NetServa variables if ~/.ns exists (central workstation)
-if [[ -d "$HOME/.ns" ]]; then
-    # Core directory structure (5-char naming convention)
-    NSDIR="${NSDIR:-$HOME/.ns}"           # NetServa Directory (root)
-    NSBIN="${NSBIN:-$NSDIR/bin}"          # NetServa Binaries
-    NSLIB="${NSLIB:-$NSDIR/lib}"          # NetServa Libraries
-    NSETC="${NSETC:-$NSDIR/etc}"          # NetServa Configuration templates
-    NSDOC="${NSDOC:-$NSDIR/doc}"          # NetServa Documentation
-    NSMAN="${NSMAN:-$NSDIR/man}"          # NetServa Manual pages
-    NSVAR="${NSVAR:-$NSDIR/var}"          # NetServa Variable data (vhost configs)
-    NSRUN="${NSRUN:-$NSDIR/run}"          # NetServa Runtime (OpenTofu/Terraform)
-    NSMNT="${NSMNT:-$NSDIR/mnt}"          # NetServa Mount points (SSHFS)
-    NSTMP="${NSTMP:-$NSDIR/tmp}"          # NetServa Temporary files
-    NSWWW="${NSWWW:-$NSDIR/www}"          # NetServa Web files
-    NSLOG="${NSLOG:-$NSDIR/log}"          # NetServa Log files (if needed)
-    NSBAK="${NSBAK:-$NSDIR/bak}"          # NetServa Backups (if needed)
-
-    # Additional NSIS directories
-    NSCFG="${NSCFG:-$NSDIR/cfg}"          # NetServa Config templates
-    
-    # SSH-related paths  
-    NSKEY="${NSKEY:-$HOME/.ssh/keys}"     # NetServa SSH Keys directory
-    NSSSH="${NSSSH:-$HOME/.ssh/config.d}" # NetServa SSH host configs
-
-    # Project metadata
-    NSPRJ="${NSPRJ:-NetServa}"            # Project name
-    NSVER="${NSVER:-0.1.0}"               # NetServa version
-    NSBLD="${NSBLD:-2025-08-12}"          # Build date
-
-    # Export all NS* variables for child processes
-    export NSDIR NSBIN NSLIB NSETC NSDOC NSMAN NSVAR NSRUN NSMNT NSTMP NSWWW
-    export NSLOG NSBAK NSCFG NSKEY NSSSH NSPRJ NSVER NSBLD
-
-    # Add NetServa bin to PATH if it exists and not already in PATH
-    if [[ -d "$NSBIN" ]] && [[ ":$PATH:" != *":$NSBIN:"* ]]; then
-        export PATH="$NSBIN:$PATH"
-    fi
-fi
 
 # Note: Custom user configuration is loaded at the end of this file
 
@@ -240,7 +198,7 @@ if [[ ${OSTYP:-} == openwrt ]]; then
             cat /etc/group
         fi
     }
-    export -f getent
+    #export -f getent  # Disabled to prevent systemd warnings
 elif [[ ${OSTYP:-} == alpine ]]; then
     sc() {
         # Convert systemd-style service@instance to OpenRC service.instance
@@ -439,12 +397,16 @@ LABEL=$(hostname)
 # Load custom user configuration to allow overriding defaults
 [[ -f ~/.myrc ]] && . ~/.myrc
 
-# Load NetServa environment if available (for extended NSCM functionality)
-[[ -f ~/.ns/etc/netserva.sh ]] && source ~/.ns/etc/netserva.sh
 
-# Export commonly used functions
-export -f chktime f getdb getuser getusers go2 grepuser sc sx health pstree_service
-export -f detect_os shpull shpush
+# Function exports disabled to prevent systemd warnings about BASH_FUNC_*%% variables
+# Functions are still available in the current shell but won't pollute child processes
+# If you need these functions in subshells, source this file again or use 'bash -c'
+#export -f chktime f getdb getuser getusers go2 grepuser sc health pstree_service
+#export -f detect_os shpull shpush
+
+# Selectively export only critical functions if needed
+# Uncomment the line below to export sx for use in all subshells:
+#export -f sx
 
 # Set colored prompt
 PS1="\[\033[1;${COLOR}m\]${LABEL} \w\[\033[0m\] "
