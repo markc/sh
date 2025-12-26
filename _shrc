@@ -75,6 +75,8 @@ alias ff='fastfetch --logo none'
 alias p='ps auxxww | grep -v grep | grep'
 alias q='find -type f -print0 | xargs -0 grep '
 alias wt="curl -s -w '%{time_total}\n' -o /dev/null"
+alias shzfs='zfs list -o name,used -s used -r rpool/data'
+alias mysql='mariadb'
 
 # Notes
 alias n='echo -e "-- $(date) --\n" >> ~/.note && e +10000 ~/.note'
@@ -109,6 +111,7 @@ elif [[ $OSTYP == alpine ]]; then
 elif [[ $OSTYP == manjaro || $OSTYP == cachyos || $OSTYP == arch ]]; then
     alias edpkg=$SUDO'nano -t -x -c /etc/pacman.conf'
     alias i=$SUDO'pacman -S'
+    alias l=$SUDO'journalctl -f'
     alias lspkg=$SUDO'pacman -Qs'
     alias r=$SUDO'pacman -Rns'
     alias s=$SUDO'pacman -Ss'
@@ -119,6 +122,7 @@ else
     alias aptkey=$SUDO'apt-key adv --recv-keys --keyserver keyserver.ubuntu.com'
     alias edpkg=$SUDO'nano -t -x -c /etc/apt/sources.list'
     alias i=$SUDO'apt-get install'
+    alias l=$SUDO'journalctl -f'
     alias lspkg='dpkg --get-selections | awk "{print \$1}" | sort | grep'
     alias r=$SUDO'apt-get remove --purge'
     alias s='apt-cache search'
@@ -127,9 +131,11 @@ else
 fi
 
 alias mgrep='mlog | grep '
-alias alog='tail -f ../log/access.log'
+alias alog='tail -f /var/log/nginx/access.log'
 alias elog='tail -f /var/log/nginx/error.log'
+alias mlog='tail -f /var/log/mail.log'
 alias plog='tail -f ../log/php-errors.log'
+alias dlog='journalctl -u pdns -f'
 
 # Firewall/security aliases
 alias shblock="nft list set ip sshguard attackers | tr '\n' ' '| sed 's/.*elements = {\([^}]*\)}.*/\1\n/' | sed -r 's/\s+//g' | tr ',' '\n'"
@@ -181,7 +187,39 @@ f() {
 
 # Service control wrapper
 if [[ ${OSTYP:-} == openwrt ]]; then
-    sc() { $SUDO /etc/init.d/$2 $1; }
+    sc() {
+        local service_name="$2"
+
+        # Handle common actions
+        case "$1" in
+        enable)
+            $SUDO /etc/init.d/"$service_name" enable
+            ;;
+        disable)
+            $SUDO /etc/init.d/"$service_name" disable
+            ;;
+        status)
+            $SUDO /etc/init.d/"$service_name" status
+            ;;
+        restart)
+            $SUDO /etc/init.d/"$service_name" restart
+            ;;
+        reload)
+            $SUDO /etc/init.d/"$service_name" reload
+            ;;
+        start)
+            $SUDO /etc/init.d/"$service_name" start
+            ;;
+        stop)
+            $SUDO /etc/init.d/"$service_name" stop
+            ;;
+        *)
+            # List all available init scripts
+            ls -1 /etc/init.d/ | grep -v '^README'
+            ;;
+        esac
+    }
+
     function getent {
         if [[ $1 == passwd ]]; then
             cat /etc/passwd
@@ -277,17 +315,15 @@ shpush() {
 
 # SSH with interactive shell
 sx() {
-    [[ -z $2 || $1 =~ -h ]] &&
-        echo "Usage: sx host command (host must be in ~/.ssh/config)" && return 1
+    [[ -z $2 || $1 =~ -h ]] && echo "Usage: sx host command" && return 1
     local _HOST=$1
     shift
     {
-        ssh $_HOST -q -t "bash -ci '$@'" 2>&1
+        ssh "$_HOST" -q -t "bash -ci $(printf '%q ' "$@")" 2>&1
     } | {
         while IFS= read -r line; do
-            [[ $line != *"bash: cannot set terminal process group"* ]] &&
-                [[ $line != *"bash: no job control"* ]] &&
-                echo "$line"
+            [[ $line != *"bash: cannot set terminal process group"* ]] && \
+            [[ $line != *"bash: no job control"* ]] && echo "$line"
         done
     }
 }
@@ -350,6 +386,257 @@ go2() {
     fi
 }
 
+# Show all vhosts on server (lists /srv/ directories)
+# Usage: shhost [pattern]
+shhost() {
+    if [[ -n $1 ]]; then
+        /bin/ls -1 /srv/ | grep "$1"
+    else
+        /bin/ls -1 /srv/
+    fi
+}
+
+# Show WHOIS summary with DNS and MX information
+shwho() {
+    [[ -z $1 || $1 =~ '-h' ]] && echo "Usage: shwho domain" && return 1
+
+    # Check required dependencies
+    local missing_deps=()
+    command -v whois >/dev/null 2>&1 || missing_deps+=("whois")
+    command -v dig >/dev/null 2>&1 || missing_deps+=("dig")
+    command -v grep >/dev/null 2>&1 || missing_deps+=("grep")
+    command -v awk >/dev/null 2>&1 || missing_deps+=("awk")
+    command -v sed >/dev/null 2>&1 || missing_deps+=("sed")
+    command -v tr >/dev/null 2>&1 || missing_deps+=("tr")
+
+    if [[ ${#missing_deps[@]} -gt 0 ]]; then
+        echo "Error: Missing required programs: ${missing_deps[*]}" >&2
+        echo "Please install them before using this function." >&2
+        return 1
+    fi
+
+    local domain="$1"
+
+    # Show key WHOIS information
+    whois "$domain" | grep -E "^(Registrar:|Registrar Name:|Name Server:|DNSSEC:)"
+
+    # Show domain A/AAAA records
+    echo "$domain = $(dig +short "$domain" | tr '\n' ' ')"
+
+    # Get MX records and resolve them
+    local MX=$(dig +short mx "$domain" | awk '{print $2}' | sed -e 's/\.$//')
+
+    if [[ -n $MX ]]; then
+        local IP=$(dig +short "$MX")
+        if [[ $IP ]]; then
+            echo "$MX = $IP"
+            local PTR=$(dig +short -x "$IP" | sed -e 's/\.$//')
+            [[ $PTR ]] && echo "$IP = $PTR"
+        fi
+    fi
+}
+
+# ========== DKIM MANAGEMENT ==========
+
+# Show DKIM keys - usage: shdkim [domain|--all]
+shdkim() {
+    local DKIM_DIR="/etc/opendkim/keys"
+
+    if [[ $1 == "--all" || -z $1 ]]; then
+        echo "=== DKIM Keys Available ==="
+        if [[ -d $DKIM_DIR ]]; then
+            for domain_dir in "$DKIM_DIR"/*/ ; do
+                [[ -d $domain_dir ]] || continue
+                local domain=$(basename "$domain_dir")
+                local selector="mail"
+                if [[ -f "$domain_dir/${selector}.txt" ]]; then
+                    echo "✓ $domain (selector: $selector)"
+                elif [[ -f "$domain_dir/${selector}.private" ]]; then
+                    echo "⚠ $domain (selector: $selector) - private key exists but no TXT record"
+                fi
+            done
+        else
+            echo "Error: DKIM directory not found: $DKIM_DIR"
+        fi
+    else
+        local domain="$1"
+        local selector="${2:-mail}"
+        local key_dir="$DKIM_DIR/$domain"
+
+        if [[ -f "$key_dir/${selector}.txt" ]]; then
+            # Extract record name first (before removing tabs)
+            local record_name=$(head -1 "$key_dir/${selector}.txt" | awk '{print $1}')
+
+            # Clean the value: remove formatting, keep semicolons, remove all spaces
+            local record_value=$(cat "$key_dir/${selector}.txt" | \
+                grep -v "^#" | \
+                tr -d '\t\n\r"() ' | \
+                sed -e 's/^[^v]*IN.*TXT//' -e 's/;-.*$//')
+
+            # Add domain to record name if it's just the selector
+            if [[ "$record_name" == "${selector}._domainkey" ]]; then
+                record_name="${selector}._domainkey.${domain}"
+            fi
+
+            echo "$record_name"
+            echo "$record_value"
+        else
+            echo "No match for '$domain'"
+            return 1
+        fi
+    fi
+}
+
+# Add new DKIM key - usage: adddkim <domain> [selector]
+adddkim() {
+    [[ -z $1 ]] && echo "Usage: adddkim <domain> [selector]" && return 1
+
+    local domain="$1"
+    local selector="${2:-mail}"
+    local DKIM_DIR="/etc/opendkim/keys"
+    local key_dir="$DKIM_DIR/$domain"
+
+    # Check for opendkim-genkey
+    if ! command -v opendkim-genkey >/dev/null 2>&1; then
+        echo "Error: opendkim-genkey not found. Install opendkim-tools package."
+        return 1
+    fi
+
+    echo "=== Adding DKIM for $domain ==="
+
+    # Create directory
+    $SUDO mkdir -p "$key_dir"
+
+    # Generate key
+    echo "Generating DKIM key (selector: $selector)..."
+    cd "$key_dir"
+    $SUDO opendkim-genkey -b 2048 -d "$domain" -s "$selector"
+    $SUDO mv "${selector}.txt" "${selector}.txt"
+    $SUDO mv "${selector}.private" "${selector}.private"
+
+    # Set permissions
+    $SUDO chown -R opendkim:opendkim "$key_dir"
+    $SUDO chmod 700 "$key_dir"
+    $SUDO chmod 600 "$key_dir/${selector}.private"
+    $SUDO chmod 600 "$key_dir/${selector}.txt"
+
+    # Generate random key ID
+    local key_id=$(date +%s)
+
+    # Update KeyTable
+    echo "Updating KeyTable..."
+    if ! grep -q "^${key_id}" /etc/opendkim/KeyTable 2>/dev/null; then
+        echo "${key_id}     ${domain}:${selector}:/etc/opendkim/keys/${domain}/${selector}.private" | $SUDO tee -a /etc/opendkim/KeyTable >/dev/null
+    fi
+
+    # Update SigningTable
+    echo "Updating SigningTable..."
+    if ! grep -q "*@${domain}" /etc/opendkim/SigningTable 2>/dev/null; then
+        echo "*@${domain}       ${key_id}" | $SUDO tee -a /etc/opendkim/SigningTable >/dev/null
+    fi
+
+    # Update TrustedHosts
+    echo "Updating TrustedHosts..."
+    if ! grep -q "^${domain}$" /etc/opendkim/TrustedHosts 2>/dev/null; then
+        {
+            echo "${domain}"
+            echo "*.${domain}"
+        } | $SUDO tee -a /etc/opendkim/TrustedHosts >/dev/null
+    fi
+
+    # Reload OpenDKIM
+    echo "Reloading OpenDKIM..."
+    sc reload opendkim
+
+    echo
+    echo "✓ DKIM key added for $domain"
+    echo
+    echo "Add this DNS TXT record:"
+    cat "$key_dir/${selector}.txt"
+}
+
+# Change/rotate DKIM key - usage: chdkim <domain> [selector]
+chdkim() {
+    [[ -z $1 ]] && echo "Usage: chdkim <domain> [selector]" && return 1
+
+    local domain="$1"
+    local selector="${2:-mail}"
+    local DKIM_DIR="/etc/opendkim/keys"
+    local key_dir="$DKIM_DIR/$domain"
+
+    echo "=== Rotating DKIM for $domain ==="
+
+    # Backup old key
+    if [[ -f "$key_dir/${selector}.private" ]]; then
+        local backup_date=$(date +%Y%m%d-%H%M%S)
+        echo "Backing up old key to ${selector}.private.${backup_date}"
+        $SUDO mv "$key_dir/${selector}.private" "$key_dir/${selector}.private.${backup_date}"
+        $SUDO mv "$key_dir/${selector}.txt" "$key_dir/${selector}.txt.${backup_date}"
+    fi
+
+    # Generate new key
+    echo "Generating new DKIM key..."
+    cd "$key_dir"
+    $SUDO opendkim-genkey -b 2048 -d "$domain" -s "$selector"
+    $SUDO mv "${selector}.txt" "${selector}.txt"
+    $SUDO mv "${selector}.private" "${selector}.private"
+
+    # Set permissions
+    $SUDO chown -R opendkim:opendkim "$key_dir"
+    $SUDO chmod 700 "$key_dir"
+    $SUDO chmod 600 "$key_dir/${selector}.private"
+    $SUDO chmod 600 "$key_dir/${selector}.txt"
+
+    # Reload OpenDKIM
+    echo "Reloading OpenDKIM..."
+    sc reload opendkim
+
+    echo
+    echo "✓ DKIM key rotated for $domain"
+    echo
+    echo "Update DNS TXT record with:"
+    cat "$key_dir/${selector}.txt"
+}
+
+# Delete DKIM key - usage: deldkim <domain>
+deldkim() {
+    [[ -z $1 ]] && echo "Usage: deldkim <domain>" && return 1
+
+    local domain="$1"
+    local DKIM_DIR="/etc/opendkim/keys"
+    local key_dir="$DKIM_DIR/$domain"
+
+    echo "=== Removing DKIM for $domain ==="
+
+    # Remove from KeyTable
+    echo "Removing from KeyTable..."
+    $SUDO sed -i "/[[:space:]]${domain}:mail:/d" /etc/opendkim/KeyTable
+
+    # Remove from SigningTable
+    echo "Removing from SigningTable..."
+    $SUDO sed -i "/\*@${domain}[[:space:]]/d" /etc/opendkim/SigningTable
+
+    # Remove from TrustedHosts
+    echo "Removing from TrustedHosts..."
+    $SUDO sed -i "/^${domain}$/d" /etc/opendkim/TrustedHosts
+    $SUDO sed -i "/^\*\.${domain}$/d" /etc/opendkim/TrustedHosts
+
+    # Archive the key directory
+    if [[ -d "$key_dir" ]]; then
+        local archive_date=$(date +%Y%m%d-%H%M%S)
+        echo "Archiving key directory to ${key_dir}.deleted.${archive_date}"
+        $SUDO mv "$key_dir" "${key_dir}.deleted.${archive_date}"
+    fi
+
+    # Reload OpenDKIM
+    echo "Reloading OpenDKIM..."
+    sc reload opendkim
+
+    echo
+    echo "✓ DKIM removed for $domain"
+    echo "  Remove DNS TXT record: ${domain}._domainkey.${domain}"
+}
+
 # Set baseline PATH for all environments (usr-merge compatible)
 # Modern systems use symlinks: /bin -> /usr/bin, /sbin -> /usr/sbin
 # NetServa Platform (_nsrc) will prepend ~/.ns/bin if it exists on workstations
@@ -381,3 +668,39 @@ LABEL=$(hostname 2>/dev/null || cat /proc/sys/kernel/hostname 2>/dev/null || ech
 # Set colored prompt
 PS1="\[\033[1;${COLOR}m\]${LABEL} \w\[\033[0m\] "
 export PS1
+
+
+# Rex function - execute remote commands without escaping hell
+rex() {
+    (cd ~/.ns && php artisan remote:exec "$@")
+}
+
+# Generate secure password (default 16 chars, guarantees 1 upper/lower/digit, Oo→0)
+newpw() {
+    local l=${1:-16}
+    (LC_ALL=C tr -dc 'A-Z' </dev/urandom | head -c 1
+     LC_ALL=C tr -dc 'a-z' </dev/urandom | head -c 1
+     LC_ALL=C tr -dc '0-9' </dev/urandom | head -c 1
+     LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c $((l-3))
+    ) | fold -w1 | shuf | tr -d '\n' | tr 'Oo' '00'; echo
+}
+
+# Create new user (username, password, comment, homedir)
+newuser() {
+    [[ -z $1 ]] && echo "Usage: newuser <username> [password] [comment] [homedir]" && return 1
+    local user=$1 pass=${2:-$(newpw)} comment=$3 homedir=$4 opts=()
+    [[ -n $comment ]] && opts+=(-c "$comment")
+    [[ -n $homedir ]] && opts+=(-d "$homedir")
+    useradd -m "${opts[@]}" "$user" && echo "$user:$pass" | chpasswd && echo "✅ User: $user | Pass: $pass"
+}
+
+# Setup chroot SFTP for existing user (for backup servers)
+chrootuser() {
+    [[ -z $1 ]] && echo "Usage: chrootuser <username>" && return 1
+    local user=$1 home=$(getent passwd "$user" | cut -d: -f6)
+    [[ -z $home ]] && echo "❌ User $user not found" && return 1
+    chown root:root "$home" && chmod 755 "$home" && \
+    mkdir -p "$home/data" && chown "$user:$user" "$home/data" && \
+    echo "✅ Chroot setup: $home (data/ writable by $user)"
+}
+export PATH="$HOME/.rc:$PATH"
