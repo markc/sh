@@ -1,10 +1,9 @@
 #!/bin/bash
 # Stats - Unified Usage Reporting CLI
-# /usr/local/bin/stats
 
 set -e
 
-STATS_LIB="/usr/local/lib/serverstats"
+STATS_LIB="${STATS_LIB:-$HOME/.rc/stats.d}"
 source "$STATS_LIB/lib/common.sh"
 
 VERSION="1.1.0"

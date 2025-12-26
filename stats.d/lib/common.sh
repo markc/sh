@@ -2,10 +2,10 @@
 # ServerStats - Common library functions
 # /usr/local/lib/serverstats/lib/common.sh
 
-# Configuration
-export STATS_DB="/var/lib/serverstats/stats.db"
-export STATS_LIB="/usr/local/lib/serverstats"
-export STATS_LOG="/var/log/serverstats.log"
+# Configuration (STATS_LIB can be set by wrapper)
+export STATS_DB="/var/lib/sqlite/stats.db"
+export STATS_LIB="${STATS_LIB:-$HOME/.rc/stats.d}"
+export STATS_LOG="/var/log/stats.log"
 export REPORT_EMAIL="markc@renta.net"
 export HOSTNAME=$(hostname -f)
 export TZ="Australia/Brisbane"
