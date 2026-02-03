@@ -105,10 +105,9 @@ sync() {
     rsync -avz --exclude='.git' ~/.rc/ "$ssh_host":~/.rc/
 
     if [[ $? -eq 0 ]]; then
-        echo "✅ Sync completed successfully"
-        echo "ℹ️  Note: ~/.myrc is machine-local and was not synced"
-        echo "   Run: ssh $ssh_host \"~/.rc/rcm init\""
-        echo "   to create remote's own ~/.myrc if needed"
+        echo "✅ Sync completed"
+        echo "🔧 Running init on $ssh_host..."
+        ssh "$ssh_host" "~/.rc/rcm init"
     else
         echo "❌ Sync failed"
         exit 1
