@@ -10,6 +10,144 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Help function
 help() {
     case $1 in
+    a | all)
+        cat <<'EOF'
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                           SSHM - SSH Manager                                 ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+WHAT IS SSHM?
+  A tool to manage SSH connections. Instead of remembering IP addresses and
+  typing long ssh commands, you save servers once and connect by nickname.
+
+FIRST TIME SETUP
+  sshm init              # Run once to set up ~/.ssh folders
+
+────────────────────────────────────────────────────────────────────────────────
+QUICK START - Connect to a Server
+────────────────────────────────────────────────────────────────────────────────
+
+  Step 1: Save the server
+    sshm create myserver 192.168.1.100
+
+  Step 2: Connect (use regular ssh with the nickname)
+    ssh myserver
+
+  That's it! The server is saved forever until you delete it.
+
+────────────────────────────────────────────────────────────────────────────────
+MANAGING SERVERS (HOSTS)
+────────────────────────────────────────────────────────────────────────────────
+
+  CREATE - Save a new server
+    sshm create NAME IP                     # Basic (port 22, user root)
+    sshm create NAME IP PORT                # Custom port
+    sshm create NAME IP PORT USER           # Custom port and user
+    sshm create NAME IP PORT USER KEYFILE   # With SSH key
+
+    Examples:
+      sshm create web1 10.0.0.5             # → ssh web1
+      sshm create db 10.0.0.6 2222          # → ssh db (port 2222)
+      sshm create pi 192.168.1.50 22 pi     # → ssh pi (user: pi)
+
+  LIST - See all saved servers
+    sshm list                               # Shows: name, IP, port, user
+
+  READ - Show details for one server
+    sshm read NAME                          # Show saved config values
+
+  UPDATE - Edit a server's settings
+    sshm update NAME                        # Opens in text editor (nano)
+
+  DELETE - Remove a saved server
+    sshm delete NAME                        # Permanently removes config
+
+  TEST - Check if servers are reachable
+    sshm test                               # Test all servers
+    sshm test NAME                          # Test one server
+    sshm test --delete-failed               # Test all, remove dead ones
+
+────────────────────────────────────────────────────────────────────────────────
+MANAGING SSH KEYS (Optional but recommended)
+────────────────────────────────────────────────────────────────────────────────
+
+  SSH keys let you log in without typing a password every time.
+
+  CREATE A KEY
+    sshm key_create KEYNAME                 # Creates keypair (no password)
+    sshm key_create KEYNAME "My Key"        # With a comment/label
+    sshm key_create KEYNAME "My Key" "pw"   # With passphrase protection
+
+    Example:
+      sshm key_create work                  # Creates ~/.ssh/keys/work
+
+  LIST KEYS
+    sshm key_list                           # Show all your keys
+
+  SHOW PUBLIC KEY (to copy to servers)
+    sshm key_read KEYNAME                   # Displays the public key
+
+  DELETE A KEY
+    sshm key_delete KEYNAME                 # Removes both private & public
+
+  USING A KEY WITH A SERVER
+    sshm create web 10.0.0.5 22 root ~/.ssh/keys/work
+
+    Then copy your public key to the server:
+      ssh-copy-id -i ~/.ssh/keys/work.pub root@10.0.0.5
+
+────────────────────────────────────────────────────────────────────────────────
+UTILITY COMMANDS
+────────────────────────────────────────────────────────────────────────────────
+
+  sshm init              # Create SSH folder structure (run once)
+  sshm perms             # Fix file permissions if SSH complains
+
+────────────────────────────────────────────────────────────────────────────────
+SHORTHAND COMMANDS
+────────────────────────────────────────────────────────────────────────────────
+
+  c  = create       kc = key_create      i = init
+  r  = read         kr = key_read        p = perms
+  u  = update       kd = key_delete      t = test
+  d  = delete       kl = key_list        h = help
+  l  = list                              ha = help all (this page)
+
+────────────────────────────────────────────────────────────────────────────────
+EXAMPLES - Common Workflows
+────────────────────────────────────────────────────────────────────────────────
+
+  # Set up SSH for the first time
+  sshm init
+
+  # Add a work server and connect
+  sshm create work 203.0.113.50
+  ssh work
+
+  # Add a Raspberry Pi on the local network
+  sshm create pi 192.168.1.100 22 pi
+  ssh pi
+
+  # Set up passwordless login with keys
+  sshm key_create home
+  sshm create server 10.0.0.1 22 root ~/.ssh/keys/home
+  ssh-copy-id -i ~/.ssh/keys/home.pub root@10.0.0.1
+  ssh server  # Now works without password!
+
+  # Clean up unreachable servers
+  sshm test --delete-failed
+
+────────────────────────────────────────────────────────────────────────────────
+WHERE FILES ARE STORED
+────────────────────────────────────────────────────────────────────────────────
+
+  ~/.ssh/hosts/NAME      Server configs (one file per server)
+  ~/.ssh/keys/NAME       SSH private keys
+  ~/.ssh/keys/NAME.pub   SSH public keys
+  ~/.ssh/config          Main SSH config (auto-loads hosts/*)
+
+EOF
+        ;;
     c | create)
         echo "Create a new SSH Host file in ~/.ssh/hosts/"
         echo "Usage: sshm create <Name> <Host> [Port] [User] [Skey]"
@@ -68,6 +206,8 @@ help() {
     *)
         echo "Usage: sshm <cmd> [args]"
         echo "Commands: create, read, update, delete, list, test, key_create, key_read, key_update, key_delete, key_list, init, perms, help"
+        echo ""
+        echo "For detailed help with examples: sshm ha"
         ;;
     esac
 }
@@ -401,6 +541,7 @@ p | perms) perms ;;
 start) start ;;
 stop) stop ;;
 h | help) help $2 ;;
+ha) help all ;;
 *) echo "Unknown command '$1'" && help ;;
 esac
 
