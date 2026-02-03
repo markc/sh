@@ -110,14 +110,19 @@ elif [[ $OSTYP == alpine ]]; then
     alias u=$SUDO'apk update && '$SUDO'apk upgrade'
 elif [[ $OSTYP == manjaro || $OSTYP == cachyos || $OSTYP == arch ]]; then
     alias edpkg=$SUDO'nano -t -x -c /etc/pacman.conf'
-    alias i=$SUDO'pacman -S'
     alias l=$SUDO'journalctl -f'
-    alias lspkg=$SUDO'pacman -Qs'
-    alias r=$SUDO'pacman -Rns'
-    alias s=$SUDO'pacman -Ss'
-    alias u=$SUDO'pacman -Syu --noconfirm ; '$SUDO' pacman -Scc --noconfirm'
-    alias uu='yay -Syyuu --noconfirm ; yay -Scc --noconfirm ; '$SUDO' pacman -Scc --noconfirm'
+    alias lspkg='paru -Qs'
     alias ram='ps -eo rss:10,vsz:10,%cpu:5,cmd --sort=rss | grep -v "^\s\+0" | cut -c -79'
+
+    alias u='$SUDO pacman -Syu --noconfirm'               # official repos only (safe fallback)
+    alias ua='paru -Sua --noconfirm --skipreview'         # AUR only
+    alias uu='paru -Syu --noconfirm --skipreview'         # everything
+    alias uc='paru -Syu --noconfirm --skipreview && paru -Scc --noconfirm && paru -c --noconfirm'  # everything + aggressive cleanup
+
+    alias i='paru -S --skipreview --noconfirm'           # install
+    alias r='paru -Rns'                                  # remove (with deps and config)
+    alias s='paru -Ss'                                   # search
+
 else
     alias aptkey=$SUDO'apt-key adv --recv-keys --keyserver keyserver.ubuntu.com'
     alias edpkg=$SUDO'nano -t -x -c /etc/apt/sources.list'
@@ -322,8 +327,8 @@ sx() {
         ssh "$_HOST" -q -t "bash -ci $(printf '%q ' "$@")" 2>&1
     } | {
         while IFS= read -r line; do
-            [[ $line != *"bash: cannot set terminal process group"* ]] && \
-            [[ $line != *"bash: no job control"* ]] && echo "$line"
+            [[ $line != *"cannot set terminal process group"* ]] && \
+            [[ $line != *"no job control"* ]] && echo "$line"
         done
     }
 }
