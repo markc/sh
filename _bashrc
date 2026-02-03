@@ -1,0 +1,2 @@
+# Source RC shell enhancements
+[ -f ~/.rc/_shrc ] && . ~/.rc/_shrc

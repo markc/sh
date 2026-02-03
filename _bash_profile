@@ -1,0 +1,5 @@
+# Source global profile first
+[ -f /etc/profile ] && . /etc/profile
+
+# Source .bashrc for interactive login shells
+[ -f ~/.bashrc ] && . ~/.bashrc

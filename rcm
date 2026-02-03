@@ -13,8 +13,9 @@ help() {
     i | init)
         echo "Initialize shell configuration"
         echo "Usage: rcm init"
+        echo "  - Creates ~/.bash_profile from template if missing"
+        echo "  - Creates ~/.bashrc from template if missing"
         echo "  - Creates ~/.myrc from template if missing"
-        echo "  - Adds sourcing line to ~/.bashrc if not present"
         ;;
     s | sync)
         echo "Sync ~/.rc directory to remote host"
@@ -35,39 +36,50 @@ help() {
 
 # Initialize RC structure
 init() {
+    # Create ~/.bash_profile from template if missing
+    if [[ ! -f ~/.bash_profile ]]; then
+        if [[ -f ~/.rc/_bash_profile ]]; then
+            cp ~/.rc/_bash_profile ~/.bash_profile
+            echo "✅ Created ~/.bash_profile"
+        else
+            echo "⚠️  Template ~/.rc/_bash_profile not found"
+        fi
+    else
+        echo "ℹ️  ~/.bash_profile already exists"
+    fi
+
+    # Create ~/.bashrc from template if missing
+    if [[ ! -f ~/.bashrc ]]; then
+        if [[ -f ~/.rc/_bashrc ]]; then
+            cp ~/.rc/_bashrc ~/.bashrc
+            echo "✅ Created ~/.bashrc"
+        else
+            echo "⚠️  Template ~/.rc/_bashrc not found"
+        fi
+    else
+        # Ensure existing .bashrc sources ~/.rc/_shrc
+        local source_line='[ -f ~/.rc/_shrc ] && . ~/.rc/_shrc'
+        if ! grep -qF "$source_line" ~/.bashrc; then
+            echo "" >> ~/.bashrc
+            echo "# Source RC shell enhancements" >> ~/.bashrc
+            echo "$source_line" >> ~/.bashrc
+            echo "✅ Added sourcing line to ~/.bashrc"
+        else
+            echo "ℹ️  ~/.bashrc already sources ~/.rc/_shrc"
+        fi
+    fi
+
     # Create user customization file from template if missing
     if [[ ! -f ~/.myrc ]]; then
         if [[ -f ~/.rc/_myrc.example ]]; then
             cp ~/.rc/_myrc.example ~/.myrc
-            # Add header explaining purpose
-            sed -i '1i# Personal configuration - machine-local, never synced or versioned\n# Sourced by ~/.rc/_shrc after base environment is set up\n' ~/.myrc
             echo "✅ Created ~/.myrc from template"
             echo "ℹ️  Edit ~/.myrc to add your personal customizations"
         else
-            echo "❌ Error: Template ~/.rc/_myrc.example not found"
-            exit 1
+            echo "⚠️  Template ~/.rc/_myrc.example not found"
         fi
     else
         echo "ℹ️  ~/.myrc already exists"
-    fi
-
-    # Add sourcing line to ~/.bashrc if not already present
-    local bashrc="$HOME/.bashrc"
-    local source_line='[ -f ~/.rc/_shrc ] && . ~/.rc/_shrc'
-
-    if [[ -f "$bashrc" ]]; then
-        if ! grep -qF "$source_line" "$bashrc"; then
-            echo "" >>"$bashrc"
-            echo "# Source RC shell enhancements" >>"$bashrc"
-            echo "$source_line" >>"$bashrc"
-            echo "✅ Added sourcing line to ~/.bashrc"
-            echo "ℹ️  Run: source ~/.bashrc (or restart shell)"
-        else
-            echo "ℹ️  ~/.bashrc already sources ~/.rc/_shrc"
-        fi
-    else
-        echo "⚠️  ~/.bashrc not found, please add manually:"
-        echo "   $source_line"
     fi
 
     echo "✅ RC structure initialized"
