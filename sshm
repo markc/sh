@@ -22,28 +22,28 @@ QUICK START
   ssh myserver                     # Connect!
 
 HOST COMMANDS
-  sshm create NAME IP [PORT] [USER] [KEYFILE]
-      sshm create web 10.0.0.5                    # Defaults: port 22, user root
-      sshm create db 10.0.0.6 2222 admin          # Custom port & user
-      sshm create pi 192.168.1.50 22 pi ~/.ssh/keys/pi
+  create NAME IP [PORT] [USER] [KEYFILE]   # Save a server (defaults: 22, root)
+  list                                      # Show all saved hosts
+  read NAME                                 # Show host config
+  update NAME                               # Edit in nano
+  delete NAME                               # Remove host
+  test [NAME] [--delete-failed]             # Test connectivity
 
-  sshm list                        # Show all saved hosts
-  sshm read NAME                   # Show host config
-  sshm update NAME                 # Edit in nano
-  sshm delete NAME                 # Remove host
-  sshm test [NAME] [--delete-failed]   # Test connectivity
+  Examples:
+    sshm create web 10.0.0.5                # Basic - port 22, user root
+    sshm create db 10.0.0.6 2222 admin      # Custom port and user
+    sshm create pi 192.168.1.50 22 pi ~/.ssh/keys/pi   # With key
 
 KEY COMMANDS (for passwordless login)
-  sshm key_create NAME [COMMENT] [PASSPHRASE]
-      sshm key_create work                        # No passphrase
-      sshm key_create work "Work laptop" "pw123"  # With passphrase
+  key_create NAME [COMMENT] [PASSPHRASE]    # Create Ed25519 keypair
+  key_list                                  # Show all keys
+  key_read NAME                             # Show public key
+  key_delete NAME                           # Remove keypair
 
-  sshm key_list                    # Show all keys
-  sshm key_read NAME               # Show public key (for copying)
-  sshm key_delete NAME             # Remove keypair
-
-  To use a key: sshm create web 10.0.0.5 22 root ~/.ssh/keys/work
-  Copy to server: ssh-copy-id -i ~/.ssh/keys/work.pub root@10.0.0.5
+  Examples:
+    sshm key_create work                    # No passphrase
+    sshm key_create work "Laptop" "pw123"   # With passphrase
+    ssh-copy-id -i ~/.ssh/keys/work.pub user@server   # Copy to server
 
 UTILITIES
   sshm init       # Create ~/.ssh structure
