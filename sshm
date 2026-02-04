@@ -46,12 +46,12 @@ KEY COMMANDS (for passwordless login)
     ssh-copy-id -i ~/.ssh/keys/work.pub user@server   # Copy to server
 
 UTILITIES
-  sshm init       # Create ~/.ssh structure
-  sshm perms      # Fix permissions
+  sshm init    # Create ~/.ssh structure
+  sshm perms   # Fix permissions
 
 SERVICE (sudo)
-  sshm start      # Start sshd (no auto-boot)
-  sshm stop       # Stop sshd, disable, drop connections
+  sshm start   # Start sshd (no auto-boot)
+  sshm stop    # Stop sshd, disable, drop INCOMING connections
 
 SHORTCUTS
   c=create  r=read  u=update  d=delete  l=list  t=test
