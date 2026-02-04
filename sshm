@@ -17,41 +17,41 @@ SSHM - SSH Manager
 Save servers by nickname, connect with: ssh nickname
 
 QUICK START
-  sshm init                        # First time setup (run once)
-  sshm create myserver 10.0.0.5    # Save a server
-  ssh myserver                     # Connect!
+  sshm init                                        # First time setup (once)
+  sshm create myserver 10.0.0.5                    # Save a server
+  ssh myserver                                     # Connect!
 
 HOST COMMANDS
-  create NAME IP [PORT] [USER] [KEYFILE]   # Save a server (defaults: 22, root)
-  list                                      # Show all saved hosts
-  read NAME                                 # Show host config
-  update NAME                               # Edit in nano
-  delete NAME                               # Remove host
-  test [NAME] [--delete-failed]             # Test connectivity
+  create NAME IP [PORT] [USER] [KEYFILE]           # Save host (defaults: 22, root)
+  list                                             # Show all saved hosts
+  read NAME                                        # Show host config
+  update NAME                                      # Edit in nano
+  delete NAME                                      # Remove host
+  test [NAME] [--delete-failed]                    # Test connectivity
 
   Examples:
-    sshm create web 10.0.0.5                # Basic - port 22, user root
-    sshm create db 10.0.0.6 2222 admin      # Custom port and user
-    sshm create pi 192.168.1.50 22 pi ~/.ssh/keys/pi   # With key
+    sshm create web 10.0.0.5                       # Basic - port 22, user root
+    sshm create db 10.0.0.6 2222 admin             # Custom port and user
+    sshm create pi 192.168.1.50 22 pi ~/k/pi       # With key
 
 KEY COMMANDS (for passwordless login)
-  key_create NAME [COMMENT] [PASSPHRASE]    # Create Ed25519 keypair
-  key_list                                  # Show all keys
-  key_read NAME                             # Show public key
-  key_delete NAME                           # Remove keypair
+  key_create NAME [COMMENT] [PASSPHRASE]           # Create Ed25519 keypair
+  key_list                                         # Show all keys
+  key_read NAME                                    # Show public key
+  key_delete NAME                                  # Remove keypair
 
   Examples:
-    sshm key_create work                    # No passphrase
-    sshm key_create work "Laptop" "pw123"   # With passphrase
-    ssh-copy-id -i ~/.ssh/keys/work.pub user@server   # Copy to server
+    sshm key_create work                           # No passphrase
+    sshm key_create work "Laptop" "pw123"          # With passphrase
+    ssh-copy-id -i ~/.ssh/keys/work.pub u@server   # Copy key to server
 
 UTILITIES
-  sshm init    # Create ~/.ssh structure
-  sshm perms   # Fix permissions
+  sshm init                                        # Create ~/.ssh structure
+  sshm perms                                       # Fix permissions
 
 SERVICE (sudo)
-  sshm start   # Start sshd (no auto-boot)
-  sshm stop    # Stop sshd, disable, drop INCOMING connections
+  sshm start                                       # Start sshd (no auto-boot)
+  sshm stop                                        # Stop, disable, drop INCOMING
 
 SHORTCUTS
   c=create  r=read  u=update  d=delete  l=list  t=test
@@ -126,10 +126,20 @@ EOF
         echo "Usage: sshm stop"
         ;;
     *)
-        echo "Usage: sshm <cmd> [args]"
-        echo "Commands: create, read, update, delete, list, test, key_create, key_read, key_update, key_delete, key_list, init, perms, start, stop, help"
-        echo ""
-        echo "For detailed help with examples: sshm ha"
+        cat <<'EOF'
+Usage: sshm <cmd> [args]
+
+  c  = create        kc = key_create
+  r  = read          kr = key_read
+  u  = update        kd = key_delete
+  d  = delete        kl = key_list
+  l  = list          i  = init
+  t  = test          p  = perms
+  h  = help          ha = help all
+  start              stop
+
+For detailed help: sshm ha
+EOF
         ;;
     esac
 }
