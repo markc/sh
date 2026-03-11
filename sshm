@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Created: 20230702 - Updated: 20251018
+# Created: 20230702 - Updated: 20260311
 # Copyright (C) 1995-2025 Mark Constable <mc@netserva.org> (MIT License)
 # SSH Manager - Manages ~/.ssh directory (hosts, keys, config)
 # Source shell environment
@@ -160,21 +160,32 @@ create() {
 
 show() {
     local name=$1
-    [[ -f ~/.ssh/hosts/$name ]] && cat ~/.ssh/hosts/$name | awk '{print $2}' || echo "Notice: ~/.ssh/hosts/'$name' does not exist (254)" && exit 254
+    if [[ -f ~/.ssh/hosts/$name ]]; then
+        awk '{print $2}' ~/.ssh/hosts/$name
+    else
+        echo "Notice: ~/.ssh/hosts/'$name' does not exist"
+        exit 254
+    fi
 }
 
 update() {
     local name=$1
-    [[ -f ~/.ssh/hosts/$name ]] && nano -t -x -c ~/.ssh/hosts/$name || echo "Notice: ~/.ssh/hosts/'$name' does not exist (254)" && exit 254
+    if [[ -f ~/.ssh/hosts/$name ]]; then
+        nano -t -x -c ~/.ssh/hosts/$name
+    else
+        echo "Notice: ~/.ssh/hosts/'$name' does not exist"
+        exit 254
+    fi
 }
 
 delete() {
     local name=$1
     if [[ -f ~/.ssh/hosts/$name ]]; then
         rm ~/.ssh/hosts/$name
-        echo "Removed: SSH host '$name' (251)" && exit 251
+        echo "Removed: SSH host '$name'"
     else
-        echo "Error: SSH host '$name' does not exist (255)" && exit 255
+        echo "Error: SSH host '$name' does not exist"
+        exit 255
     fi
 }
 
@@ -198,20 +209,35 @@ key_create() {
     local name=$1 comment=${2:-"$(hostname)@lan"} password=$3
 
     if [[ -f ~/.ssh/keys/$name ]]; then
-        echo "Warning: SSH Key '~/.ssh/keys/$name' already exists" && exit 254
+        echo "Warning: SSH Key '~/.ssh/keys/$name' already exists"
+        exit 254
     fi
 
-    ssh-keygen -o -a 100 -t ed25519 -f ~/.ssh/keys/$name -C "$comment" -N "$password" || echo "Error: SSH key '$name' not created" && exit 254
+    if ! ssh-keygen -o -a 100 -t ed25519 -f ~/.ssh/keys/$name -C "$comment" -N "$password"; then
+        echo "Error: SSH key '$name' not created"
+        exit 254
+    fi
 }
 
 key_read() {
     local name=$1
-    [[ -f ~/.ssh/keys/$name.pub ]] && cat ~/.ssh/keys/$name.pub || echo "Warning: '$name' key does not exist (254)" && exit 254
+    if [[ -f ~/.ssh/keys/$name.pub ]]; then
+        cat ~/.ssh/keys/$name.pub
+    else
+        echo "Warning: '$name' key does not exist"
+        exit 254
+    fi
 }
 
 key_delete() {
     local name=$1
-    [[ -f ~/.ssh/keys/$name ]] && rm ~/.ssh/keys/$name ~/.ssh/keys/$name.pub && echo "Success: removed ~/.ssh/keys/$name and ~/.ssh/keys/$name.pub" || echo "Error: ~/.ssh/keys/$name does not exist" && exit 255
+    if [[ -f ~/.ssh/keys/$name ]]; then
+        rm ~/.ssh/keys/$name ~/.ssh/keys/$name.pub
+        echo "Success: removed ~/.ssh/keys/$name and ~/.ssh/keys/$name.pub"
+    else
+        echo "Error: ~/.ssh/keys/$name does not exist"
+        exit 255
+    fi
 }
 
 key_list() {

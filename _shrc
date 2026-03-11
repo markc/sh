@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
-# Created: 20150101 - Updated: 20250804
+# Created: 20150101 - Updated: 20260311
 # Copyright (C) 1995-2025 Mark Constable <mc@netserva.org> (MIT License)
 #
-# Shell resource configuration - aliases and functions
-# This file contains useful aliases and bash functions extracted from
-# the NetServa management system. Source this in your ~/.bashrc:
-# [[ -f ~/.rc/shrc.sh ]] && . ~/.rc/shrc.sh
+# Shell resource configuration — requires bash (not ash/dash/sh)
+# Source this in your ~/.bashrc: [[ -f ~/.rc/_shrc ]] && source ~/.rc/_shrc
+# Optional modules in _shrc.d/ can be loaded from ~/.myrc
+
+# Requires bash — fail clearly if sourced from ash/dash/sh
+if [ -z "$BASH_VERSION" ]; then
+    echo "~/.rc/_shrc requires bash (install with: apk add bash / opkg install bash)" >&2
+    return 2>/dev/null || exit 1
+fi
 
 # Enable alias expansion in non-interactive shells (required for BASH_ENV)
 shopt -s expand_aliases 2>/dev/null
@@ -55,8 +60,6 @@ unalias sudo 2>/dev/null || true
 SUDO=$([[ $(id -u) -gt 0 ]] && echo '/usr/bin/sudo ')
 export SUDO
 
-# Note: Custom user configuration is loaded at the end of this file
-
 # ========== ALIASES ==========
 
 # Navigation and file management
@@ -75,17 +78,16 @@ alias ff='fastfetch --logo none'
 alias p='ps auxxww | grep -v grep | grep'
 alias q='find -type f -print0 | xargs -0 grep '
 alias wt="curl -s -w '%{time_total}\n' -o /dev/null"
-alias shzfs='zfs list -o name,used -s used -r rpool/data'
-alias mysql='mariadb'
 
 # Notes
 alias n='echo -e "-- $(date) --\n" >> ~/.note && e +10000 ~/.note'
 alias sn='[ -f ~/.note ] && cat ~/.note'
+alias shortname="n\$(tr -d : </sys/class/net/e*/address|head -c12|tail -c5)"
 
 # Help and configuration
 alias ?='bash ~/.help'
 alias eh='e ~/.help'
-alias es='e ~/.myrc && source ~/.rc/_shrc && echo "✅ Reloaded: _shrc → _myrc → _nsrc"'
+alias es='e ~/.myrc && source ~/.rc/_shrc && echo "✅ Reloaded: _shrc → _myrc"'
 alias m='bash ~/.menu'
 
 # Package management aliases based on OS type
@@ -114,15 +116,14 @@ elif [[ $OSTYP == manjaro || $OSTYP == cachyos || $OSTYP == arch ]]; then
     alias lspkg='paru -Qs'
     alias ram='ps -eo rss:10,vsz:10,%cpu:5,cmd --sort=rss | grep -v "^\s\+0" | cut -c -79'
 
-    alias u='$SUDO pacman -Syu --noconfirm'               # official repos only (safe fallback)
+    alias u='$SUDO pacman -Syu --noconfirm'               # official repos only
     alias ua='paru -Sua --noconfirm --skipreview'         # AUR only
     alias uu='paru -Syu --noconfirm --skipreview'         # everything
-    alias uc='paru -Syu --noconfirm --skipreview && paru -Scc --noconfirm && paru -c --noconfirm'  # everything + aggressive cleanup
+    alias uc='paru -Syu --noconfirm --skipreview && paru -Scc --noconfirm && paru -c --noconfirm'
 
-    alias i='paru -S --skipreview --noconfirm'           # install
-    alias r='paru -Rns'                                  # remove (with deps and config)
-    alias s='paru -Ss'                                   # search
-
+    alias i='paru -S --skipreview --noconfirm'
+    alias r='paru -Rns'
+    alias s='paru -Ss'
 else
     alias aptkey=$SUDO'apt-key adv --recv-keys --keyserver keyserver.ubuntu.com'
     alias edpkg=$SUDO'nano -t -x -c /etc/apt/sources.list'
@@ -135,49 +136,24 @@ else
     alias ram='ps -eo rss:10,vsz:10,%cpu:5,cmd --sort=rss | grep -v "^\s\+0" | cut -c -79'
 fi
 
-alias mgrep='mlog | grep '
-alias alog='tail -f /var/log/nginx/access.log'
-alias elog='tail -f /var/log/nginx/error.log'
-alias mlog='tail -f /var/log/mail.log'
-alias plog='tail -f ../log/php-errors.log'
-alias dlog='journalctl -u pdns -f'
-
-# Firewall/security aliases
-alias shblock="nft list set ip sshguard attackers | tr '\n' ' '| sed 's/.*elements = {\([^}]*\)}.*/\1\n/' | sed -r 's/\s+//g' | tr ',' '\n'"
-alias oldblock='iptables -A INPUT -j DROP -s '
-alias oldshblock='iptables -L -n | grep ^DROP | awk '\''{print $4}'\'' | sort -n'
-alias oldunblock='iptables -D INPUT -j DROP -s '
-
-# Mail log processing
-alias maillog="journalctl -f -n 10000 | stdbuf -oL grep 'warning: header Subject:' | sed -e 's/mail .*warning: header Subject:\(.*\)/\1/' -e 's/ from .*];//' -e 's/proto=.*$//'"
-
-# Server management tools
-alias ports='ss -tuln'                       # Show listening ports
-alias procs='ps aux --sort=-%cpu | head -20' # Top CPU processes
-alias disk='df -h'                           # Disk usage human readable
-alias mem='free -h'                          # Memory usage human readable
+# Monitoring
+alias ports='ss -tuln'
+alias procs='ps aux --sort=-%cpu | head -20'
+alias disk='df -h'
+alias mem='free -h'
 alias temp='sensors 2>/dev/null || cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null'
-alias netcon='ss -tuln | grep LISTEN' # Network connections
 alias sysinfo='uname -a && uptime && free -h && df -h /'
-alias listening='netstat -tuln 2>/dev/null || ss -tuln'
-alias top10='ps aux --sort=-%cpu | head -11' # Top 10 CPU processes
 
-# Log monitoring (adjust paths for different systems)
+# Log monitoring (with fallbacks for non-systemd systems)
 alias logs='journalctl -f'
 alias syslog='tail -f /var/log/syslog 2>/dev/null || tail -f /var/log/messages 2>/dev/null || journalctl -f'
 alias authlog='tail -f /var/log/auth.log 2>/dev/null || journalctl -f -u ssh'
 
-# Service shortcuts
-alias systemd='systemctl'
+# Service and security monitoring
 alias services='systemctl list-units --type=service --state=running'
 alias failed='systemctl list-units --failed'
-
-# Security monitoring
 alias lastlog='last | head -10'
 alias failedlogins='journalctl -t sshd | grep "Failed password" | tail -10'
-alias connections='ss -tuln | grep :22' # SSH connections
-
-# Additional tools (NetServa-specific aliases moved to .nsrc.sh)
 
 # ========== FUNCTIONS ==========
 
@@ -194,34 +170,15 @@ f() {
 if [[ ${OSTYP:-} == openwrt ]]; then
     sc() {
         local service_name="$2"
-
-        # Handle common actions
         case "$1" in
-        enable)
-            $SUDO /etc/init.d/"$service_name" enable
-            ;;
-        disable)
-            $SUDO /etc/init.d/"$service_name" disable
-            ;;
-        status)
-            $SUDO /etc/init.d/"$service_name" status
-            ;;
-        restart)
-            $SUDO /etc/init.d/"$service_name" restart
-            ;;
-        reload)
-            $SUDO /etc/init.d/"$service_name" reload
-            ;;
-        start)
-            $SUDO /etc/init.d/"$service_name" start
-            ;;
-        stop)
-            $SUDO /etc/init.d/"$service_name" stop
-            ;;
-        *)
-            # List all available init scripts
-            ls -1 /etc/init.d/ | grep -v '^README'
-            ;;
+        enable)  $SUDO /etc/init.d/"$service_name" enable ;;
+        disable) $SUDO /etc/init.d/"$service_name" disable ;;
+        status)  $SUDO /etc/init.d/"$service_name" status ;;
+        restart) $SUDO /etc/init.d/"$service_name" restart ;;
+        reload)  $SUDO /etc/init.d/"$service_name" reload ;;
+        start)   $SUDO /etc/init.d/"$service_name" start ;;
+        stop)    $SUDO /etc/init.d/"$service_name" stop ;;
+        *)       ls -1 /etc/init.d/ | grep -v '^README' ;;
         esac
     }
 
@@ -232,41 +189,21 @@ if [[ ${OSTYP:-} == openwrt ]]; then
             cat /etc/group
         fi
     }
-    #export -f getent  # Disabled to prevent systemd warnings
 elif [[ ${OSTYP:-} == alpine ]]; then
     sc() {
-        # Convert systemd-style service@instance to OpenRC service.instance
         local service_name="$2"
         if [[ "$2" == *"@"* ]]; then
             service_name="${2/@/.}"
         fi
-
-        # Handle common actions
         case "$1" in
-        enable)
-            $SUDO rc-update add "$service_name" default
-            ;;
-        disable)
-            $SUDO rc-update del "$service_name" default
-            ;;
-        status)
-            $SUDO rc-service "$service_name" status
-            ;;
-        restart)
-            $SUDO rc-service "$service_name" restart
-            ;;
-        reload)
-            $SUDO rc-service "$service_name" reload
-            ;;
-        start)
-            $SUDO rc-service "$service_name" start
-            ;;
-        stop)
-            $SUDO rc-service "$service_name" stop
-            ;;
-        *)
-            $SUDO rc-status --all | awk '/\[.*\]/ {print $1}'
-            ;;
+        enable)  $SUDO rc-update add "$service_name" default ;;
+        disable) $SUDO rc-update del "$service_name" default ;;
+        status)  $SUDO rc-service "$service_name" status ;;
+        restart) $SUDO rc-service "$service_name" restart ;;
+        reload)  $SUDO rc-service "$service_name" reload ;;
+        start)   $SUDO rc-service "$service_name" start ;;
+        stop)    $SUDO rc-service "$service_name" stop ;;
+        *)       $SUDO rc-status --all | awk '/\[.*\]/ {print $1}' ;;
         esac
     }
 else
@@ -289,34 +226,10 @@ getusers() {
     getent passwd | awk -F: '{if ($3 > 999 && $3 < 9999) print}'
 }
 
-# Display user info (moved to .nsrc.sh)
-
-# Navigate to user directories (moved to .nsrc.sh)
-
 # Search for user in system
 grepuser() {
     getusers | grep -E "$1[,:]"
 }
-
-# Git shortcuts for .sh repo
-shpull() {
-    cd "$HOME/.sh"
-    git pull
-}
-
-shpush() {
-    cd "$HOME/.sh"
-    if [[ -n "$1" ]]; then
-        git commit -am "$*"
-    else
-        git commit -a
-    fi
-    git push
-}
-
-# Note: Git shortcuts for .ns repo (nspull, nspush) provided by ~/.ns/.nsrc.sh
-
-# Show database command (moved to .nsrc.sh)
 
 # SSH with interactive shell
 sx() {
@@ -383,304 +296,7 @@ pstree_service() {
     fi
 }
 
-go2() {
-    if [[ $1 =~ "@" ]]; then
-        cd /srv/${1#*@}*/msg/*${1%@*}
-    else
-        cd /srv/$1*/web/app
-    fi
-}
-
-# Show all vhosts on server (lists /srv/ directories)
-# Usage: shhost [pattern]
-shhost() {
-    if [[ -n $1 ]]; then
-        /bin/ls -1 /srv/ | grep "$1"
-    else
-        /bin/ls -1 /srv/
-    fi
-}
-
-# Show WHOIS summary with DNS and MX information
-shwho() {
-    [[ -z $1 || $1 =~ '-h' ]] && echo "Usage: shwho domain" && return 1
-
-    # Check required dependencies
-    local missing_deps=()
-    command -v whois >/dev/null 2>&1 || missing_deps+=("whois")
-    command -v dig >/dev/null 2>&1 || missing_deps+=("dig")
-    command -v grep >/dev/null 2>&1 || missing_deps+=("grep")
-    command -v awk >/dev/null 2>&1 || missing_deps+=("awk")
-    command -v sed >/dev/null 2>&1 || missing_deps+=("sed")
-    command -v tr >/dev/null 2>&1 || missing_deps+=("tr")
-
-    if [[ ${#missing_deps[@]} -gt 0 ]]; then
-        echo "Error: Missing required programs: ${missing_deps[*]}" >&2
-        echo "Please install them before using this function." >&2
-        return 1
-    fi
-
-    local domain="$1"
-
-    # Show key WHOIS information
-    whois "$domain" | grep -E "^(Registrar:|Registrar Name:|Name Server:|DNSSEC:)"
-
-    # Show domain A/AAAA records
-    echo "$domain = $(dig +short "$domain" | tr '\n' ' ')"
-
-    # Get MX records and resolve them
-    local MX=$(dig +short mx "$domain" | awk '{print $2}' | sed -e 's/\.$//')
-
-    if [[ -n $MX ]]; then
-        local IP=$(dig +short "$MX")
-        if [[ $IP ]]; then
-            echo "$MX = $IP"
-            local PTR=$(dig +short -x "$IP" | sed -e 's/\.$//')
-            [[ $PTR ]] && echo "$IP = $PTR"
-        fi
-    fi
-}
-
-# ========== DKIM MANAGEMENT ==========
-
-# Show DKIM keys - usage: shdkim [domain|--all]
-shdkim() {
-    local DKIM_DIR="/etc/opendkim/keys"
-
-    if [[ $1 == "--all" || -z $1 ]]; then
-        echo "=== DKIM Keys Available ==="
-        if [[ -d $DKIM_DIR ]]; then
-            for domain_dir in "$DKIM_DIR"/*/ ; do
-                [[ -d $domain_dir ]] || continue
-                local domain=$(basename "$domain_dir")
-                local selector="mail"
-                if [[ -f "$domain_dir/${selector}.txt" ]]; then
-                    echo "✓ $domain (selector: $selector)"
-                elif [[ -f "$domain_dir/${selector}.private" ]]; then
-                    echo "⚠ $domain (selector: $selector) - private key exists but no TXT record"
-                fi
-            done
-        else
-            echo "Error: DKIM directory not found: $DKIM_DIR"
-        fi
-    else
-        local domain="$1"
-        local selector="${2:-mail}"
-        local key_dir="$DKIM_DIR/$domain"
-
-        if [[ -f "$key_dir/${selector}.txt" ]]; then
-            # Extract record name first (before removing tabs)
-            local record_name=$(head -1 "$key_dir/${selector}.txt" | awk '{print $1}')
-
-            # Clean the value: remove formatting, keep semicolons, remove all spaces
-            local record_value=$(cat "$key_dir/${selector}.txt" | \
-                grep -v "^#" | \
-                tr -d '\t\n\r"() ' | \
-                sed -e 's/^[^v]*IN.*TXT//' -e 's/;-.*$//')
-
-            # Add domain to record name if it's just the selector
-            if [[ "$record_name" == "${selector}._domainkey" ]]; then
-                record_name="${selector}._domainkey.${domain}"
-            fi
-
-            echo "$record_name"
-            echo "$record_value"
-        else
-            echo "No match for '$domain'"
-            return 1
-        fi
-    fi
-}
-
-# Add new DKIM key - usage: adddkim <domain> [selector]
-adddkim() {
-    [[ -z $1 ]] && echo "Usage: adddkim <domain> [selector]" && return 1
-
-    local domain="$1"
-    local selector="${2:-mail}"
-    local DKIM_DIR="/etc/opendkim/keys"
-    local key_dir="$DKIM_DIR/$domain"
-
-    # Check for opendkim-genkey
-    if ! command -v opendkim-genkey >/dev/null 2>&1; then
-        echo "Error: opendkim-genkey not found. Install opendkim-tools package."
-        return 1
-    fi
-
-    echo "=== Adding DKIM for $domain ==="
-
-    # Create directory
-    $SUDO mkdir -p "$key_dir"
-
-    # Generate key
-    echo "Generating DKIM key (selector: $selector)..."
-    cd "$key_dir"
-    $SUDO opendkim-genkey -b 2048 -d "$domain" -s "$selector"
-    $SUDO mv "${selector}.txt" "${selector}.txt"
-    $SUDO mv "${selector}.private" "${selector}.private"
-
-    # Set permissions
-    $SUDO chown -R opendkim:opendkim "$key_dir"
-    $SUDO chmod 700 "$key_dir"
-    $SUDO chmod 600 "$key_dir/${selector}.private"
-    $SUDO chmod 600 "$key_dir/${selector}.txt"
-
-    # Generate random key ID
-    local key_id=$(date +%s)
-
-    # Update KeyTable
-    echo "Updating KeyTable..."
-    if ! grep -q "^${key_id}" /etc/opendkim/KeyTable 2>/dev/null; then
-        echo "${key_id}     ${domain}:${selector}:/etc/opendkim/keys/${domain}/${selector}.private" | $SUDO tee -a /etc/opendkim/KeyTable >/dev/null
-    fi
-
-    # Update SigningTable
-    echo "Updating SigningTable..."
-    if ! grep -q "*@${domain}" /etc/opendkim/SigningTable 2>/dev/null; then
-        echo "*@${domain}       ${key_id}" | $SUDO tee -a /etc/opendkim/SigningTable >/dev/null
-    fi
-
-    # Update TrustedHosts
-    echo "Updating TrustedHosts..."
-    if ! grep -q "^${domain}$" /etc/opendkim/TrustedHosts 2>/dev/null; then
-        {
-            echo "${domain}"
-            echo "*.${domain}"
-        } | $SUDO tee -a /etc/opendkim/TrustedHosts >/dev/null
-    fi
-
-    # Reload OpenDKIM
-    echo "Reloading OpenDKIM..."
-    sc reload opendkim
-
-    echo
-    echo "✓ DKIM key added for $domain"
-    echo
-    echo "Add this DNS TXT record:"
-    cat "$key_dir/${selector}.txt"
-}
-
-# Change/rotate DKIM key - usage: chdkim <domain> [selector]
-chdkim() {
-    [[ -z $1 ]] && echo "Usage: chdkim <domain> [selector]" && return 1
-
-    local domain="$1"
-    local selector="${2:-mail}"
-    local DKIM_DIR="/etc/opendkim/keys"
-    local key_dir="$DKIM_DIR/$domain"
-
-    echo "=== Rotating DKIM for $domain ==="
-
-    # Backup old key
-    if [[ -f "$key_dir/${selector}.private" ]]; then
-        local backup_date=$(date +%Y%m%d-%H%M%S)
-        echo "Backing up old key to ${selector}.private.${backup_date}"
-        $SUDO mv "$key_dir/${selector}.private" "$key_dir/${selector}.private.${backup_date}"
-        $SUDO mv "$key_dir/${selector}.txt" "$key_dir/${selector}.txt.${backup_date}"
-    fi
-
-    # Generate new key
-    echo "Generating new DKIM key..."
-    cd "$key_dir"
-    $SUDO opendkim-genkey -b 2048 -d "$domain" -s "$selector"
-    $SUDO mv "${selector}.txt" "${selector}.txt"
-    $SUDO mv "${selector}.private" "${selector}.private"
-
-    # Set permissions
-    $SUDO chown -R opendkim:opendkim "$key_dir"
-    $SUDO chmod 700 "$key_dir"
-    $SUDO chmod 600 "$key_dir/${selector}.private"
-    $SUDO chmod 600 "$key_dir/${selector}.txt"
-
-    # Reload OpenDKIM
-    echo "Reloading OpenDKIM..."
-    sc reload opendkim
-
-    echo
-    echo "✓ DKIM key rotated for $domain"
-    echo
-    echo "Update DNS TXT record with:"
-    cat "$key_dir/${selector}.txt"
-}
-
-# Delete DKIM key - usage: deldkim <domain>
-deldkim() {
-    [[ -z $1 ]] && echo "Usage: deldkim <domain>" && return 1
-
-    local domain="$1"
-    local DKIM_DIR="/etc/opendkim/keys"
-    local key_dir="$DKIM_DIR/$domain"
-
-    echo "=== Removing DKIM for $domain ==="
-
-    # Remove from KeyTable
-    echo "Removing from KeyTable..."
-    $SUDO sed -i "/[[:space:]]${domain}:mail:/d" /etc/opendkim/KeyTable
-
-    # Remove from SigningTable
-    echo "Removing from SigningTable..."
-    $SUDO sed -i "/\*@${domain}[[:space:]]/d" /etc/opendkim/SigningTable
-
-    # Remove from TrustedHosts
-    echo "Removing from TrustedHosts..."
-    $SUDO sed -i "/^${domain}$/d" /etc/opendkim/TrustedHosts
-    $SUDO sed -i "/^\*\.${domain}$/d" /etc/opendkim/TrustedHosts
-
-    # Archive the key directory
-    if [[ -d "$key_dir" ]]; then
-        local archive_date=$(date +%Y%m%d-%H%M%S)
-        echo "Archiving key directory to ${key_dir}.deleted.${archive_date}"
-        $SUDO mv "$key_dir" "${key_dir}.deleted.${archive_date}"
-    fi
-
-    # Reload OpenDKIM
-    echo "Reloading OpenDKIM..."
-    sc reload opendkim
-
-    echo
-    echo "✓ DKIM removed for $domain"
-    echo "  Remove DNS TXT record: ${domain}._domainkey.${domain}"
-}
-
-# Set baseline PATH for all environments (usr-merge compatible)
-# Modern systems use symlinks: /bin -> /usr/bin, /sbin -> /usr/sbin
-# NetServa Platform (_nsrc) will prepend ~/.ns/bin if it exists on workstations
-export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-
-# Set default color and label (can be overridden by ~/.myrc)
-COLOR=${COLOR:-31}
-LABEL=$(hostname 2>/dev/null || cat /proc/sys/kernel/hostname 2>/dev/null || echo "host")
-
-# Load personal configuration (machine-local, never synced or versioned)
-# This file is independent of ~/.rc/ and ~/.ns/ - survives their deletion
-# Can override defaults (COLOR, LABEL), extend PATH, define personal aliases
-[[ -f ~/.myrc ]] && . ~/.myrc
-
-# Load NetServa Platform (NS) configuration (only on workstations)
-# Provides NetServa functions, aliases, and prepends ~/.ns/bin to PATH
-[[ -f "${NS:-$HOME/.ns}/_nsrc" ]] && . "${NS:-$HOME/.ns}/_nsrc"
-
-# Function exports disabled to prevent systemd warnings about BASH_FUNC_*%% variables
-# Functions are still available in the current shell but won't pollute child processes
-# If you need these functions in subshells, source this file again or use 'bash -c'
-#export -f chktime f getdb getuser getusers go2 grepuser sc health pstree_service
-#export -f detect_os shpull shpush
-
-# Selectively export only critical functions if needed
-# Uncomment the line below to export sx for use in all subshells:
-#export -f sx
-
-# Set colored prompt
-PS1="\[\033[1;${COLOR}m\]${LABEL} \w\[\033[0m\] "
-export PS1
-
-
-# Rex function - execute remote commands without escaping hell
-rex() {
-    (cd ~/.ns && php artisan remote:exec "$@")
-}
-
-# Generate secure password (default 16 chars, guarantees 1 upper/lower/digit, Oo→0)
+# Generate secure password (default 16 chars, guarantees 1 upper/lower/digit)
 newpw() {
     local l=${1:-16}
     (LC_ALL=C tr -dc 'A-Z' </dev/urandom | head -c 1
@@ -690,22 +306,19 @@ newpw() {
     ) | fold -w1 | shuf | tr -d '\n' | tr 'Oo' '00'; echo
 }
 
-# Create new user (username, password, comment, homedir)
-newuser() {
-    [[ -z $1 ]] && echo "Usage: newuser <username> [password] [comment] [homedir]" && return 1
-    local user=$1 pass=${2:-$(newpw)} comment=$3 homedir=$4 opts=()
-    [[ -n $comment ]] && opts+=(-c "$comment")
-    [[ -n $homedir ]] && opts+=(-d "$homedir")
-    useradd -m "${opts[@]}" "$user" && echo "$user:$pass" | chpasswd && echo "✅ User: $user | Pass: $pass"
-}
+# Set baseline PATH for all environments (usr-merge compatible)
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-# Setup chroot SFTP for existing user (for backup servers)
-chrootuser() {
-    [[ -z $1 ]] && echo "Usage: chrootuser <username>" && return 1
-    local user=$1 home=$(getent passwd "$user" | cut -d: -f6)
-    [[ -z $home ]] && echo "❌ User $user not found" && return 1
-    chown root:root "$home" && chmod 755 "$home" && \
-    mkdir -p "$home/data" && chown "$user:$user" "$home/data" && \
-    echo "✅ Chroot setup: $home (data/ writable by $user)"
-}
+# Set default color and label (can be overridden by ~/.myrc)
+COLOR=${COLOR:-31}
+LABEL=$(hostname 2>/dev/null || cat /proc/sys/kernel/hostname 2>/dev/null || echo "host")
+
+# Load personal configuration (machine-local, never synced or versioned)
+# Can override COLOR/LABEL, extend PATH, add aliases, source _shrc.d/ modules
+[[ -f ~/.myrc ]] && source ~/.myrc
+
+# Set colored prompt
+PS1="\[\033[1;${COLOR}m\]${LABEL} \w\[\033[0m\] "
+export PS1
+
 export PATH="$HOME/.rc:$PATH"

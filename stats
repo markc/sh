@@ -1,5 +1,0 @@
-#!/bin/bash
-# Stats - Server Usage Reporting wrapper
-STATS_LIB="${HOME}/.rc/stats.d"
-source "$STATS_LIB/lib/common.sh"
-source "$STATS_LIB/main.sh" "$@"

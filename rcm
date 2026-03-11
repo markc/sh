@@ -58,7 +58,7 @@ init() {
         fi
     else
         # Ensure existing .bashrc sources ~/.rc/_shrc
-        local source_line='[ -f ~/.rc/_shrc ] && . ~/.rc/_shrc'
+        local source_line='[[ -f ~/.rc/_shrc ]] && source ~/.rc/_shrc'
         if ! grep -qF "$source_line" ~/.bashrc; then
             echo "" >> ~/.bashrc
             echo "# Source RC shell enhancements" >> ~/.bashrc
