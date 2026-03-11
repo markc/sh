@@ -1,41 +1,193 @@
 #!/usr/bin/env bash
-# Created: 20250930 - Updated: 20251018
+# Created: 20230702 - Updated: 20260311
 # Copyright (C) 1995-2025 Mark Constable <mc@netserva.org> (MIT License)
-# RC Manager - Manages ~/.rc runtime configuration directory
-# Source shell environment
+#
+# rcm — RC Manager
+#
+# Single tool to bootstrap, configure, and deploy the ~/.rc shell toolkit.
+# Manages three things:
+#   1. Shell config — init bash profile/rc files, personal ~/.myrc
+#   2. SSH hosts    — save servers by nickname, connect with: ssh nickname
+#   3. SSH keys     — create/manage Ed25519 keypairs for passwordless login
+#
+# Quick start:
+#   rcm init                        # Set up this machine (shell + SSH)
+#   rcm create myserver 10.0.0.5    # Save a server
+#   ssh myserver                    # Connect!
+#   rcm sync myserver               # Deploy ~/.rc to that server
+#
+# All commands: rcm ha
+
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 [[ -f "$DIR/_shrc" ]] && source "$DIR/_shrc"
 
-
-# Help function
 help() {
     case $1 in
+    a | all)
+        cat <<'EOF'
+RCM — RC Manager
+=================
+Bootstrap, configure, and deploy the ~/.rc shell toolkit.
+
+SETUP
+  rcm init                                         # Set up this machine (shell + SSH)
+  rcm sync HOST                                    # Deploy ~/.rc to remote + run init
+
+  init creates (if missing):
+    ~/.bash_profile    from ~/.rc/_bash_profile
+    ~/.bashrc          from ~/.rc/_bashrc
+    ~/.myrc            from ~/.rc/_myrc.example
+    ~/.ssh/            NetServa 3.0 structure (hosts/, keys/, mux/, config)
+
+  sync rsyncs ~/.rc/ (excluding .git) to HOST, then runs rcm init remotely.
+  ~/.myrc is never synced — each machine keeps its own.
+
+HOST COMMANDS — save servers by nickname
+  create NAME IP [PORT] [USER] [KEYFILE]           # Save host (defaults: 22, root)
+  list                                             # Show all saved hosts
+  read NAME                                        # Show host config values
+  update NAME                                      # Edit host config in nano
+  delete NAME                                      # Remove host
+  test [NAME] [--delete-failed]                    # Test SSH connectivity
+
+  Examples:
+    rcm create web 10.0.0.5                        # Basic — port 22, user root
+    rcm create db 10.0.0.6 2222 admin              # Custom port and user
+    rcm create pi 192.168.1.50 22 pi ~/k/pi        # With specific key
+    rcm test                                       # Test all hosts
+    rcm test --delete-failed                       # Test all, remove dead ones
+
+KEY COMMANDS — Ed25519 keypairs for passwordless login
+  key_create NAME [COMMENT] [PASSPHRASE]           # Create keypair (100 KDF rounds)
+  key_list                                         # Show all keys with fingerprints
+  key_read NAME                                    # Show public key (for copying)
+  key_delete NAME                                  # Remove keypair
+
+  Examples:
+    rcm key_create work                            # No passphrase
+    rcm key_create work "Laptop" "secret"          # With comment and passphrase
+    ssh-copy-id -i ~/.ssh/keys/work.pub u@server   # Deploy key to server
+
+UTILITIES
+  rcm perms                                        # Fix ~/.ssh permissions (after rsync)
+
+SERVICE (sudo required)
+  rcm start                                        # Start sshd (no auto-boot)
+  rcm stop                                         # Stop sshd, disable, drop INCOMING
+
+SHORTCUTS
+  i=init  s=sync                                   # Setup
+  c=create  r=read  u=update  d=delete             # Hosts
+  l=list  t=test  p=perms                          # Hosts/utils
+  kc=key_create  kr=key_read  kd=key_delete  kl=key_list  # Keys
+  h=help  ha=help all                              # Help
+
+FILES
+  ~/.rc/_shrc         Core shell toolkit (sourced by ~/.bashrc)
+  ~/.rc/_shrc.d/      Optional server modules (loaded via ~/.myrc)
+  ~/.myrc             Personal config (machine-local, never synced)
+  ~/.ssh/hosts/*      Individual SSH host configs
+  ~/.ssh/keys/*       Ed25519 keypairs
+  ~/.ssh/mux/*        ControlMaster multiplexing sockets
+EOF
+        ;;
     i | init)
-        echo "Initialize shell configuration"
+        echo "Initialize this machine: shell config + SSH structure"
         echo "Usage: rcm init"
-        echo "  - Creates ~/.bash_profile from template if missing"
-        echo "  - Creates ~/.bashrc from template if missing"
-        echo "  - Creates ~/.myrc from template if missing"
+        echo "  Creates ~/.bash_profile, ~/.bashrc, ~/.myrc from templates"
+        echo "  Creates ~/.ssh/ with hosts/, keys/, mux/, config"
+        echo "  Safe to run multiple times (idempotent)"
         ;;
     s | sync)
-        echo "Sync ~/.rc directory to remote host"
-        echo "Usage: rcm sync <ssh_host>"
-        echo "Example: rcm sync myserver"
-        echo "Note: ~/.myrc is not synced (machine-local only)"
+        echo "Deploy ~/.rc to a remote server"
+        echo "Usage: rcm sync <host>"
+        echo "  Rsyncs ~/.rc/ (excluding .git) then runs rcm init remotely"
+        echo "  ~/.myrc is never synced — each machine keeps its own"
+        ;;
+    c | create)
+        echo "Save an SSH host by nickname"
+        echo "Usage: rcm create <name> <ip> [port] [user] [keyfile]"
+        echo "  Defaults: port 22, user root"
+        echo "  Creates ~/.ssh/hosts/<name>"
+        ;;
+    r | read | show)
+        echo "Show saved host config values"
+        echo "Usage: rcm read <name>"
+        ;;
+    u | update)
+        echo "Edit a host config in nano"
+        echo "Usage: rcm update <name>"
+        ;;
+    d | delete)
+        echo "Remove a saved host"
+        echo "Usage: rcm delete <name>"
+        ;;
+    l | list)
+        echo "List all saved hosts with connection details"
+        echo "Usage: rcm list"
+        ;;
+    t | test)
+        echo "Test SSH connectivity"
+        echo "Usage: rcm test [name] [--delete-failed]"
+        echo "  No args: test all hosts"
+        echo "  With name: test one host"
+        echo "  --delete-failed: remove unreachable hosts (not ephemeral)"
+        ;;
+    kc | key_create)
+        echo "Create an Ed25519 keypair"
+        echo "Usage: rcm key_create <name> [comment] [passphrase]"
+        echo "  Keys stored in ~/.ssh/keys/"
+        echo "  100 KDF rounds for brute-force resistance"
+        ;;
+    kr | key_read)
+        echo "Show a public key (for copying to servers)"
+        echo "Usage: rcm key_read <name>"
+        ;;
+    kd | key_delete)
+        echo "Remove a keypair (private + public)"
+        echo "Usage: rcm key_delete <name>"
+        ;;
+    kl | key_list)
+        echo "List all keys with fingerprints"
+        echo "Usage: rcm key_list"
+        ;;
+    p | perms)
+        echo "Fix ~/.ssh permissions (directories 700, files 600)"
+        echo "Usage: rcm perms"
+        echo "  Use after git clone or rsync"
+        ;;
+    start)
+        echo "Start SSH daemon without enabling at boot (sudo)"
+        echo "Usage: rcm start"
+        ;;
+    stop)
+        echo "Stop SSH daemon, disable at boot, drop INCOMING connections (sudo)"
+        echo "Usage: rcm stop"
         ;;
     *)
-        echo "Usage: rcm <cmd> [args]"
-        echo "Commands: init, sync, help"
-        echo ""
-        echo "For SSH management use: sshm"
+        cat <<'EOF'
+Usage: rcm <command> [args]
+
+  SETUP        i  = init        s  = sync
+  HOSTS        c  = create      r  = read       u = update
+               d  = delete      l  = list        t = test
+  KEYS         kc = key_create  kr = key_read
+               kd = key_delete  kl = key_list
+  UTILS        p  = perms       start            stop
+  HELP         h  = help        ha = help all
+
+Quick start:  rcm init && rcm create myserver 10.0.0.5 && ssh myserver
+Full help:    rcm ha
+EOF
         ;;
     esac
 }
 
 [[ -z $1 || $1 =~ -h ]] && help && exit 1
 
-# Initialize RC structure
-init() {
+# ========== SHELL INIT ==========
+
+shell_init() {
     # Create ~/.bash_profile from template if missing
     if [[ ! -f ~/.bash_profile ]]; then
         if [[ -f ~/.rc/_bash_profile ]]; then
@@ -81,11 +233,54 @@ init() {
     else
         echo "ℹ️  ~/.myrc already exists"
     fi
-
-    echo "✅ RC structure initialized"
 }
 
-# Sync ~/.rc directory to remote host
+# ========== SSH INIT ==========
+
+ssh_init() {
+    [[ -d ~/.ssh ]] || { mkdir ~/.ssh && chmod 700 ~/.ssh && echo "Created ~/.ssh"; }
+    [[ -f ~/.ssh/authorized_keys ]] || { touch ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys && echo "Created ~/.ssh/authorized_keys"; }
+    [[ -d ~/.ssh/hosts ]] || { mkdir ~/.ssh/hosts && chmod 700 ~/.ssh/hosts && echo "Created ~/.ssh/hosts"; }
+    [[ -d ~/.ssh/keys ]] || { mkdir ~/.ssh/keys && chmod 700 ~/.ssh/keys && echo "Created ~/.ssh/keys"; }
+    [[ -d ~/.ssh/mux ]] || { mkdir ~/.ssh/mux && chmod 700 ~/.ssh/mux && echo "Created ~/.ssh/mux (for ControlMaster sockets)"; }
+
+    [[ -f ~/.ssh/config ]] || {
+        echo "# SSH Configuration
+# Created by rcm on $(date +'%Y%m%d')
+
+# Security and Performance
+Ciphers aes128-ctr,aes192-ctr,aes256-ctr,aes128-gcm@openssh.com,aes256-gcm@openssh.com,chacha20-poly1305@openssh.com
+
+# Include all host configurations from ~/.ssh/hosts/
+Include ~/.ssh/hosts/*
+
+# Global defaults for all hosts
+Host *
+  TCPKeepAlive yes
+  ServerAliveInterval 30
+  ForwardAgent yes
+  AddKeysToAgent yes
+  IdentitiesOnly yes
+  # ControlMaster for connection multiplexing
+  ControlMaster auto
+  ControlPath ~/.ssh/mux/%r@%h:%p
+  ControlPersist 10m" >~/.ssh/config
+    }
+    perms
+}
+
+# ========== COMBINED INIT ==========
+
+init() {
+    shell_init
+    echo ""
+    ssh_init
+    echo ""
+    echo "✅ RC initialized (shell + SSH)"
+}
+
+# ========== SYNC ==========
+
 sync() {
     local ssh_host="$1"
 
@@ -95,7 +290,6 @@ sync() {
         exit 1
     fi
 
-    # Check if SSH host exists in config
     if ! grep -q "^Host $ssh_host$" ~/.ssh/hosts/* 2>/dev/null; then
         echo "⚠️  Warning: SSH host '$ssh_host' not found in ~/.ssh/hosts/"
         echo "Attempting connection anyway..."
@@ -114,11 +308,317 @@ sync() {
     fi
 }
 
-# Command handler
+# ========== HOST COMMANDS ==========
+
+create() {
+    local name=$1 host=$2 port=${3:-22} user=${4:-root} skey=${5:-none}
+
+    echo "Host $name
+    Hostname $host
+    Port $port
+    User $user" >~/.ssh/hosts/$name
+
+    [[ $skey != "none" ]] && echo "  IdentityFile $skey" >>~/.ssh/hosts/$name || echo "  #IdentityFile none" >>~/.ssh/hosts/$name
+}
+
+show() {
+    local name=$1
+    if [[ -f ~/.ssh/hosts/$name ]]; then
+        awk '{print $2}' ~/.ssh/hosts/$name
+    else
+        echo "Notice: ~/.ssh/hosts/'$name' does not exist"
+        exit 254
+    fi
+}
+
+update() {
+    local name=$1
+    if [[ -f ~/.ssh/hosts/$name ]]; then
+        nano -t -x -c ~/.ssh/hosts/$name
+    else
+        echo "Notice: ~/.ssh/hosts/'$name' does not exist"
+        exit 254
+    fi
+}
+
+delete() {
+    local name=$1
+    if [[ -f ~/.ssh/hosts/$name ]]; then
+        rm ~/.ssh/hosts/$name
+        echo "Removed: SSH host '$name'"
+    else
+        echo "Error: SSH host '$name' does not exist"
+        exit 255
+    fi
+}
+
+list() {
+    for file in ~/.ssh/hosts/*; do
+        [[ -f "$file" ]] || continue
+        awk '
+        BEGIN { host=""; hostname=""; port="22"; user="root"; key="" }
+        /^Host / { host=$2 }
+        /Hostname/ { hostname=$2 }
+        /Port/ { port=$2 }
+        /User/ { user=$2 }
+        /IdentityFile/ { key=$2 }
+        END { printf "%-15s %17s %5s %10s %25s\n", host, hostname, port, user, key }
+        ' "$file"
+    done
+}
+
+# ========== KEY COMMANDS ==========
+
+key_create() {
+    local name=$1 comment=${2:-"$(hostname)@lan"} password=$3
+
+    if [[ -f ~/.ssh/keys/$name ]]; then
+        echo "Warning: SSH Key '~/.ssh/keys/$name' already exists"
+        exit 254
+    fi
+
+    if ! ssh-keygen -o -a 100 -t ed25519 -f ~/.ssh/keys/$name -C "$comment" -N "$password"; then
+        echo "Error: SSH key '$name' not created"
+        exit 254
+    fi
+}
+
+key_read() {
+    local name=$1
+    if [[ -f ~/.ssh/keys/$name.pub ]]; then
+        cat ~/.ssh/keys/$name.pub
+    else
+        echo "Warning: '$name' key does not exist"
+        exit 254
+    fi
+}
+
+key_delete() {
+    local name=$1
+    if [[ -f ~/.ssh/keys/$name ]]; then
+        rm ~/.ssh/keys/$name ~/.ssh/keys/$name.pub
+        echo "Success: removed ~/.ssh/keys/$name and ~/.ssh/keys/$name.pub"
+    else
+        echo "Error: ~/.ssh/keys/$name does not exist"
+        exit 255
+    fi
+}
+
+key_list() {
+    for key in ~/.ssh/keys/*.pub; do
+        [[ -f "$key" ]] || continue
+        echo -n "$(basename "$key" .pub) "
+        ssh-keygen -lf "$key"
+    done
+}
+
+# ========== UTILITIES ==========
+
+copy() {
+    local skey=$1 name=$2
+
+    [[ ! -f ~/.ssh/keys/$skey.pub ]] && echo "Error: ~/.ssh/keys/$skey.pub does not exist" && exit 255
+    [[ ! -f ~/.ssh/hosts/$name ]] && echo "Error: ~/.ssh/hosts/$name does not exist" && exit 255
+
+    local pubkey=$(cat ~/.ssh/keys/$skey.pub)
+    ssh $name "[[ ! -d ~/.ssh ]] && mkdir -p ~/.ssh && chmod 700 ~/.ssh; echo $pubkey >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys;"
+    echo "Success: Public key $skey.pub was successfully transferred to $name"
+}
+
+perms() {
+    find ~/.ssh -type d -exec chmod 700 {} +
+    find ~/.ssh -type f -exec chmod 600 {} +
+    echo "Updated permissions for ~/.ssh"
+}
+
+# ========== SSH CONNECTIVITY TEST ==========
+
+test() {
+    local test_host=$1
+    local delete_failed=false
+    local timeout=5
+
+    [[ "$@" =~ --delete-failed ]] && delete_failed=true
+
+    local RED='\033[0;31m'
+    local GREEN='\033[0;32m'
+    local YELLOW='\033[1;33m'
+    local BLUE='\033[0;34m'
+    local NC='\033[0m'
+
+    local total=0 success=0 failed=0 special_success=0 ephemeral_offline=0
+
+    declare -a failed_hosts failed_files ephemeral_offline_hosts
+
+    declare -A special_hosts=(["github.com"]="git_provider")
+    local ephemeral_file="$HOME/.ssh/hosts/.ephemeral"
+    if [[ -f "$ephemeral_file" ]]; then
+        while IFS= read -r line; do
+            [[ -z "$line" || "$line" =~ ^# ]] && continue
+            special_hosts["$line"]="ephemeral"
+        done <"$ephemeral_file"
+    fi
+
+    echo "🔍 Testing SSH connectivity in ~/.ssh/hosts/"
+    echo "⏱️  Timeout: ${timeout} seconds per host"
+    [[ "$delete_failed" == true ]] && echo -e "${RED}🗑️  WARNING: Failed host files will be automatically deleted!${NC}"
+    echo ""
+
+    test_single_host() {
+        local host_file=$1
+        local filename=$(basename "$host_file")
+
+        [[ "$filename" == "config" || "$filename" =~ ^\. ]] && return
+
+        ((total++))
+
+        local host=$(grep -i "^Host" "$host_file" | awk '{print $2}' | head -1)
+        local hostname=$(grep -i "^\s*Hostname" "$host_file" | awk '{print $2}' | head -1)
+        host=${host:-$filename}
+
+        [[ -z "$host" ]] && return
+
+        local display_info="$host"
+        [[ -n "$hostname" ]] && display_info="$host ($hostname)"
+
+        printf "Testing %-40s ... " "$display_info"
+
+        if [[ -n "${special_hosts[$host]}" ]]; then
+            local host_type="${special_hosts[$host]}"
+            local ssh_output=$(ssh -o BatchMode=yes \
+                -o ConnectTimeout="$timeout" \
+                -o StrictHostKeyChecking=no \
+                -o UserKnownHostsFile=/dev/null \
+                "$host" 2>&1 || true)
+
+            if [[ "$ssh_output" =~ "successfully authenticated" ]] ||
+                [[ "$ssh_output" =~ "Hi" ]] ||
+                [[ "$ssh_output" =~ "Permission denied (publickey)" ]]; then
+                echo -e "${BLUE}✅ OK ($host_type)${NC}"
+                ((success++))
+                ((special_success++))
+            else
+                if [[ "$host_type" == "ephemeral" ]]; then
+                    echo -e "${YELLOW}⏸️  OFFLINE ($host_type)${NC}"
+                    ephemeral_offline_hosts+=("$([ -n "$hostname" ] && echo "$filename ($hostname)" || echo "$filename")")
+                    ((ephemeral_offline++))
+                else
+                    echo -e "${RED}❌ FAILED${NC}"
+                    failed_hosts+=("$([ -n "$hostname" ] && echo "$filename ($hostname)" || echo "$filename")")
+                    failed_files+=("$host_file")
+                    ((failed++))
+                fi
+            fi
+        else
+            if ssh -o BatchMode=yes \
+                -o ConnectTimeout="$timeout" \
+                -o StrictHostKeyChecking=no \
+                -o UserKnownHostsFile=/dev/null \
+                -o LogLevel=ERROR \
+                "$host" "true" 2>/dev/null; then
+                echo -e "${GREEN}✅ OK${NC}"
+                ((success++))
+            else
+                echo -e "${RED}❌ FAILED${NC}"
+                failed_hosts+=("$([ -n "$hostname" ] && echo "$filename ($hostname)" || echo "$filename")")
+                failed_files+=("$host_file")
+                ((failed++))
+            fi
+        fi
+    }
+
+    if [[ -n "$test_host" && "$test_host" != "--delete-failed" ]]; then
+        local host_file="$HOME/.ssh/hosts/$test_host"
+        if [[ -f "$host_file" ]]; then
+            test_single_host "$host_file"
+        else
+            echo -e "${RED}❌ Error: Host '$test_host' not found in ~/.ssh/hosts/${NC}"
+            return 1
+        fi
+    else
+        for host_file in ~/.ssh/hosts/*; do
+            [[ -f "$host_file" ]] && test_single_host "$host_file"
+        done
+    fi
+
+    if [[ -z "$test_host" || "$test_host" == "--delete-failed" ]]; then
+        echo ""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "📊 Summary"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "   Total hosts:    $total"
+        echo -e "   ${GREEN}Successful:     $success${NC}"
+        [[ $special_success -gt 0 ]] && echo -e "   ${BLUE}  ├─ Special:     $special_success${NC}"
+        [[ $ephemeral_offline -gt 0 ]] && echo -e "   ${YELLOW}Offline:        $ephemeral_offline (ephemeral)${NC}"
+        echo -e "   ${RED}Failed:         $failed${NC}"
+        echo ""
+
+        [[ $failed -gt 0 ]] && {
+            echo -e "${RED}❌ Failed Hosts:${NC}"
+            for host in "${failed_hosts[@]}"; do echo "   - $host"; done
+            echo ""
+        }
+
+        [[ $ephemeral_offline -gt 0 ]] && {
+            echo -e "${YELLOW}⏸️  Offline Ephemeral Hosts:${NC}"
+            for host in "${ephemeral_offline_hosts[@]}"; do echo "   - $host"; done
+            echo ""
+        }
+
+        if [[ "$delete_failed" == true && $failed -gt 0 ]]; then
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo -e "${RED}🗑️  Deleting Failed Host Files${NC}"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            for file in "${failed_files[@]}"; do
+                local fn=$(basename "$file")
+                rm -f "$file" && echo -e "   ${RED}✗${NC} Deleted: $fn" || echo -e "   ${YELLOW}⚠️${NC} Failed to delete: $fn"
+            done
+            echo ""
+            echo -e "${GREEN}✅ Deleted $failed failed host configuration files${NC}"
+            echo ""
+        fi
+
+        [[ $failed -gt 0 && "$delete_failed" != true ]] && return 1
+    fi
+
+    return 0
+}
+
+# ========== SSHD SERVICE ==========
+
+start() {
+    sudo systemctl start sshd
+    echo "SSH daemon started (not enabled at boot)"
+}
+
+stop() {
+    sudo systemctl stop sshd
+    sudo systemctl disable sshd
+    sudo pkill -9 sshd 2>/dev/null || true
+    echo "SSH daemon stopped, disabled, and all connections dropped"
+}
+
+# ========== COMMAND HANDLER ==========
+
 case $1 in
 i | init) init ;;
 s | sync) sync $2 ;;
+c | create) create $2 $3 $4 $5 $6 ;;
+r | read | show) show $2 ;;
+u | update) update $2 ;;
+d | delete) delete $2 ;;
+l | list) list ;;
+t | test) test $2 $3 ;;
+kc | key_create) key_create $2 $3 $4 ;;
+kr | key_read) key_read $2 ;;
+ku | key_update) key_create $2 $3 $4 ;;
+kd | key_delete) key_delete $2 ;;
+kl | key_list) key_list ;;
+p | perms) perms ;;
+start) start ;;
+stop) stop ;;
 h | help) help $2 ;;
+ha) help all ;;
 *) echo "Unknown command '$1'" && help ;;
 esac
 

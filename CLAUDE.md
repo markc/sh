@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Bash-exclusive shell configuration providing cross-platform aliases, functions, and tools for system administration. Requires bash (not ash/dash/sh) — will reject non-bash shells with an install hint.
 
+**`rcm`** is the single management tool: it bootstraps shell config, manages SSH hosts and keys, and deploys `~/.rc` to remote servers. Run `rcm ha` for full built-in help.
+
 ## Architecture
 
 ### Load Chain
@@ -19,7 +21,7 @@ Bash-exclusive shell configuration providing cross-platform aliases, functions, 
               └─> source ~/.rc/_shrc.d/net.sh      # Optional: WHOIS, firewall
 ```
 
-- `_shrc` is the core (323 lines) — synced to all remotes via `rcm sync`
+- `_shrc` is the core (324 lines) — synced to all remotes via `rcm sync`
 - `~/.myrc` is machine-local (created from `_myrc.example`, never versioned)
 - `_shrc.d/` modules are opt-in — source the ones you need from `~/.myrc`
 
@@ -27,9 +29,9 @@ Bash-exclusive shell configuration providing cross-platform aliases, functions, 
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `_shrc` | 323 | Core: OS detection, universal aliases, service control, prompt |
-| `sshm` | 510 | SSH host/key manager (NetServa 3.0 directory structure) |
-| `rcm` | 125 | RC deployment: local init + remote rsync |
+| `_shrc` | 324 | Core: OS detection, universal aliases, service control, prompt |
+| `rcm` | 625 | RC Manager: shell init, SSH hosts/keys, deploy, sshd service |
+| `sshm` | — | Symlink to `rcm` (backward compatibility) |
 | `_shrc.d/server.sh` | 216 | DKIM management, user creation, vhost navigation |
 | `_shrc.d/logs.sh` | 11 | Mail/web/DNS log tail aliases |
 | `_shrc.d/net.sh` | 39 | WHOIS lookups, firewall aliases |
@@ -53,7 +55,7 @@ Bash-exclusive shell configuration providing cross-platform aliases, functions, 
 
 ```bash
 git clone https://github.com/markc/rc ~/.rc
-~/.rc/rcm init          # Creates ~/.bash_profile, ~/.bashrc, ~/.myrc from templates
+~/.rc/rcm init          # Set up this machine (shell + SSH, one command)
 source ~/.bashrc         # Activate (or open new shell)
 ```
 
@@ -62,7 +64,7 @@ On Alpine/OpenWRT, install bash first: `apk add bash` / `opkg install bash`
 ### Deploy to a Remote Server
 
 ```bash
-sshm create webbox 10.0.0.5          # Save the host
+rcm create webbox 10.0.0.5           # Save the host
 rcm sync webbox                       # Rsync ~/.rc + run init on remote
 ```
 
@@ -77,7 +79,68 @@ source ~/.rc/_shrc.d/logs.sh
 source ~/.rc/_shrc.d/net.sh
 ```
 
-## Everyday Usage
+## RC Manager (rcm)
+
+Single tool for setup, SSH management, and deployment. Run `rcm ha` for full help.
+
+### Setup Commands
+
+```bash
+rcm init                               # Set up this machine (shell + SSH)
+rcm sync HOST                          # Deploy ~/.rc to remote + run init
+```
+
+`rcm init` creates (if missing): `~/.bash_profile`, `~/.bashrc`, `~/.myrc` from templates, plus `~/.ssh/` with hosts/, keys/, mux/, and config. Safe to run multiple times.
+
+### Host Commands — save servers by nickname
+
+```bash
+rcm create myserver 10.0.0.5          # Save host (defaults: port 22, user root)
+rcm create db 10.0.0.6 2222 admin     # Custom port and user
+rcm create pi 192.168.1.50 22 pi ~/k/pi  # With specific key
+ssh myserver                           # Connect using saved config
+
+rcm list                               # Show all hosts with connection details
+rcm read myserver                      # Show host config values
+rcm update myserver                    # Edit host config in nano
+rcm delete myserver                    # Remove host
+
+rcm test                               # TCP test all hosts
+rcm test myserver                      # Test one host
+rcm test --delete-failed               # Test all, remove dead ones
+```
+
+### Key Commands — Ed25519 keypairs for passwordless login
+
+```bash
+rcm key_create work                    # Create keypair (100 KDF rounds)
+rcm key_create work "Laptop" "secret"  # With comment and passphrase
+rcm key_list                           # Show all keys with fingerprints
+rcm key_read work                      # Show public key (for copying)
+rcm key_delete work                    # Remove keypair
+
+ssh-copy-id -i ~/.ssh/keys/work.pub u@server  # Deploy key to server
+```
+
+### Utilities and Service
+
+```bash
+rcm perms                              # Fix ~/.ssh permissions (after rsync)
+rcm start                              # Start sshd without enabling at boot (sudo)
+rcm stop                               # Stop sshd, disable, drop INCOMING (sudo)
+```
+
+### Shortcuts
+
+```
+SETUP    i=init  s=sync
+HOSTS    c=create  r=read  u=update  d=delete  l=list  t=test
+KEYS     kc=key_create  kr=key_read  kd=key_delete  kl=key_list
+UTILS    p=perms  start  stop
+HELP     h=help  ha=help all
+```
+
+## Shell Aliases and Functions (`_shrc`)
 
 ### Universal Package Management
 
@@ -130,35 +193,7 @@ ram                     # Processes sorted by memory usage
 logs                    # journalctl -f
 f pattern               # Find files by name
 p pattern               # Find processes by name
-```
-
-### SSH Manager (sshm)
-
-See `sshm.md` for full reference.
-
-```bash
-sshm init                              # First-time setup (creates ~/.ssh structure)
-sshm create myserver 10.0.0.5          # Save a host (defaults: port 22, user root)
-sshm create db 10.0.0.6 2222 admin     # Custom port and user
-ssh myserver                            # Connect using saved config
-
-sshm list                               # Show all hosts
-sshm test                               # TCP test all hosts
-sshm test myserver                      # Test one host
-sshm test --delete-failed               # Test all, remove dead ones
-
-sshm key_create work                    # Create Ed25519 keypair
-sshm key_list                           # Show key fingerprints
-ssh-copy-id -i ~/.ssh/keys/work.pub u@host  # Deploy key
-
-# Shortcuts: c=create l=list r=read u=update d=delete t=test
-#            kc=key_create kl=key_list kr=key_read kd=key_delete
-```
-
-### Remote Command Execution
-
-```bash
-sx hostname "command"   # SSH with interactive shell (filters noise)
+sx host "command"       # SSH with interactive shell (filters noise)
 ```
 
 ### Personal Configuration (~/.myrc)
@@ -216,17 +251,17 @@ shblock                  # Show nftables/sshguard blocked IPs
 ## Validation
 
 ```bash
-bash -n _shrc && bash -n sshm && bash -n rcm    # Syntax check core
-for f in _shrc.d/*.sh; do bash -n "$f"; done     # Syntax check modules
-rcm init                                          # Idempotent local setup
-sshm init                                         # Creates ~/.ssh NS 3.0 structure
-sshm test                                         # TCP connectivity check
+bash -n _shrc && bash -n rcm                      # Syntax check core
+for f in _shrc.d/*.sh; do bash -n "$f"; done       # Syntax check modules
+rcm init                                            # Idempotent setup
+rcm test                                            # TCP connectivity check
 ```
 
 ## Conventions
 
 - **Bash required**: `_shrc` guards against non-bash shells at load time
-- **Idempotent commands**: `rcm init`, `sshm init`, `sshm perms` are all safe to repeat
+- **Single tool**: `rcm` handles everything; `sshm` is a symlink for backward compat
+- **Idempotent**: `rcm init`, `rcm perms` are safe to repeat
 - **Ed25519 only**: SSH keys use ed25519 with 100 KDF rounds
 - **No Docker**: Uses Incus containers or Proxmox VMs
 - **PATH**: Follows usr-merge standard (`/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`)
