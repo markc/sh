@@ -16,7 +16,7 @@ sshm list
 sshm test [name] [--delete-failed]
 
 # Key Management
-sshm key_create <name> [comment] [password]
+sshm key_create <name> [comment] [passphrase]
 sshm key_read <name>
 sshm key_delete <name>
 sshm key_list
@@ -24,6 +24,10 @@ sshm key_list
 # Utilities
 sshm init
 sshm perms
+
+# Service (sudo)
+sshm start
+sshm stop
 ```
 
 ## DESCRIPTION
@@ -32,10 +36,11 @@ Manages SSH using NetServa 3.0 directory structure with individual host files:
 
 ```
 ~/.ssh/
-├── config          # Main config (includes hosts/*)
-├── hosts/          # Individual host configs
-├── keys/           # SSH key pairs
-└── mux/            # Connection multiplexing sockets
+├── config              # Main config (includes hosts/*)
+├── authorized_keys     # Public keys
+├── hosts/              # Individual host configs
+├── keys/               # Ed25519 keypairs
+└── mux/                # ControlMaster multiplexing sockets
 ```
 
 ## HOST COMMANDS
@@ -48,8 +53,9 @@ sshm create server2 192.168.1.101 2222 admin ~/.ssh/keys/mykey
 ```
 
 Creates `~/.ssh/hosts/<name>` with Host, Hostname, Port, User, IdentityFile.
+Defaults: port 22, user root.
 
-### read / show
+### read
 
 ```bash
 sshm read server1
@@ -79,7 +85,7 @@ Remove host configuration file.
 sshm list
 ```
 
-Show all hosts: `name hostname:port user`
+Show all hosts with hostname, port, user, and key path.
 
 ### test
 
@@ -89,7 +95,9 @@ sshm test server1            # Test specific host
 sshm test --delete-failed    # Test all, delete unreachable
 ```
 
-Tests TCP connectivity. Optionally removes failed non-ephemeral hosts.
+Tests TCP connectivity with 5-second timeout. Supports ephemeral hosts
+(listed in `~/.ssh/hosts/.ephemeral`) which show as "offline" rather than
+"failed". Git providers (github.com) are detected automatically.
 
 ## KEY COMMANDS
 
@@ -97,10 +105,10 @@ Tests TCP connectivity. Optionally removes failed non-ephemeral hosts.
 
 ```bash
 sshm key_create mykey
-sshm key_create work "Work Key" "password123"
+sshm key_create work "Laptop" "passphrase123"
 ```
 
-Creates Ed25519 key pair in `~/.ssh/keys/`.
+Creates Ed25519 keypair in `~/.ssh/keys/` with 100 KDF rounds.
 
 ### key_read
 
@@ -108,7 +116,7 @@ Creates Ed25519 key pair in `~/.ssh/keys/`.
 sshm key_read mykey
 ```
 
-Display public key.
+Display public key (for copying to servers).
 
 ### key_delete
 
@@ -116,7 +124,7 @@ Display public key.
 sshm key_delete mykey
 ```
 
-Remove key pair.
+Remove private and public key files.
 
 ### key_list
 
@@ -124,7 +132,7 @@ Remove key pair.
 sshm key_list
 ```
 
-List all keys in `~/.ssh/keys/`.
+List all keys with fingerprints.
 
 ## UTILITY COMMANDS
 
@@ -134,12 +142,11 @@ List all keys in `~/.ssh/keys/`.
 sshm init
 ```
 
-Creates NS 3.0 directory structure:
-- `~/.ssh/` (700)
-- `~/.ssh/hosts/` (700)
-- `~/.ssh/keys/` (700)
-- `~/.ssh/mux/` (700)
-- `~/.ssh/config` with multiplexing
+Creates NS 3.0 directory structure and generates `~/.ssh/config` with:
+- Secure ciphers only
+- Connection multiplexing (ControlMaster auto, 10min persist)
+- Keep-alive (ServerAliveInterval 30s)
+- ForwardAgent and AddKeysToAgent enabled
 
 Safe to run multiple times.
 
@@ -149,48 +156,64 @@ Safe to run multiple times.
 sshm perms
 ```
 
-Fixes all SSH permissions (use after git clone/rsync).
+Fixes all SSH permissions: directories 700, files 600.
+Use after git clone or rsync.
+
+### start
+
+```bash
+sshm start
+```
+
+Start sshd without enabling at boot (sudo required).
+
+### stop
+
+```bash
+sshm stop
+```
+
+Stop sshd, disable at boot, and drop all INCOMING SSH connections (sudo required).
+
+## SHORTCUTS
+
+```
+c=create  r=read  u=update  d=delete  l=list  t=test
+kc=key_create  kr=key_read  kd=key_delete  kl=key_list
+i=init  p=perms  h=help  ha=help all
+```
 
 ## EXAMPLES
 
 ### Complete Workflow
 
 ```bash
-# Initialize
 sshm init
-
-# Create key
 sshm key_create prod
-
-# Add hosts
 sshm create server1 192.168.1.100 22 root ~/.ssh/keys/prod
-sshm create server2 192.168.1.101 22 admin ~/.ssh/keys/prod
-
-# Test connectivity
-sshm test
-
-# Connect
+ssh-copy-id -i ~/.ssh/keys/prod.pub root@192.168.1.100
 ssh server1
 ```
 
-### Show Public Key
+### Deploy Key to Server
 
 ```bash
 sshm key_read prod
-# Copy to remote: ssh-copy-id -i ~/.ssh/keys/prod.pub user@server
+# or: ssh-copy-id -i ~/.ssh/keys/prod.pub user@server
 ```
 
 ## FILES
 
 - `~/.ssh/config` - Main config (includes hosts/*)
 - `~/.ssh/hosts/*` - Individual host configs
-- `~/.ssh/keys/*` - Key pairs (private 600, public 644)
+- `~/.ssh/hosts/.ephemeral` - List of ephemeral hostnames (not deleted on test failure)
+- `~/.ssh/keys/*` - Keypairs (private 600, public 600)
 - `~/.ssh/mux/*` - Multiplexing sockets
 
 ## SEE ALSO
 
+- `CLAUDE.md` - Architecture and usage reference
 - `rcm.md` - RC deployment
-- `_shrc.md` - Shell configuration
 
 ## AUTHOR
 

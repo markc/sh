@@ -16,42 +16,38 @@ rcm help [command]       # Show help
 
 Manages deployment of the RC shell configuration system. Use `rcm init` to set up the current machine, or `rcm sync` to deploy `~/.rc/` to remote servers.
 
+Requires bash. On Alpine: `apk add bash`. On OpenWRT: `opkg install bash`.
+
 ## COMMANDS
 
 ### init
-
-Initialize shell configuration locally.
 
 ```bash
 rcm init
 ```
 
-Creates `~/.myrc` from template and adds sourcing line to `~/.bashrc`.
+Creates from templates (if missing):
+- `~/.bash_profile` from `_bash_profile`
+- `~/.bashrc` from `_bashrc` (or appends source line to existing)
+- `~/.myrc` from `_myrc.example`
 
 **Safe to run multiple times.**
 
 ### sync
 
-Deploy `~/.rc/` to remote server.
-
 ```bash
 rcm sync <ssh_host>
 ```
 
-Uses rsync to sync `~/.rc/` (excluding `.git`). Note: `~/.myrc` is never synced - each machine has its own.
+Uses rsync to sync `~/.rc/` (excluding `.git`) to remote, then runs `rcm init` on the remote.
 
-After sync, run on remote:
-```bash
-ssh <host> rcm init     # Create remote's ~/.myrc
-```
+Note: `~/.myrc` is never synced — each machine has its own.
 
 ## FILES
 
-- `~/.rc/_shrc` - Foundation (synced to remotes)
+- `~/.rc/_shrc` - Core shell toolkit (synced to remotes)
+- `~/.rc/_shrc.d/` - Optional server modules (synced, loaded via ~/.myrc)
 - `~/.myrc` - Personal config (machine-local, never synced)
-- `~/.rc/_myrc.example` - Template for ~/.myrc
-
-See `_shrc.md` for architecture and loading order details.
 
 ## EXAMPLES
 
@@ -66,8 +62,8 @@ source ~/.bashrc
 ### Deploy to Remote
 
 ```bash
+sshm create server1 10.0.0.5
 rcm sync server1
-ssh server1 rcm init
 ```
 
 ### Customize
@@ -78,7 +74,7 @@ es    # Edit ~/.myrc and reload
 
 ## SEE ALSO
 
-- `_shrc.md` - Shell configuration reference
+- `CLAUDE.md` - Architecture and usage reference
 - `sshm.md` - SSH host/key management
 
 ## AUTHOR
