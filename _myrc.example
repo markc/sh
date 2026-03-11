@@ -1,10 +1,9 @@
 # Created: 20130218 - Updated: 20251018
-# Copyright (C) 1995-2025 Mark Constable <mc@netserva.org> (MIT License)
+# Copyright (C) 1995-2026 Mark Constable <mc@netserva.org> (MIT License)
 #
 # Personal shell configuration - machine-local, never synced
 # Use for: API tokens, custom aliases, COLOR/LABEL overrides, PATH extensions
 
-# Essential aliases (makes rcm/sshm available without ~/.rc in PATH)
+# Essential alias (makes rcm available without ~/.rc in PATH)
 alias rcm=~/.rc/rcm
-alias sshm=~/.rc/sshm
 

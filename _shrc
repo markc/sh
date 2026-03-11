@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Created: 20150101 - Updated: 20260311
-# Copyright (C) 1995-2025 Mark Constable <mc@netserva.org> (MIT License)
+# Copyright (C) 1995-2026 Mark Constable <mc@netserva.org> (MIT License)
 #
 # Shell resource configuration — requires bash (not ash/dash/sh)
 # Source this in your ~/.bashrc: [[ -f ~/.rc/_shrc ]] && source ~/.rc/_shrc

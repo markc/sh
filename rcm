@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Created: 20230702 - Updated: 20260311
-# Copyright (C) 1995-2025 Mark Constable <mc@netserva.org> (MIT License)
+# Copyright (C) 1995-2026 Mark Constable <mc@netserva.org> (MIT License)
 #
 # rcm — RC Manager
 #
@@ -43,7 +43,7 @@ SETUP
   ~/.myrc is never synced — each machine keeps its own.
 
 HOST COMMANDS — save servers by nickname
-  create NAME IP [PORT] [USER] [KEYFILE]           # Save host (defaults: 22, root)
+  create NAME IP [PORT] [USER] [KEYFILE]           # Save host (defaults: 22, root, ~/.ssh/keys/default)
   list                                             # Show all saved hosts
   read NAME                                        # Show host config values
   update NAME                                      # Edit host config in nano
@@ -51,22 +51,22 @@ HOST COMMANDS — save servers by nickname
   test [NAME] [--delete-failed]                    # Test SSH connectivity
 
   Examples:
-    rcm create web 10.0.0.5                        # Basic — port 22, user root
+    rcm create web 10.0.0.5                        # Basic — port 22, user root, default key
     rcm create db 10.0.0.6 2222 admin              # Custom port and user
     rcm create pi 192.168.1.50 22 pi ~/k/pi        # With specific key
     rcm test                                       # Test all hosts
     rcm test --delete-failed                       # Test all, remove dead ones
 
 KEY COMMANDS — Ed25519 keypairs for passwordless login
-  key_create NAME [COMMENT] [PASSPHRASE]           # Create keypair (100 KDF rounds)
+  key_create [NAME] [COMMENT] [PASSPHRASE]         # Create keypair (default name: "default")
   key_list                                         # Show all keys with fingerprints
-  key_read NAME                                    # Show public key (for copying)
+  key_read [NAME]                                  # Show public key (default name: "default")
   key_delete NAME                                  # Remove keypair
 
   Examples:
-    rcm key_create work                            # No passphrase
-    rcm key_create work "Laptop" "secret"          # With comment and passphrase
-    ssh-copy-id -i ~/.ssh/keys/work.pub u@server   # Deploy key to server
+    rcm key_create                                 # Create default key (no passphrase)
+    rcm key_create work "Laptop" "secret"          # Named key with comment and passphrase
+    ssh-copy-id -i ~/.ssh/keys/default.pub u@server  # Deploy key to server
 
 GIT — update and publish ~/.rc
   pull                                             # Fetch upstream, pull if newer
@@ -117,7 +117,7 @@ EOF
     c | create)
         echo "Save an SSH host by nickname"
         echo "Usage: rcm create <name> <ip> [port] [user] [keyfile]"
-        echo "  Defaults: port 22, user root"
+        echo "  Defaults: port 22, user root, key ~/.ssh/keys/default"
         echo "  Creates ~/.ssh/hosts/<name>"
         ;;
     r | read | show)
@@ -145,13 +145,13 @@ EOF
         ;;
     kc | key_create)
         echo "Create an Ed25519 keypair"
-        echo "Usage: rcm key_create <name> [comment] [passphrase]"
-        echo "  Keys stored in ~/.ssh/keys/"
-        echo "  100 KDF rounds for brute-force resistance"
+        echo "Usage: rcm key_create [name] [comment] [passphrase]"
+        echo "  Default name: 'default' — used by host create when no key specified"
+        echo "  Keys stored in ~/.ssh/keys/, 100 KDF rounds"
         ;;
     kr | key_read)
         echo "Show a public key (for copying to servers)"
-        echo "Usage: rcm key_read <name>"
+        echo "Usage: rcm key_read [name]  (default: 'default')"
         ;;
     kd | key_delete)
         echo "Remove a keypair (private + public)"
@@ -333,14 +333,13 @@ sync() {
 # ========== HOST COMMANDS ==========
 
 create() {
-    local name=$1 host=$2 port=${3:-22} user=${4:-root} skey=${5:-none}
+    local name=$1 host=$2 port=${3:-22} user=${4:-root} skey=${5:-'~/.ssh/keys/default'}
 
     echo "Host $name
-    Hostname $host
-    Port $port
-    User $user" >~/.ssh/hosts/$name
-
-    [[ $skey != "none" ]] && echo "  IdentityFile $skey" >>~/.ssh/hosts/$name || echo "  #IdentityFile none" >>~/.ssh/hosts/$name
+  Hostname $host
+  Port $port
+  User $user
+  IdentityFile $skey" >~/.ssh/hosts/$name
 }
 
 show() {
@@ -392,7 +391,7 @@ list() {
 # ========== KEY COMMANDS ==========
 
 key_create() {
-    local name=$1 comment=${2:-"$(hostname)@lan"} password=$3
+    local name=${1:-default} comment=${2:-"$(hostname)@lan"} password=${3:-""}
 
     if [[ -f ~/.ssh/keys/$name ]]; then
         echo "Warning: SSH Key '~/.ssh/keys/$name' already exists"
@@ -406,7 +405,7 @@ key_create() {
 }
 
 key_read() {
-    local name=$1
+    local name=${1:-default}
     if [[ -f ~/.ssh/keys/$name.pub ]]; then
         cat ~/.ssh/keys/$name.pub
     else
