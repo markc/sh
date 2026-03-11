@@ -122,6 +122,14 @@ rcm key_delete work                    # Remove keypair
 ssh-copy-id -i ~/.ssh/keys/work.pub u@server  # Deploy key to server
 ```
 
+### Git — Update and Publish
+
+```bash
+rcm pull                               # Fetch upstream, pull if newer
+rcm push                               # Commit all changes + push (auto message)
+rcm push "Add custom aliases"          # Commit + push with your message
+```
+
 ### Utilities and Service
 
 ```bash
@@ -136,6 +144,7 @@ rcm stop                               # Stop sshd, disable, drop INCOMING (sudo
 SETUP    i=init  s=sync
 HOSTS    c=create  r=read  u=update  d=delete  l=list  t=test
 KEYS     kc=key_create  kr=key_read  kd=key_delete  kl=key_list
+GIT      pull  push
 UTILS    p=perms  start  stop
 HELP     h=help  ha=help all
 ```

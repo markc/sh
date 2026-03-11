@@ -68,6 +68,15 @@ KEY COMMANDS — Ed25519 keypairs for passwordless login
     rcm key_create work "Laptop" "secret"          # With comment and passphrase
     ssh-copy-id -i ~/.ssh/keys/work.pub u@server   # Deploy key to server
 
+GIT — update and publish ~/.rc
+  pull                                             # Fetch upstream, pull if newer
+  push [MESSAGE]                                   # Commit all changes + push
+
+  Examples:
+    rcm pull                                       # Check for updates
+    rcm push                                       # Commit + push (auto message)
+    rcm push "Add custom aliases"                  # Commit + push with message
+
 UTILITIES
   rcm perms                                        # Fix ~/.ssh permissions (after rsync)
 
@@ -80,6 +89,7 @@ SHORTCUTS
   c=create  r=read  u=update  d=delete             # Hosts
   l=list  t=test  p=perms                          # Hosts/utils
   kc=key_create  kr=key_read  kd=key_delete  kl=key_list  # Keys
+  pull  push                                       # Git
   h=help  ha=help all                              # Help
 
 FILES
@@ -151,6 +161,17 @@ EOF
         echo "List all keys with fingerprints"
         echo "Usage: rcm key_list"
         ;;
+    pull)
+        echo "Check upstream for updates and pull if available"
+        echo "Usage: rcm pull"
+        echo "  Fetches from origin, shows status, pulls if behind"
+        ;;
+    push)
+        echo "Commit all changes and push to upstream"
+        echo "Usage: rcm push [message]"
+        echo "  Without message: auto-generates from changed files"
+        echo "  With message: uses your message as commit summary"
+        ;;
     p | perms)
         echo "Fix ~/.ssh permissions (directories 700, files 600)"
         echo "Usage: rcm perms"
@@ -173,6 +194,7 @@ Usage: rcm <command> [args]
                d  = delete      l  = list        t = test
   KEYS         kc = key_create  kr = key_read
                kd = key_delete  kl = key_list
+  GIT          pull             push
   UTILS        p  = perms       start            stop
   HELP         h  = help        ha = help all
 
@@ -584,6 +606,64 @@ test() {
     return 0
 }
 
+# ========== GIT ==========
+
+pull() {
+    cd ~/.rc
+    git fetch origin 2>/dev/null || { echo "❌ Failed to fetch from origin"; return 1; }
+
+    local local_head=$(git rev-parse HEAD)
+    local remote_head=$(git rev-parse @{u} 2>/dev/null)
+
+    if [[ -z "$remote_head" ]]; then
+        echo "⚠️  No upstream tracking branch set"
+        return 1
+    elif [[ "$local_head" == "$remote_head" ]]; then
+        echo "✅ ~/.rc is up to date"
+    else
+        local behind=$(git rev-list --count HEAD..@{u})
+        if [[ $behind -gt 0 ]]; then
+            echo "⬇️  $behind new commit(s) available"
+            git pull --ff-only || { echo "❌ Pull failed (local changes?) — try: rcm push first"; return 1; }
+            echo "✅ ~/.rc updated"
+        else
+            echo "ℹ️  Local is ahead of upstream — use: rcm push"
+        fi
+    fi
+}
+
+push() {
+    cd ~/.rc
+    local status=$(git status --porcelain)
+
+    if [[ -z "$status" ]]; then
+        # Nothing to commit — but maybe we need to push existing commits
+        local ahead=$(git rev-list --count @{u}..HEAD 2>/dev/null)
+        if [[ $ahead -gt 0 ]]; then
+            echo "⬆️  Pushing $ahead commit(s)..."
+            git push || { echo "❌ Push failed"; return 1; }
+            echo "✅ Pushed to origin"
+        else
+            echo "✅ Nothing to commit, up to date with origin"
+        fi
+        return 0
+    fi
+
+    # Build commit message
+    local msg
+    if [[ -n "$1" ]]; then
+        msg="$*"
+    else
+        msg="Update: $(git diff --name-only HEAD 2>/dev/null; git ls-files --others --exclude-standard) "
+        msg="Update: $(echo "$status" | awk '{print $2}' | tr '\n' ' ')"
+    fi
+
+    git add -A
+    git commit -m "$msg"
+    git push || { echo "❌ Push failed"; return 1; }
+    echo "✅ Committed and pushed"
+}
+
 # ========== SSHD SERVICE ==========
 
 start() {
@@ -615,6 +695,8 @@ ku | key_update) key_create $2 $3 $4 ;;
 kd | key_delete) key_delete $2 ;;
 kl | key_list) key_list ;;
 p | perms) perms ;;
+pull) pull ;;
+push) shift; push "$@" ;;
 start) start ;;
 stop) stop ;;
 h | help) help $2 ;;
