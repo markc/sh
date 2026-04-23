@@ -435,17 +435,6 @@ key_list() {
 
 # ========== UTILITIES ==========
 
-copy() {
-    local skey=$1 name=$2
-
-    [[ ! -f ~/.ssh/keys/$skey.pub ]] && echo "Error: ~/.ssh/keys/$skey.pub does not exist" && exit 255
-    [[ ! -f ~/.ssh/hosts/$name ]] && echo "Error: ~/.ssh/hosts/$name does not exist" && exit 255
-
-    local pubkey=$(cat ~/.ssh/keys/$skey.pub)
-    ssh $name "[[ ! -d ~/.ssh ]] && mkdir -p ~/.ssh && chmod 700 ~/.ssh; echo $pubkey >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys;"
-    echo "Success: Public key $skey.pub was successfully transferred to $name"
-}
-
 perms() {
     find ~/.ssh -type d -exec chmod 700 {} +
     find ~/.ssh -type f -exec chmod 600 {} +
@@ -653,7 +642,6 @@ push() {
     if [[ -n "$1" ]]; then
         msg="$*"
     else
-        msg="Update: $(git diff --name-only HEAD 2>/dev/null; git ls-files --others --exclude-standard) "
         msg="Update: $(echo "$status" | awk '{print $2}' | tr '\n' ' ')"
     fi
 
@@ -679,28 +667,29 @@ stop() {
 
 # ========== COMMAND HANDLER ==========
 
-case $1 in
+cmd=$1
+shift
+case $cmd in
 i | init) init ;;
-s | sync) sync $2 ;;
-c | create) create $2 $3 $4 $5 $6 ;;
-r | read | show) show $2 ;;
-u | update) update $2 ;;
-d | delete) delete $2 ;;
+s | sync) sync "$@" ;;
+c | create) create "$@" ;;
+r | read | show) show "$@" ;;
+u | update) update "$@" ;;
+d | delete) delete "$@" ;;
 l | list) list ;;
-t | test) test $2 $3 ;;
-kc | key_create) key_create $2 $3 $4 ;;
-kr | key_read) key_read $2 ;;
-ku | key_update) key_create $2 $3 $4 ;;
-kd | key_delete) key_delete $2 ;;
+t | test) test "$@" ;;
+kc | key_create) key_create "$@" ;;
+kr | key_read) key_read "$@" ;;
+kd | key_delete) key_delete "$@" ;;
 kl | key_list) key_list ;;
 p | perms) perms ;;
 pull) pull ;;
-push) shift; push "$@" ;;
+push) push "$@" ;;
 start) start ;;
 stop) stop ;;
-h | help) help $2 ;;
+h | help) help "$@" ;;
 ha) help all ;;
-*) echo "Unknown command '$1'" && help ;;
+*) echo "Unknown command '$cmd'" >&2; help >&2; exit 1 ;;
 esac
 
 exit 0

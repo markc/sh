@@ -124,6 +124,17 @@ elif [[ $OSTYP == manjaro || $OSTYP == cachyos || $OSTYP == arch ]]; then
     alias i='paru -S --skipreview --noconfirm'
     alias r='paru -Rns'
     alias s='paru -Ss'
+elif [[ $OSTYP == macos ]]; then
+    # Homebrew — never sudo (brew refuses to run as root)
+    alias edpkg='nano -t -x -c $(brew --prefix 2>/dev/null)/etc/Brewfile'
+    alias i='brew install'
+    alias l='log stream --level=info'
+    alias lspkg='brew list | sort | grep'
+    alias r='brew uninstall'
+    alias ram='ps -Ao rss,vsz,pcpu,comm -r | head -20'
+    alias s='brew search'
+    alias u='brew update && brew upgrade'
+    alias uc='brew update && brew upgrade && brew cleanup'
 else
     alias aptkey=$SUDO'apt-key adv --recv-keys --keyserver keyserver.ubuntu.com'
     alias edpkg=$SUDO'nano -t -x -c /etc/apt/sources.list'
@@ -136,24 +147,34 @@ else
     alias ram='ps -eo rss:10,vsz:10,%cpu:5,cmd --sort=rss | grep -v "^\s\+0" | cut -c -79'
 fi
 
-# Monitoring
-alias ports='ss -tuln'
-alias procs='ps aux --sort=-%cpu | head -20'
+# Monitoring — differs per OS (BSD vs GNU utilities)
 alias disk='df -h'
-alias mem='free -h'
 alias temp='sensors 2>/dev/null || cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null'
-alias sysinfo='uname -a && uptime && free -h && df -h /'
-
-# Log monitoring (with fallbacks for non-systemd systems)
-alias logs='journalctl -f'
-alias syslog='tail -f /var/log/syslog 2>/dev/null || tail -f /var/log/messages 2>/dev/null || journalctl -f'
-alias authlog='tail -f /var/log/auth.log 2>/dev/null || journalctl -f -u ssh'
-
-# Service and security monitoring
-alias services='systemctl list-units --type=service --state=running'
-alias failed='systemctl list-units --failed'
 alias lastlog='last | head -10'
-alias failedlogins='journalctl -t sshd | grep "Failed password" | tail -10'
+
+if [[ $OSTYP == macos ]]; then
+    alias ports='lsof -iTCP -sTCP:LISTEN -P -n'
+    alias procs='ps -Ao pid,pcpu,pmem,comm -r | head -20'
+    alias mem='top -l1 -n0 | grep -E "PhysMem|^Processes"'
+    alias sysinfo='uname -a && uptime && (top -l1 -n0 | grep PhysMem) && df -h /'
+    alias logs='log stream --level=info'
+    alias syslog='log stream --level=info'
+    alias authlog='log stream --predicate '"'"'subsystem == "com.apple.authd"'"'"''
+    alias services='launchctl list | head -40'
+    alias failed='launchctl list | awk '"'"'$2 != 0 && $2 != "-" && NR > 1 {print}'"'"''
+    alias failedlogins='log show --predicate '"'"'eventMessage CONTAINS "Failed" AND process == "sshd"'"'"' --last 1h 2>/dev/null | tail -20'
+else
+    alias ports='ss -tuln'
+    alias procs='ps aux --sort=-%cpu | head -20'
+    alias mem='free -h'
+    alias sysinfo='uname -a && uptime && free -h && df -h /'
+    alias logs='journalctl -f'
+    alias syslog='tail -f /var/log/syslog 2>/dev/null || tail -f /var/log/messages 2>/dev/null || journalctl -f'
+    alias authlog='tail -f /var/log/auth.log 2>/dev/null || journalctl -f -u ssh'
+    alias services='systemctl list-units --type=service --state=running'
+    alias failed='systemctl list-units --failed'
+    alias failedlogins='journalctl -t sshd | grep "Failed password" | tail -10'
+fi
 
 # ========== FUNCTIONS ==========
 
@@ -206,6 +227,19 @@ elif [[ ${OSTYP:-} == alpine ]]; then
         *)       $SUDO rc-status --all | awk '/\[.*\]/ {print $1}' ;;
         esac
     }
+elif [[ ${OSTYP:-} == macos ]]; then
+    sc() {
+        local service_name="$2"
+        case "$1" in
+        enable)  $SUDO launchctl load -w "$service_name" ;;
+        disable) $SUDO launchctl unload -w "$service_name" ;;
+        status)  launchctl list | awk -v s="$service_name" 'NR==1 || $3 ~ s' ;;
+        restart) $SUDO launchctl stop "$service_name"; $SUDO launchctl start "$service_name" ;;
+        start)   $SUDO launchctl start "$service_name" ;;
+        stop)    $SUDO launchctl stop "$service_name" ;;
+        *)       launchctl list | awk 'NR>1 {print $3}' ;;
+        esac
+    }
 else
     sc() {
         if [[ -z $1 ]]; then
@@ -251,16 +285,26 @@ health() {
     echo "=== System Health Check ==="
     echo "Date: $(date)"
     echo "Uptime: $(uptime -p 2>/dev/null || uptime)"
-    echo "Load: $(cat /proc/loadavg)"
+    echo "Load: $(cat /proc/loadavg 2>/dev/null || uptime | awk -F'load average[s]*:' '{print $2}')"
     echo
     echo "=== Memory Usage ==="
-    free -h
+    if command -v free >/dev/null 2>&1; then
+        free -h
+    elif [[ $OSTYP == macos ]]; then
+        top -l1 -n0 | grep -E "PhysMem|^Processes"
+    else
+        vm_stat 2>/dev/null | head -5 || echo "(no memory tool available)"
+    fi
     echo
     echo "=== Disk Usage ==="
     df -h / | tail -1
     echo
     echo "=== Top Processes (CPU) ==="
-    ps aux --sort=-%cpu | head -6
+    if ps aux --sort=-%cpu >/dev/null 2>&1; then
+        ps aux --sort=-%cpu | head -6
+    else
+        ps -Ao user,pid,pcpu,pmem,comm -r | head -6
+    fi
     echo
     echo "=== Network Connections ==="
     ss -tuln | grep LISTEN | wc -l | xargs echo "Listening ports:"
