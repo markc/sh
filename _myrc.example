@@ -4,6 +4,6 @@
 # Personal shell configuration - machine-local, never synced
 # Use for: API tokens, custom aliases, COLOR/LABEL overrides, PATH extensions
 
-# Essential alias (makes rcm available without ~/.rc in PATH)
-alias rcm=~/.rc/rcm
+# Essential alias (makes sshm available without ~/.sh in PATH)
+alias sshm=~/.sh/sshm
 

@@ -1,5 +1,5 @@
 # Server administration: DKIM, user management, vhost navigation
-# Source from ~/.myrc on mail/web servers: source ~/.rc/_shrc.d/server.sh
+# Source from ~/.myrc on mail/web servers: source ~/.sh/_shrc.d/server.sh
 
 # Navigate to vhost directories
 go2() {

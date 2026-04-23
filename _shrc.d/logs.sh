@@ -1,5 +1,5 @@
 # Service log aliases for mail, web, and DNS servers
-# Source from ~/.myrc on servers: source ~/.rc/_shrc.d/logs.sh
+# Source from ~/.myrc on servers: source ~/.sh/_shrc.d/logs.sh
 
 alias mgrep='mlog | grep '
 alias alog='tail -f /var/log/nginx/access.log'

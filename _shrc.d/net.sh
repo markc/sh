@@ -1,5 +1,5 @@
 # Network diagnostics: WHOIS lookups, firewall management
-# Source from ~/.myrc on servers: source ~/.rc/_shrc.d/net.sh
+# Source from ~/.myrc on servers: source ~/.sh/_shrc.d/net.sh
 
 # Firewall/security aliases
 alias shblock="nft list set ip sshguard attackers | tr '\n' ' '| sed 's/.*elements = {\([^}]*\)}.*/\1\n/' | sed -r 's/\s+//g' | tr ',' '\n'"

@@ -3,12 +3,12 @@
 # Copyright (C) 1995-2026 Mark Constable <mc@netserva.org> (MIT License)
 #
 # Shell resource configuration — requires bash (not ash/dash/sh)
-# Source this in your ~/.bashrc: [[ -f ~/.rc/_shrc ]] && source ~/.rc/_shrc
+# Source this in your ~/.bashrc: [[ -f ~/.sh/_shrc ]] && source ~/.sh/_shrc
 # Optional modules in _shrc.d/ can be loaded from ~/.myrc
 
 # Requires bash — fail clearly if sourced from ash/dash/sh
 if [ -z "$BASH_VERSION" ]; then
-    echo "~/.rc/_shrc requires bash (install with: apk add bash / opkg install bash)" >&2
+    echo "~/.sh/_shrc requires bash (install with: apk add bash / opkg install bash)" >&2
     return 2>/dev/null || exit 1
 fi
 
@@ -82,12 +82,12 @@ alias wt="curl -s -w '%{time_total}\n' -o /dev/null"
 # Notes
 alias n='echo -e "-- $(date) --\n" >> ~/.note && e +10000 ~/.note'
 alias sn='[ -f ~/.note ] && cat ~/.note'
-alias shortname="n\$(tr -d : </sys/class/net/e*/address|head -c12|tail -c5)"
+alias shortname="echo n\$(cat /sys/class/net/e*/address 2>/dev/null|head -1|tr -d :|head -c12|tail -c5)"
 
 # Help and configuration
 alias ?='bash ~/.help'
 alias eh='e ~/.help'
-alias es='e ~/.myrc && source ~/.rc/_shrc && echo "✅ Reloaded: _shrc → _myrc"'
+alias es='e ~/.myrc && source ~/.sh/_shrc && echo "✅ Reloaded: _shrc → _myrc"'
 alias m='bash ~/.menu'
 
 # Package management aliases based on OS type
@@ -321,4 +321,4 @@ LABEL=$(hostname 2>/dev/null || cat /proc/sys/kernel/hostname 2>/dev/null || ech
 PS1="\[\033[1;${COLOR}m\]${LABEL} \w\[\033[0m\] "
 export PS1
 
-export PATH="$HOME/.rc:$PATH"
+export PATH="$HOME/.sh:$PATH"

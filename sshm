@@ -2,21 +2,21 @@
 # Created: 20230702 - Updated: 20260311
 # Copyright (C) 1995-2026 Mark Constable <mc@netserva.org> (MIT License)
 #
-# rcm — RC Manager
+# sshm — SSH Manager
 #
-# Single tool to bootstrap, configure, and deploy the ~/.rc shell toolkit.
+# Single tool to bootstrap, configure, and deploy the ~/.sh shell toolkit.
 # Manages three things:
 #   1. Shell config — init bash profile/rc files, personal ~/.myrc
 #   2. SSH hosts    — save servers by nickname, connect with: ssh nickname
 #   3. SSH keys     — create/manage Ed25519 keypairs for passwordless login
 #
 # Quick start:
-#   rcm init                        # Set up this machine (shell + SSH)
-#   rcm create myserver 10.0.0.5    # Save a server
+#   sshm init                        # Set up this machine (shell + SSH)
+#   sshm create myserver 10.0.0.5    # Save a server
 #   ssh myserver                    # Connect!
-#   rcm sync myserver               # Deploy ~/.rc to that server
+#   sshm sync myserver               # Deploy ~/.sh to that server
 #
-# All commands: rcm ha
+# All commands: sshm ha
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 [[ -f "$DIR/_shrc" ]] && source "$DIR/_shrc"
@@ -25,21 +25,21 @@ help() {
     case $1 in
     a | all)
         cat <<'EOF'
-RCM — RC Manager
-=================
-Bootstrap, configure, and deploy the ~/.rc shell toolkit.
+SSHM — SSH Manager
+==================
+Bootstrap, configure, and deploy the ~/.sh shell toolkit.
 
 SETUP
-  rcm init                                         # Set up this machine (shell + SSH)
-  rcm sync HOST                                    # Deploy ~/.rc to remote + run init
+  sshm init                                         # Set up this machine (shell + SSH)
+  sshm sync HOST                                    # Deploy ~/.sh to remote + run init
 
   init creates (if missing):
-    ~/.bash_profile    from ~/.rc/_bash_profile
-    ~/.bashrc          from ~/.rc/_bashrc
-    ~/.myrc            from ~/.rc/_myrc.example
+    ~/.bash_profile    from ~/.sh/_bash_profile
+    ~/.bashrc          from ~/.sh/_bashrc
+    ~/.myrc            from ~/.sh/_myrc.example
     ~/.ssh/            NetServa 3.0 structure (hosts/, keys/, mux/, config)
 
-  sync rsyncs ~/.rc/ (excluding .git) to HOST, then runs rcm init remotely.
+  sync rsyncs ~/.sh/ (excluding .git) to HOST, then runs sshm init remotely.
   ~/.myrc is never synced — each machine keeps its own.
 
 HOST COMMANDS — save servers by nickname
@@ -51,11 +51,11 @@ HOST COMMANDS — save servers by nickname
   test [NAME] [--delete-failed]                    # Test SSH connectivity
 
   Examples:
-    rcm create web 10.0.0.5                        # Basic — port 22, user root, default key
-    rcm create db 10.0.0.6 2222 admin              # Custom port and user
-    rcm create pi 192.168.1.50 22 pi ~/k/pi        # With specific key
-    rcm test                                       # Test all hosts
-    rcm test --delete-failed                       # Test all, remove dead ones
+    sshm create web 10.0.0.5                        # Basic — port 22, user root, default key
+    sshm create db 10.0.0.6 2222 admin              # Custom port and user
+    sshm create pi 192.168.1.50 22 pi ~/k/pi        # With specific key
+    sshm test                                       # Test all hosts
+    sshm test --delete-failed                       # Test all, remove dead ones
 
 KEY COMMANDS — Ed25519 keypairs for passwordless login
   key_create [NAME] [COMMENT] [PASSPHRASE]         # Create keypair (default name: "default")
@@ -64,25 +64,25 @@ KEY COMMANDS — Ed25519 keypairs for passwordless login
   key_delete NAME                                  # Remove keypair
 
   Examples:
-    rcm key_create                                 # Create default key (no passphrase)
-    rcm key_create work "Laptop" "secret"          # Named key with comment and passphrase
+    sshm key_create                                 # Create default key (no passphrase)
+    sshm key_create work "Laptop" "secret"          # Named key with comment and passphrase
     ssh-copy-id -i ~/.ssh/keys/default.pub u@server  # Deploy key to server
 
-GIT — update and publish ~/.rc
+GIT — update and publish ~/.sh
   pull                                             # Fetch upstream, pull if newer
   push [MESSAGE]                                   # Commit all changes + push
 
   Examples:
-    rcm pull                                       # Check for updates
-    rcm push                                       # Commit + push (auto message)
-    rcm push "Add custom aliases"                  # Commit + push with message
+    sshm pull                                       # Check for updates
+    sshm push                                       # Commit + push (auto message)
+    sshm push "Add custom aliases"                  # Commit + push with message
 
 UTILITIES
-  rcm perms                                        # Fix ~/.ssh permissions (after rsync)
+  sshm perms                                        # Fix ~/.ssh permissions (after rsync)
 
 SERVICE (sudo required)
-  rcm start                                        # Start sshd (no auto-boot)
-  rcm stop                                         # Stop sshd, disable, drop INCOMING
+  sshm start                                        # Start sshd (no auto-boot)
+  sshm stop                                         # Stop sshd, disable, drop INCOMING
 
 SHORTCUTS
   i=init  s=sync                                   # Setup
@@ -93,8 +93,8 @@ SHORTCUTS
   h=help  ha=help all                              # Help
 
 FILES
-  ~/.rc/_shrc         Core shell toolkit (sourced by ~/.bashrc)
-  ~/.rc/_shrc.d/      Optional server modules (loaded via ~/.myrc)
+  ~/.sh/_shrc         Core shell toolkit (sourced by ~/.bashrc)
+  ~/.sh/_shrc.d/      Optional server modules (loaded via ~/.myrc)
   ~/.myrc             Personal config (machine-local, never synced)
   ~/.ssh/hosts/*      Individual SSH host configs
   ~/.ssh/keys/*       Ed25519 keypairs
@@ -103,91 +103,91 @@ EOF
         ;;
     i | init)
         echo "Initialize this machine: shell config + SSH structure"
-        echo "Usage: rcm init"
+        echo "Usage: sshm init"
         echo "  Creates ~/.bash_profile, ~/.bashrc, ~/.myrc from templates"
         echo "  Creates ~/.ssh/ with hosts/, keys/, mux/, config"
         echo "  Safe to run multiple times (idempotent)"
         ;;
     s | sync)
-        echo "Deploy ~/.rc to a remote server"
-        echo "Usage: rcm sync <host>"
-        echo "  Rsyncs ~/.rc/ (excluding .git) then runs rcm init remotely"
+        echo "Deploy ~/.sh to a remote server"
+        echo "Usage: sshm sync <host>"
+        echo "  Rsyncs ~/.sh/ (excluding .git) then runs sshm init remotely"
         echo "  ~/.myrc is never synced — each machine keeps its own"
         ;;
     c | create)
         echo "Save an SSH host by nickname"
-        echo "Usage: rcm create <name> <ip> [port] [user] [keyfile]"
+        echo "Usage: sshm create <name> <ip> [port] [user] [keyfile]"
         echo "  Defaults: port 22, user root, key ~/.ssh/keys/default"
         echo "  Creates ~/.ssh/hosts/<name>"
         ;;
     r | read | show)
         echo "Show saved host config values"
-        echo "Usage: rcm read <name>"
+        echo "Usage: sshm read <name>"
         ;;
     u | update)
         echo "Edit a host config in nano"
-        echo "Usage: rcm update <name>"
+        echo "Usage: sshm update <name>"
         ;;
     d | delete)
         echo "Remove a saved host"
-        echo "Usage: rcm delete <name>"
+        echo "Usage: sshm delete <name>"
         ;;
     l | list)
         echo "List all saved hosts with connection details"
-        echo "Usage: rcm list"
+        echo "Usage: sshm list"
         ;;
     t | test)
         echo "Test SSH connectivity"
-        echo "Usage: rcm test [name] [--delete-failed]"
+        echo "Usage: sshm test [name] [--delete-failed]"
         echo "  No args: test all hosts"
         echo "  With name: test one host"
         echo "  --delete-failed: remove unreachable hosts (not ephemeral)"
         ;;
     kc | key_create)
         echo "Create an Ed25519 keypair"
-        echo "Usage: rcm key_create [name] [comment] [passphrase]"
+        echo "Usage: sshm key_create [name] [comment] [passphrase]"
         echo "  Default name: 'default' — used by host create when no key specified"
         echo "  Keys stored in ~/.ssh/keys/, 100 KDF rounds"
         ;;
     kr | key_read)
         echo "Show a public key (for copying to servers)"
-        echo "Usage: rcm key_read [name]  (default: 'default')"
+        echo "Usage: sshm key_read [name]  (default: 'default')"
         ;;
     kd | key_delete)
         echo "Remove a keypair (private + public)"
-        echo "Usage: rcm key_delete <name>"
+        echo "Usage: sshm key_delete <name>"
         ;;
     kl | key_list)
         echo "List all keys with fingerprints"
-        echo "Usage: rcm key_list"
+        echo "Usage: sshm key_list"
         ;;
     pull)
         echo "Check upstream for updates and pull if available"
-        echo "Usage: rcm pull"
+        echo "Usage: sshm pull"
         echo "  Fetches from origin, shows status, pulls if behind"
         ;;
     push)
         echo "Commit all changes and push to upstream"
-        echo "Usage: rcm push [message]"
+        echo "Usage: sshm push [message]"
         echo "  Without message: auto-generates from changed files"
         echo "  With message: uses your message as commit summary"
         ;;
     p | perms)
         echo "Fix ~/.ssh permissions (directories 700, files 600)"
-        echo "Usage: rcm perms"
+        echo "Usage: sshm perms"
         echo "  Use after git clone or rsync"
         ;;
     start)
         echo "Start SSH daemon without enabling at boot (sudo)"
-        echo "Usage: rcm start"
+        echo "Usage: sshm start"
         ;;
     stop)
         echo "Stop SSH daemon, disable at boot, drop INCOMING connections (sudo)"
-        echo "Usage: rcm stop"
+        echo "Usage: sshm stop"
         ;;
     *)
         cat <<'EOF'
-Usage: rcm <command> [args]
+Usage: sshm <command> [args]
 
   SETUP        i  = init        s  = sync
   HOSTS        c  = create      r  = read       u = update
@@ -198,8 +198,8 @@ Usage: rcm <command> [args]
   UTILS        p  = perms       start            stop
   HELP         h  = help        ha = help all
 
-Quick start:  rcm init && rcm create myserver 10.0.0.5 && ssh myserver
-Full help:    rcm ha
+Quick start:  sshm init && sshm create myserver 10.0.0.5 && ssh myserver
+Full help:    sshm ha
 EOF
         ;;
     esac
@@ -212,11 +212,11 @@ EOF
 shell_init() {
     # Create ~/.bash_profile from template if missing
     if [[ ! -f ~/.bash_profile ]]; then
-        if [[ -f ~/.rc/_bash_profile ]]; then
-            cp ~/.rc/_bash_profile ~/.bash_profile
+        if [[ -f ~/.sh/_bash_profile ]]; then
+            cp ~/.sh/_bash_profile ~/.bash_profile
             echo "✅ Created ~/.bash_profile"
         else
-            echo "⚠️  Template ~/.rc/_bash_profile not found"
+            echo "⚠️  Template ~/.sh/_bash_profile not found"
         fi
     else
         echo "ℹ️  ~/.bash_profile already exists"
@@ -224,33 +224,33 @@ shell_init() {
 
     # Create ~/.bashrc from template if missing
     if [[ ! -f ~/.bashrc ]]; then
-        if [[ -f ~/.rc/_bashrc ]]; then
-            cp ~/.rc/_bashrc ~/.bashrc
+        if [[ -f ~/.sh/_bashrc ]]; then
+            cp ~/.sh/_bashrc ~/.bashrc
             echo "✅ Created ~/.bashrc"
         else
-            echo "⚠️  Template ~/.rc/_bashrc not found"
+            echo "⚠️  Template ~/.sh/_bashrc not found"
         fi
     else
-        # Ensure existing .bashrc sources ~/.rc/_shrc
-        local source_line='[[ -f ~/.rc/_shrc ]] && source ~/.rc/_shrc'
+        # Ensure existing .bashrc sources ~/.sh/_shrc
+        local source_line='[[ -f ~/.sh/_shrc ]] && source ~/.sh/_shrc'
         if ! grep -qF "$source_line" ~/.bashrc; then
             echo "" >> ~/.bashrc
-            echo "# Source RC shell enhancements" >> ~/.bashrc
+            echo "# Source SH shell enhancements" >> ~/.bashrc
             echo "$source_line" >> ~/.bashrc
             echo "✅ Added sourcing line to ~/.bashrc"
         else
-            echo "ℹ️  ~/.bashrc already sources ~/.rc/_shrc"
+            echo "ℹ️  ~/.bashrc already sources ~/.sh/_shrc"
         fi
     fi
 
     # Create user customization file from template if missing
     if [[ ! -f ~/.myrc ]]; then
-        if [[ -f ~/.rc/_myrc.example ]]; then
-            cp ~/.rc/_myrc.example ~/.myrc
+        if [[ -f ~/.sh/_myrc.example ]]; then
+            cp ~/.sh/_myrc.example ~/.myrc
             echo "✅ Created ~/.myrc from template"
             echo "ℹ️  Edit ~/.myrc to add your personal customizations"
         else
-            echo "⚠️  Template ~/.rc/_myrc.example not found"
+            echo "⚠️  Template ~/.sh/_myrc.example not found"
         fi
     else
         echo "ℹ️  ~/.myrc already exists"
@@ -268,7 +268,7 @@ ssh_init() {
 
     [[ -f ~/.ssh/config ]] || {
         echo "# SSH Configuration
-# Created by rcm on $(date +'%Y%m%d')
+# Created by sshm on $(date +'%Y%m%d')
 
 # Security and Performance
 Ciphers aes128-ctr,aes192-ctr,aes256-ctr,aes128-gcm@openssh.com,aes256-gcm@openssh.com,chacha20-poly1305@openssh.com
@@ -298,7 +298,7 @@ init() {
     echo ""
     ssh_init
     echo ""
-    echo "✅ RC initialized (shell + SSH)"
+    echo "✅ SH initialized (shell + SSH)"
 }
 
 # ========== SYNC ==========
@@ -308,7 +308,7 @@ sync() {
 
     if [[ -z "$ssh_host" ]]; then
         echo "❌ Error: SSH host required"
-        echo "Usage: rcm sync <ssh_host>"
+        echo "Usage: sshm sync <ssh_host>"
         exit 1
     fi
 
@@ -317,13 +317,13 @@ sync() {
         echo "Attempting connection anyway..."
     fi
 
-    echo "🔄 Syncing ~/.rc/ to $ssh_host:~/.rc/..."
-    rsync -avz --exclude='.git' ~/.rc/ "$ssh_host":~/.rc/
+    echo "🔄 Syncing ~/.sh/ to $ssh_host:~/.sh/..."
+    rsync -avz --exclude='.git' ~/.sh/ "$ssh_host":~/.sh/
 
     if [[ $? -eq 0 ]]; then
         echo "✅ Sync completed"
         echo "🔧 Running init on $ssh_host..."
-        ssh "$ssh_host" "~/.rc/rcm init"
+        ssh "$ssh_host" "~/.sh/sshm init"
     else
         echo "❌ Sync failed"
         exit 1
@@ -608,7 +608,7 @@ test() {
 # ========== GIT ==========
 
 pull() {
-    cd ~/.rc
+    cd ~/.sh
     git fetch origin 2>/dev/null || { echo "❌ Failed to fetch from origin"; return 1; }
 
     local local_head=$(git rev-parse HEAD)
@@ -618,21 +618,21 @@ pull() {
         echo "⚠️  No upstream tracking branch set"
         return 1
     elif [[ "$local_head" == "$remote_head" ]]; then
-        echo "✅ ~/.rc is up to date"
+        echo "✅ ~/.sh is up to date"
     else
         local behind=$(git rev-list --count HEAD..@{u})
         if [[ $behind -gt 0 ]]; then
             echo "⬇️  $behind new commit(s) available"
-            git pull --ff-only || { echo "❌ Pull failed (local changes?) — try: rcm push first"; return 1; }
-            echo "✅ ~/.rc updated"
+            git pull --ff-only || { echo "❌ Pull failed (local changes?) — try: sshm push first"; return 1; }
+            echo "✅ ~/.sh updated"
         else
-            echo "ℹ️  Local is ahead of upstream — use: rcm push"
+            echo "ℹ️  Local is ahead of upstream — use: sshm push"
         fi
     fi
 }
 
 push() {
-    cd ~/.rc
+    cd ~/.sh
     local status=$(git status --porcelain)
 
     if [[ -z "$status" ]]; then
