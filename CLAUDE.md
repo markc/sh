@@ -8,6 +8,8 @@ Bash-exclusive cross-platform shell config (aliases, functions, tools) for syste
 
 **`sshm`** is the single management tool: bootstraps shell config, manages SSH hosts/keys, deploys `~/.sh` to remotes. Run `sshm ha` for full built-in help.
 
+`README.md` is a symlink to this file — there is one document, not two.
+
 ## Architecture
 
 ### Load Chain
@@ -18,12 +20,14 @@ Bash-exclusive cross-platform shell config (aliases, functions, tools) for syste
                     → source ~/.sh/_shrc.d/*.sh (opt-in server modules)
 ```
 
+`_shrc` also prepends `~/.sh` to `PATH`, so `sshm` is callable after sourcing.
+
 ### Key Files
 
 | File | Purpose |
 |------|---------|
-| `_shrc` | Core (~324 lines): OS detection, universal aliases, service control, prompt |
-| `sshm` | SSH Manager (~706 lines): shell init, SSH hosts/keys, deploy, connectivity test, git, sshd |
+| `_shrc` | Core (368 lines): OS/arch detection, universal aliases, `sc` service control, functions, colored prompt |
+| `sshm` | SSH Manager (695 lines): shell init, SSH hosts/keys, deploy, connectivity test, git, sshd |
 | `_bash_profile` / `_bashrc` | Minimal templates copied to `~/` on `sshm init` |
 | `_myrc.example` | Template for machine-local `~/.myrc` (prompt color, modules, PATH extensions) |
 | `_shrc.d/server.sh` | DKIM management, user creation, vhost navigation |
@@ -34,15 +38,17 @@ Bash-exclusive cross-platform shell config (aliases, functions, tools) for syste
 
 | Variable | Purpose |
 |----------|---------|
-| `OSTYP` | Auto-detected OS: `alpine`, `debian`, `cachyos`, `arch`, `openwrt`, `macos` |
-| `ARCH` | Auto-detected architecture: `x86_64`, `arm64`, `armv7` |
+| `OSTYP` | Auto-detected OS: `alpine`, `debian`, `ubuntu`, `cachyos`, `manjaro`, `arch`, `openwrt`, `macos` (falls back via `ID_LIKE`, then `uname`) |
+| `ARCH` | Auto-detected architecture: `x86_64`, `arm64`, `armv7` (else raw `uname -m`) |
 | `SUDO` | `/usr/bin/sudo ` if non-root, empty if root |
 | `COLOR` | Prompt color (default `31`, override in `~/.myrc`) |
 | `LABEL` | Prompt label (default `hostname`, override in `~/.myrc`) |
 
 ### OS Abstraction
 
-`_shrc` detects OS via `/etc/os-release` and sets `OSTYP`. Package aliases (`i`=install, `r`=remove, `s`=search, `u`=upgrade) and service control (`sc`) adapt per OS automatically. Same interface, different backends.
+`_shrc` detects OS via `/etc/os-release` and sets `OSTYP`. Package aliases (`i`=install, `r`=remove, `s`=search, `u`=upgrade, `lspkg`=list) and service control (`sc`) adapt per OS automatically — same interface, different backends (apt / apk / opkg / paru / brew, and systemd / OpenRC / init.d / launchctl).
+
+On Arch/CachyOS/Manjaro `u` upgrades official repos only; `ua` is AUR-only, `uu` everything, `uc` everything + cleanup. macOS also has `uc` (upgrade + cleanup).
 
 ## Installation
 
@@ -56,21 +62,24 @@ On Alpine/OpenWRT, install bash first. Deploy to remote: `sshm create HOST IP &&
 
 ## Key Aliases and Functions
 
-- **Navigation:** `..` (cd ..), `la` (ls -lFAh), `e`/`se` (nano/sudo nano), `es` (edit ~/.myrc + reload)
-- **Diagnostics:** `health`, `ports`, `procs`, `mem`, `disk`, `ram`, `logs`, `f` (find), `p` (grep procs)
-- **Packages:** `i` (install), `r` (remove), `s` (search), `u` (upgrade) — maps to native pkg manager
-- **Services:** `sc start|stop|restart|enable SERVICE` — wraps systemd/OpenRC/init.d
-- **SSH:** `sx host "command"` — SSH with interactive shell
-- **Notes/help:** `n` (append timestamped note to `~/.note`), `sn` (show), `?` (run `~/.help`), `m` (run `~/.menu`)
-- **Security:** `newpw [len]` — generate password guaranteeing upper/lower/digit
+- **Navigation:** `..` (cd ..), `la`/`ll`/`ls` (dirs-first colored), `e`/`se` (nano / sudo nano), `df` (df -kTh)
+- **Search:** `f PATTERN` (find by name), `q PATTERN` (recursive grep), `p PATTERN` (grep processes)
+- **Diagnostics:** `health` (full report), `ports`, `procs`, `mem`, `disk`, `ram`, `temp`, `logs`, `syslog`, `authlog`, `services`, `failed`, `failedlogins`, `lastlog`, `pstree_service SVC`, `ff` (fastfetch), `wt URL` (curl timing)
+- **Packages:** `i` (install), `r` (remove), `s` (search), `u` (upgrade), `lspkg`, `edpkg` — maps to native pkg manager
+- **Services:** `sc start|stop|restart|enable|status SERVICE` (no args = list services) — wraps systemd/OpenRC/init.d/launchctl
+- **Users:** `getusers` (UID 1000–9998), `grepuser NAME`
+- **SSH:** `sx host "command"` — run a command in a remote interactive bash, job-control noise stripped
+- **Notes/help:** `n` (append timestamped note + open `~/.note`), `sn` (show notes), `?` (run `~/.help`), `eh` (edit `~/.help`), `es` (edit `~/.myrc` + reload), `m` (run `~/.menu`)
+- **Misc:** `newpw [len]` (default 16, guarantees upper/lower/digit), `chktime FILE SECS` (file older than N secs), `shortname` (MAC-derived host id)
 
 ## sshm Reference (`sshm ha`)
 
-Extra behaviour not shown in the help text below:
-- `test` uses `ssh BatchMode=yes` with 5s timeout and a colour-coded summary.
+Behaviour not obvious from the help text:
+- `test` uses `ssh BatchMode=yes` with a 5s timeout and a colour-coded summary.
 - Hosts listed in `~/.ssh/hosts/.ephemeral` report `OFFLINE` instead of `FAILED` and survive `--delete-failed`.
 - `github.com` is auto-recognised as a git provider (success on `Permission denied (publickey)`).
-- `pull` is fast-forward only; `push [MESSAGE]` auto-generates a message from changed files if omitted.
+- `pull` is fast-forward only; `push [MESSAGE]` auto-generates a message from changed file names if omitted, and will push existing commits even when there's nothing new to commit.
+- `init` is idempotent: if `~/.bashrc` already exists it just appends the `_shrc` source line if missing.
 
 ```
 SSHM — SSH Manager
@@ -114,7 +123,7 @@ KEY COMMANDS — Ed25519 keypairs for passwordless login
   Examples:
     sshm key_create                                 # Create default key (no passphrase)
     sshm key_create work "Laptop" "secret"          # Named key with comment and passphrase
-    ssh-copy-id -i ~/.ssh/keys/default.pub u@server # Deploy key to server
+    ssh-copy-id -i ~/.ssh/keys/default.pub u@server  # Deploy key to server
 
 GIT — update and publish ~/.sh
   pull                                             # Fetch upstream, pull if newer
@@ -151,18 +160,18 @@ FILES
 
 ## Server Modules (`_shrc.d/`)
 
-Opt-in via `~/.myrc`. See each file for available commands:
-- **server.sh** — DKIM (`adddkim`/`chdkim`/`deldkim`), users (`newuser`/`chrootuser`), vhosts (`go2`/`shhost`)
-- **logs.sh** — `mlog`, `alog`, `elog`, `dlog`
-- **net.sh** — `shwho` (WHOIS summary), `shblock` (blocked IPs)
+Opt-in by sourcing from `~/.myrc`. See each file for the full command set:
+- **server.sh** — DKIM (`shdkim`/`adddkim`/`chdkim`/`deldkim`), users (`newuser`/`chrootuser`), vhosts (`go2`/`shhost`)
+- **logs.sh** — `mlog`, `mgrep`, `alog`, `elog`, `plog`, `dlog`, `maillog`
+- **net.sh** — `shwho` (WHOIS + DNS/MX summary), `shblock` (nftables sshguard blocklist)
 
 ## Validation
 
 ```bash
 bash -n _shrc && bash -n sshm                      # Syntax check core
 for f in _shrc.d/*.sh; do bash -n "$f"; done       # Syntax check modules
-sshm init                                            # Idempotent setup
-sshm test                                            # TCP connectivity check
+sshm init                                          # Idempotent setup
+sshm test                                          # SSH connectivity check
 ```
 
 ## Conventions
@@ -175,8 +184,9 @@ sshm test                                            # TCP connectivity check
 - **No Docker** — Uses Incus containers or Proxmox VMs
 - **OS detection** — Reads `/etc/os-release`, sets `OSTYP`/`ARCH`; all conditional logic branches on these
 - **Core vs modules** — `_shrc` loads everywhere; `_shrc.d/` is opt-in via `~/.myrc`
+- **Everything versioned** — no `.gitignore` exclusions; personal config lives in `~/.myrc` outside the repo
 - **Deployment** — `sshm sync <host>` rsyncs `~/.sh` (excluding `.git`), runs `sshm init` on remote
-- **Platforms** — Debian/Ubuntu, Arch/CachyOS, Alpine, OpenWRT, macOS (Homebrew + launchctl, never sudo brew)
+- **Platforms** — Debian/Ubuntu, Arch/CachyOS/Manjaro, Alpine, OpenWRT, macOS (Homebrew + launchctl, never sudo brew)
 
 ## License
 
