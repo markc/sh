@@ -787,6 +787,7 @@ which presents as mysterious "it stopped using my key" behaviour.
 ├── config              # generated once — see below
 ├── authorized_keys
 ├── hosts/              # one file per saved host  (sshm create/…)
+│   ├── .class          # optional: NetServa class roster (see section 16)
 │   └── .ephemeral      # optional: names of sometimes-offline hosts
 ├── keys/               # your Ed25519 keypairs    (sshm key_create/…)
 └── mux/                # live ControlMaster sockets (auto-managed)
@@ -860,6 +861,38 @@ Typical fleet update: edit something in `~/.sh`, then
 Note the deploy is **push-based and git-free** on the servers — remotes get a
 plain directory, not a git clone. Your workstation's clone is the source of
 truth; git history stays with you.
+
+### The NetServa class roster — ~/.ssh/hosts/.class
+
+Not every server should get `~/.sh`. In NetServa terms, NS 1.0–3.0 machines
+run bash and are managed by this toolkit; NS 4.0 (NS 3.0 + mix) and NS 5.0
+(pure cosmix) machines run mix as the login shell with `~/.mixrc`, and are
+managed by the mix/cosmix tooling instead. Deploying `~/.sh` to one of those
+— and especially running `sshm init` over ssh against a mix login shell —
+ranges from pointless to harmful.
+
+`~/.ssh/hosts/.class` records which is which: one `host class` pair per
+line, whitespace separated, blank lines and `#` comments ignored. Hosts not
+listed default to **3.0**, so you only annotate the exceptions:
+
+```
+# ~/.ssh/hosts/.class
+mko   5.0
+web1  4.0
+ns1gc 1.0
+```
+
+Two things read it:
+
+- **`sshm sync` refuses any host whose class is 4.0 or higher**, with an
+  error telling you why. There is no override flag — if the refusal is
+  wrong, fix the roster entry.
+- **`sshm list` shows the class** as a final column, so the fleet split is
+  visible at a glance.
+
+`sshm init` creates a commented template if the file is missing. Like
+everything else in `~/.ssh`, the roster is machine-local — it names real
+hosts, so it never belongs in a public repo.
 
 ---
 
@@ -955,6 +988,13 @@ missing binaries; nothing breaks at load time.
 comments ignored. Dotfiles in `hosts/` are skipped by the test scanner, so
 the file itself is never "tested". Anything named here is expected to be
 offline sometimes: reported `OFFLINE`, never deleted, never fails the run.
+
+### Class roster file format
+
+`~/.ssh/hosts/.class` — one `host class` pair per line (e.g. `mko 5.0`),
+whitespace separated, blank lines and `#` comments ignored. Unlisted hosts
+default to `3.0`. Classes `4.0`+ mark mix-managed machines: `sshm sync`
+refuses them, `sshm list` shows the class column. See section 16.
 
 ### sshm exit codes
 

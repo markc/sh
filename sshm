@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Created: 20230702 - Updated: 20260311
+# Created: 20230702 - Updated: 20260702
 # Copyright (C) 1995-2026 Mark Constable <mc@netserva.org> (MIT License)
 #
 # sshm — SSH Manager
@@ -41,6 +41,8 @@ SETUP
 
   sync rsyncs ~/.sh/ (excluding .git) to HOST, then runs sshm init remotely.
   ~/.myrc is never synced — each machine keeps its own.
+  Hosts marked NS 4.0+ in ~/.ssh/hosts/.class are refused — those are
+  mix-managed (~/.mixrc), not ~/.sh. Unlisted hosts default to NS 3.0.
 
 HOST COMMANDS — save servers by nickname
   create NAME IP [PORT] [USER] [KEYFILE]           # Save host (defaults: 22, root, ~/.ssh/keys/default)
@@ -97,6 +99,7 @@ FILES
   ~/.sh/_shrc.d/      Optional server modules (loaded via ~/.myrc)
   ~/.myrc             Personal config (machine-local, never synced)
   ~/.ssh/hosts/*      Individual SSH host configs
+  ~/.ssh/hosts/.class NetServa class roster (NS 4.0+ = mix-managed, sync refuses)
   ~/.ssh/keys/*       Ed25519 keypairs
   ~/.ssh/mux/*        ControlMaster multiplexing sockets
 EOF
@@ -113,6 +116,7 @@ EOF
         echo "Usage: sshm sync <host>"
         echo "  Rsyncs ~/.sh/ (excluding .git) then runs sshm init remotely"
         echo "  ~/.myrc is never synced — each machine keeps its own"
+        echo "  Refuses hosts marked NS 4.0+ in ~/.ssh/hosts/.class (mix-managed)"
         ;;
     c | create)
         echo "Save an SSH host by nickname"
@@ -288,6 +292,24 @@ Host *
   ControlPath ~/.ssh/mux/%r@%h:%p
   ControlPersist 10m" >~/.ssh/config
     }
+
+    [[ -f ~/.ssh/hosts/.class ]] || {
+        echo "# ~/.ssh/hosts/.class — NetServa class roster
+#
+# One \"host class\" pair per line, whitespace separated. Blank lines and
+# # comments ignored. Hosts not listed here default to NS 3.0.
+#
+#   NS 1.0-3.0  bash login shell, managed by ~/.sh   (sshm sync allowed)
+#   NS 4.0      NS 3.0 + mix login shell + ~/.mixrc  (sshm sync refuses)
+#   NS 5.0      pure cosmix                          (sshm sync refuses)
+#
+# Example:
+#   mko   5.0
+#   web1  4.0
+#   ns1gc 1.0
+" >~/.ssh/hosts/.class
+        echo "Created ~/.ssh/hosts/.class (NetServa class roster)"
+    }
     perms
 }
 
@@ -301,6 +323,16 @@ init() {
     echo "✅ SH initialized (shell + SSH)"
 }
 
+# ========== NETSERVA CLASS ROSTER ==========
+
+# NS class of a host from ~/.ssh/hosts/.class; unlisted hosts are NS 3.0.
+# NS 1.0-3.0 = bash + ~/.sh; NS 4.0-5.0 = mix login shell + ~/.mixrc.
+host_class() {
+    local class
+    class=$(awk -v h="$1" '!/^[[:space:]]*#/ && $1 == h {print $2; exit}' ~/.ssh/hosts/.class 2>/dev/null)
+    echo "${class:-3.0}"
+}
+
 # ========== SYNC ==========
 
 sync() {
@@ -309,6 +341,13 @@ sync() {
     if [[ -z "$ssh_host" ]]; then
         echo "❌ Error: SSH host required"
         echo "Usage: sshm sync <ssh_host>"
+        exit 1
+    fi
+
+    local class=$(host_class "$ssh_host")
+    if [[ ${class%%.*} =~ ^[0-9]+$ && ${class%%.*} -ge 4 ]]; then
+        echo "❌ Error: '$ssh_host' is NS $class — managed via mix (~/.mixrc), not ~/.sh"
+        echo "   If that's wrong, fix its entry in ~/.ssh/hosts/.class"
         exit 1
     fi
 
@@ -376,14 +415,14 @@ delete() {
 list() {
     for file in ~/.ssh/hosts/*; do
         [[ -f "$file" ]] || continue
-        awk '
+        awk -v class="$(host_class "$(basename "$file")")" '
         BEGIN { host=""; hostname=""; port="22"; user="root"; key="" }
         /^Host / { host=$2 }
         /Hostname/ { hostname=$2 }
         /Port/ { port=$2 }
         /User/ { user=$2 }
         /IdentityFile/ { key=$2 }
-        END { printf "%-15s %17s %5s %10s %25s\n", host, hostname, port, user, key }
+        END { printf "%-15s %17s %5s %10s %25s %5s\n", host, hostname, port, user, key, class }
         ' "$file"
     done
 }

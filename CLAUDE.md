@@ -18,7 +18,7 @@ The repo IS the live config on this machine — edits take effect on the next
 | File | Lines | Purpose |
 |------|-------|---------|
 | `_shrc` | 370 | Core, sourced by `~/.bashrc`: bash guard, OS/arch detection, all aliases, `sc` service wrapper, functions, PATH baseline, prompt |
-| `sshm` | 695 | The only executable: shell init, SSH host/key CRUD, connectivity test, deploy (`sync`), git `pull`/`push`, sshd start/stop |
+| `sshm` | 734 | The only executable: shell init, SSH host/key CRUD, connectivity test, deploy (`sync`), git `pull`/`push`, sshd start/stop |
 | `_bash_profile` | template | Copied to `~/.bash_profile` by `sshm init` — sources `/etc/profile` then `~/.bashrc` |
 | `_bashrc` | template | Copied to `~/.bashrc` by `sshm init` — one guarded `source ~/.sh/_shrc` line |
 | `_myrc.example` | template | Copied to `~/.myrc` by `sshm init` — machine-local overrides, never versioned or synced |
@@ -84,7 +84,7 @@ with sudo. `sc` (service control) wraps systemctl / OpenRC `rc-service` /
 
 ## sshm Command Map
 
-Dispatch is the `case` at `sshm:672`. Shortcuts: `i`=init `s`=sync `c`=create
+Dispatch is the `case` at `sshm:711`. Shortcuts: `i`=init `s`=sync `c`=create
 `r`=read `u`=update `d`=delete `l`=list `t`=test `p`=perms `kc/kr/kd/kl`=key
 ops, `pull` `push` `start` `stop` `h`/`ha`=help. Full help text lives in the
 `help()` heredoc at `sshm:24` — keep it in sync with behaviour changes.
@@ -110,6 +110,12 @@ Behaviour not obvious from the help text:
   line appended if missing; existing files are never overwritten.
 - `sync HOST` rsyncs `~/.sh/` (excluding `.git`) then runs `sshm init`
   remotely; `~/.myrc` lives outside the repo so it is never synced.
+- **NetServa class roster** `~/.ssh/hosts/.class` (`host class` pairs,
+  unlisted = 3.0, `#` comments; template created by `init`). `host_class()`
+  reads it; `sync` refuses class ≥ 4.0 hosts (NS 4.0/5.0 are mix-managed via
+  `~/.mixrc`, and remote bash-isms misbehave against a mix login shell);
+  `list` appends the class as a final column. No override flag — fix the
+  roster entry instead.
 - `stop` disables sshd **and** `pkill -9 sshd` — kills the current session if
   run over SSH.
 - `sshm` sources `_shrc` at startup (`sshm:22`) so it has `OSTYP`/`SUDO`.
