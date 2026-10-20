@@ -351,9 +351,9 @@ newpw() {
 }
 
 # Set baseline PATH for all environments (usr-merge compatible)
-# /opt/cosmix/bin first: Cosmix daemons + mix shell live here post-cutover
+# /opt/mixos/bin first: Cosmix daemons + mix shell live here post-cutover
 # (2026-05-23); mirrors /etc/profile.d/cosmix.sh in case _shrc resets PATH.
-export PATH=/opt/cosmix/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+export PATH=/opt/mixos/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # Set default color and label (can be overridden by ~/.myrc)
 COLOR=${COLOR:-31}

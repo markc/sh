@@ -34,7 +34,7 @@ login shell:      ~/.bash_profile → /etc/profile → ~/.bashrc
 interactive:      ~/.bashrc → source ~/.sh/_shrc
 _shrc order:      bash guard → expand_aliases → detect_os (OSTYP/ARCH)
                   → SUDO → aliases (per-OS branches) → functions
-                  → PATH baseline (RESET, /opt/cosmix/bin first)
+                  → PATH baseline (RESET, /opt/mixos/bin first)
                   → COLOR/LABEL defaults → source ~/.myrc
                   → PS1 → prepend ~/.sh to PATH
 ~/.myrc:          user overrides + optional `source ~/.sh/_shrc.d/*.sh`
@@ -163,7 +163,7 @@ branches are what you can exercise live.
   definitions like `alias i=$SUDO'apt-get install'` — preserve that pattern
   exactly; quoting it breaks root (empty) vs non-root expansion.
 - `_shrc`'s PATH reset (`_shrc:356`) intentionally starts with
-  `/opt/cosmix/bin` (Cosmix daemons + mix shell, mirrors
+  `/opt/mixos/bin` (Cosmix daemons + mix shell, mirrors
   `/etc/profile.d/cosmix.sh`); don't remove it.
 - The `?` alias (`bash ~/.help`) shadows the bash glob character in
   interactive use — deliberate.

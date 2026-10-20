@@ -211,7 +211,7 @@ The order matters and is worth knowing:
 6. **All functions** — `f`, `sc`, `sx`, `health`, `newpw`, etc.
 7. **PATH baseline** — PATH is *reset* to a fixed, known-good value:
    ```
-   /opt/cosmix/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+   /opt/mixos/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
    ```
    This is deliberate (reproducible environment on every host) and it means
    any PATH additions **must** happen after this point — i.e. in `~/.myrc`.
@@ -929,7 +929,7 @@ The corners you only hit once you live in this thing.
 `_shrc` **overwrites** PATH with a fixed baseline:
 
 ```
-/opt/cosmix/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+/opt/mixos/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ```
 
 then appends your `~/.myrc` additions and finally prepends `~/.sh`. This
@@ -937,7 +937,7 @@ guarantees an identical, predictable PATH on every host (and always includes
 sbin, which many distros omit for non-root users — so `ss`, `sysctl` etc.
 work unqualified). The flip side: **anything that prepends to PATH before
 `_shrc` runs is wiped**. Version managers (cargo, nvm, pyenv…) must be
-activated from `~/.myrc`, not from earlier in `~/.bashrc`. (`/opt/cosmix/bin`
+activated from `~/.myrc`, not from earlier in `~/.bashrc`. (`/opt/mixos/bin`
 leads the baseline because that's where the Cosmix daemons and the mix shell
 live on these machines; harmless if the directory doesn't exist.)
 
